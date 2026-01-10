@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Tests
+coverage/
+.nyc_output/
+
+# Development
+*.log
+.DS_Store
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Source files
+src/
+tsconfig.json
+tsup.config.ts
+.eslintrc*
+.prettierrc*
+jest.config.*

@@ -1,0 +1,54 @@
+{
+    "name": "@posty5/social-publisher-task",
+    "version": "1.0.0",
+    "description": "Social Publisher Task management SDK for Posty5 API",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "typecheck": "tsc --noEmit",
+        "lint": "eslint src --ext .ts",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "posty5",
+        "social-publisher",
+        "task",
+        "sdk",
+        "api",
+        "typescript"
+    ],
+    "author": "Posty5",
+    "license": "MIT",
+    "peerDependencies": {
+        "@posty5/core": "^1.0.0"
+    },
+    "devDependencies": {
+        "@posty5/core": "file:../posty5-core",
+        "@types/node": "^20.0.0",
+        "@typescript-eslint/eslint-plugin": "^6.0.0",
+        "@typescript-eslint/parser": "^6.0.0",
+        "eslint": "^8.0.0",
+        "typescript": "^5.3.0",
+        "tsup": "^8.0.0"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    }
+}

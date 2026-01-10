@@ -1,0 +1,38 @@
+{
+    "name": "@posty5/sdk-monorepo",
+    "version": "1.0.0",
+    "description": "Posty5 SDK - TypeScript/JavaScript client libraries for Posty5 API",
+    "private": true,
+    "scripts": {
+        "test": "tsx test.ts",
+        "test:watch": "tsx watch test.ts",
+        "build:all": "npm run build --workspaces",
+        "clean": "npm run clean --workspaces"
+    },
+    "workspaces": [
+        "posty5-core",
+        "posty5-short-link",
+        "posty5-qr-code",
+        "posty5-html-hosting",
+        "posty5-html-hosting-variables",
+        "posty5-html-hosting-form-submission",
+        "posty5-social-publisher-workspace",
+        "posty5-social-publisher-task"
+    ],
+    "devDependencies": {
+        "tsx": "^4.7.0",
+        "typescript": "^5.3.3"
+    },
+    "keywords": [
+        "posty5",
+        "sdk",
+        "api-client",
+        "typescript",
+        "short-link",
+        "qr-code",
+        "html-hosting",
+        "social-publisher"
+    ],
+    "author": "Posty5",
+    "license": "MIT"
+}
