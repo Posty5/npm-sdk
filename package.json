@@ -4,8 +4,9 @@
     "description": "Posty5 SDK - TypeScript/JavaScript client libraries for Posty5 API",
     "private": true,
     "scripts": {
-        "test": "tsx test.ts",
-        "test:watch": "tsx watch test.ts",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
         "build:all": "npm run build --workspaces",
         "clean": "npm run clean --workspaces"
     },
@@ -20,7 +21,9 @@
         "posty5-social-publisher-task"
     ],
     "devDependencies": {
-        "tsx": "^4.7.0",
+        "@types/jest": "^29.5.11",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.1.1",
         "typescript": "^5.3.3"
     },
     "keywords": [
