@@ -34,7 +34,7 @@ export interface ISocialPublisherWorkspaceSampleDetails {
 
 export type ISearchSocialPublisherWorkspaceResponse = IPaginationResponse<ISocialPublisherWorkspaceSampleDetails>;
 export type ICreateSocialPublisherWorkspaceResponse = string; // Returns ID string
-export type IUpdateSocialPublisherWorkspaceResponse = string; // Returns success message string usually, but module says it returns string message "Organization Updated Successfully"
+export type IUpdateSocialPublisherWorkspaceResponse = string; // Returns success message string usually, but module says it returns string message "Workspace Updated Successfully"
 export interface IDeleteSocialPublisherWorkspaceResponse {
     message?: string;
 }

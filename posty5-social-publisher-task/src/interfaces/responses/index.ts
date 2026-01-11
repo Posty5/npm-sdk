@@ -11,7 +11,7 @@ export interface IGenerateUploadUrlsResponse {
     uploadThumb?: IUploadConfig;
     videoUplaodFileURL: string;
     thumbUploadFileURL?: string;
-    organization: any;
+    workspace: any;
 }
 
 export interface ISocialPublisherTaskStatusLog {
@@ -48,7 +48,7 @@ export interface ISocialPublisherTaskResponse {
     currentStatusChangedAt: Date;
     statusHistory: ISocialPublisherTaskStatusLog[];
     needsMaintenance: boolean;
-    organization: {
+    workspace: {
         workspaceId: string;
     };
     tiktokAccount?: ISocialPublisherTaskPlatform;

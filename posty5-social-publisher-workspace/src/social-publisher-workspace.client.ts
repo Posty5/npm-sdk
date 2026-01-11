@@ -11,7 +11,7 @@ import {
 } from './interfaces';
 
 /**
- * Social Publisher Organization Client
+ * Social Publisher Workspace Client
  */
 export class SocialPublisherWorkspaceClient {
     private http: HttpClient;
@@ -26,7 +26,7 @@ export class SocialPublisherWorkspaceClient {
     }
 
     /**
-     * Search organizations
+     * Search workspaces
      * @param params - Search filters
      * @param pagination - Pagination options
      */
@@ -41,8 +41,8 @@ export class SocialPublisherWorkspaceClient {
     }
 
     /**
-     * Get organization by ID
-     * @param id - Organization ID
+     * Get workspace by ID
+     * @param id - Workspace ID
      */
     async get(id: string): Promise<ISocialPublisherWorkspaceResponse> {
         const response = await this.http.get<ISocialPublisherWorkspaceResponse>(`${this.basePath}/${id}`);
@@ -50,9 +50,9 @@ export class SocialPublisherWorkspaceClient {
     }
 
     /**
-     * Create organization
-     * @param data - Organization data
-     * @returns Organization ID
+     * Create workspace
+     * @param data - Workspace data
+     * @returns Workspace ID
      */
     async create(data: ICreateSocialPublisherWorkspaceRequest): Promise<ICreateSocialPublisherWorkspaceResponse> {
         const response = await this.http.post<ICreateSocialPublisherWorkspaceResponse>(this.basePath, {
@@ -63,9 +63,9 @@ export class SocialPublisherWorkspaceClient {
     }
 
     /**
-     * Update organization
-     * @param id - Organization ID
-     * @param data - Organization data
+     * Update workspace
+     * @param id - Workspace ID
+     * @param data - Workspace data
      */
     async update(id: string, data: IUpdateSocialPublisherWorkspaceRequest): Promise<IUpdateSocialPublisherWorkspaceResponse> {
         const response = await this.http.put<IUpdateSocialPublisherWorkspaceResponse>(`${this.basePath}/${id}`, data);
@@ -73,8 +73,8 @@ export class SocialPublisherWorkspaceClient {
     }
 
     /**
-     * Delete organization
-     * @param id - Organization ID
+     * Delete workspace
+     * @param id - Workspace ID
      */
     async delete(id: string): Promise<void> {
         await this.http.delete<IDeleteSocialPublisherWorkspaceResponse>(`${this.basePath}/${id}`);

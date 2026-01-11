@@ -230,7 +230,7 @@ export class SocialPublisherTaskClient {
             source: "video-file"
         };
 
-        return await this.create(taskSettings, uploadUrlsResponse.organization._id);
+        return await this.create(taskSettings, uploadUrlsResponse.workspace._id);
     }
 
     /**
