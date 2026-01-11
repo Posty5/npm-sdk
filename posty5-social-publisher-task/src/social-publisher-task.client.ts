@@ -108,13 +108,69 @@ export class SocialPublisherTaskClient {
     }
 
     /**
+     * Handle thumbnail upload - accepts either File or URL string
+     * @param thumb - Thumbnail as File (will be uploaded) or URL string (will be passed directly)
+     * @returns Thumbnail URL or undefined
+     */
+    private async handleThumbnailUpload(thumb?: File | string): Promise<string | undefined> {
+        if (!thumb) {
+            return undefined;
+        }
+
+        // If thumb is a string (URL), validate and return it directly
+        if (typeof thumb === 'string') {
+            const urlPattern = /(http:\/\/)..*|(https:\/\/)..*/gi;
+            if (!urlPattern.test(thumb)) {
+                throw new Error('Invalid thumbnail URL format');
+            }
+            return thumb;
+        }
+
+        // If thumb is a File, upload it
+        if (thumb instanceof File) {
+            // Validate thumbnail file size
+            if (thumb.size > this.maxImageUploadSizeBytes) {
+                throw new Error(`Thumbnail file size (${thumb.size} bytes) exceeds maximum allowed size (${this.maxImageUploadSizeBytes} bytes)`);
+            }
+
+            // Generate upload URL
+            const uploadUrlsResponse = await this.generateUploadUrls({
+                thumbFileType: thumb.type
+            });
+
+            if (uploadUrlsResponse.uploadThumb) {
+                const thumbFormData = new FormData();
+
+                // Add all fields from the signed URL configuration
+                Object.entries(uploadUrlsResponse.uploadThumb.fields).forEach(([key, value]) => {
+                    thumbFormData.append(key, value);
+                });
+
+                // Add the file last (required by AWS S3/R2)
+                thumbFormData.append('file', thumb);
+
+                // Upload to R2
+                await fetch(uploadUrlsResponse.uploadThumb.url, {
+                    method: 'POST',
+                    body: thumbFormData,
+                });
+
+                return uploadUrlsResponse.thumbUploadFileURL;
+            }
+        }
+
+        return undefined;
+    }
+
+
+    /**
      * Publish a short video by uploading a video file and optional thumbnail
      * @param settings - Task creation settings
      * @param video - Video file to upload (.mp4, .mov, .avi, .mkv, .webm)
-     * @param thumb - Optional thumbnail image file
+     * @param thumb - Optional thumbnail image file or URL string
      * @returns Created task response
      */
-    async publishShortVideoByFile(settings: ITaskSetting, video: File, thumb?: File): Promise<ICreateSocialPublisherTaskResponse> {
+    async publishShortVideoByFile(settings: ITaskSetting, video: File, thumb?: File | string): Promise<ICreateSocialPublisherTaskResponse> {
         // Validate video size
         if (video.size > this.maxVideoUploadSizeBytes) {
             throw new Error(`Video file size (${video.size} bytes) exceeds maximum allowed size (${this.maxVideoUploadSizeBytes} bytes)`);
@@ -127,39 +183,15 @@ export class SocialPublisherTaskClient {
             throw new Error(`Invalid video file type. Allowed types: ${allowedVideoTypes.join(', ')}`);
         }
 
-        // Validate thumbnail file if provided
-        if (thumb) {
-            if (thumb.size > this.maxImageUploadSizeBytes) {
-                throw new Error(`Thumbnail file size (${thumb.size} bytes) exceeds maximum allowed size (${this.maxImageUploadSizeBytes} bytes)`);
-            }
-        }
-
         this.checkFromPlatform(settings);
 
-        // Step 1: Generate upload URLs
+        // Step 1: Handle thumbnail upload (File or URL)
+        const thumbURL = await this.handleThumbnailUpload(thumb);
+
+        // Step 2: Generate upload URLs for video
         const uploadUrlsResponse = await this.generateUploadUrls({
-            thumbFileType: thumb?.type,
             videoFileType: video.type
         });
-
-        // Step 2: Upload thumbnail if provided
-        if (thumb && uploadUrlsResponse.uploadThumb) {
-            const thumbFormData = new FormData();
-
-            // Add all fields from the signed URL configuration
-            Object.entries(uploadUrlsResponse.uploadThumb.fields).forEach(([key, value]) => {
-                thumbFormData.append(key, value);
-            });
-
-            // Add the file last (required by AWS S3/R2)
-            thumbFormData.append('file', thumb);
-
-            // Upload to R2
-            await fetch(uploadUrlsResponse.uploadThumb.url, {
-                method: 'POST',
-                body: thumbFormData,
-            });
-        }
 
         // Step 3: Upload video
         const videoFormData = new FormData();
@@ -178,11 +210,11 @@ export class SocialPublisherTaskClient {
             body: videoFormData,
         });
 
-        // Step 4: Create task with uploaded file URLs
+        // Step 3: Create task with uploaded file URLs
         const taskSettings: ICreateSocialPublisherTaskRequest = {
             ...settings,
             videoURL: uploadUrlsResponse.videoUplaodFileURL,
-            thumbURL: uploadUrlsResponse.thumbUploadFileURL,
+            thumbURL,
             source: "video-file"
         };
 
@@ -190,13 +222,13 @@ export class SocialPublisherTaskClient {
     }
 
     /**
-     * Publish a short video by providing a video URL and optional thumbnail file
+     * Publish a short video by providing a video URL and optional thumbnail
      * @param settings - Task creation settings
      * @param videoURL - Video URL (.mp4, .mov, .avi, .mkv, .webm)
-     * @param thumb - Optional thumbnail image file
+     * @param thumb - Optional thumbnail image file or URL string
      * @returns Created task response
      */
-    async publishShortVideoByURL(settings: ITaskSetting, videoURL: string, thumb?: File): Promise<ICreateSocialPublisherTaskResponse> {
+    async publishShortVideoByURL(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<ICreateSocialPublisherTaskResponse> {
         // Validate video URL
         const videoUrlPattern = /(http:\/\/)..*|(https:\/\/)..*/gi;
         if (!videoUrlPattern.test(videoURL)) {
@@ -210,40 +242,10 @@ export class SocialPublisherTaskClient {
             throw new Error(`Invalid video URL. Must contain one of: ${allowedVideoExtensions.join(', ')}`);
         }
 
-        let thumbURL: string | undefined;
         this.checkFromPlatform(settings);
 
-        // Upload thumbnail if provided
-        if (thumb) {
-            // Validate thumbnail file
-            if (thumb.size > this.maxImageUploadSizeBytes) {
-                throw new Error(`Thumbnail file size (${thumb.size} bytes) exceeds maximum allowed size (${this.maxImageUploadSizeBytes} bytes)`);
-            }
-
-            const uploadUrlsResponse = await this.generateUploadUrls({
-                thumbFileType: thumb.type
-            });
-
-            if (uploadUrlsResponse.uploadThumb) {
-                const thumbFormData = new FormData();
-
-                // Add all fields from the signed URL configuration
-                Object.entries(uploadUrlsResponse.uploadThumb.fields).forEach(([key, value]) => {
-                    thumbFormData.append(key, value);
-                });
-
-                // Add the file last (required by AWS S3/R2)
-                thumbFormData.append('file', thumb);
-
-                // Upload to R2
-                await fetch(uploadUrlsResponse.uploadThumb.url, {
-                    method: 'POST',
-                    body: thumbFormData,
-                });
-
-                thumbURL = uploadUrlsResponse.thumbUploadFileURL;
-            }
-        }
+        // Handle thumbnail upload (File or URL)
+        const thumbURL = await this.handleThumbnailUpload(thumb);
 
         // Create task with video URL
         const taskSettings: ICreateSocialPublisherTaskRequest = {
@@ -260,50 +262,20 @@ export class SocialPublisherTaskClient {
      * Publish a repost video from Facebook
      * @param settings - Task creation settings
      * @param videoURL - Facebook video URL (facebook.com, fb.watch)
-     * @param thumb - Optional thumbnail image file
+     * @param thumb - Optional thumbnail image file or URL string
      * @returns Created task response
      */
-    async publishRepostVideoByFacebook(settings: ITaskSetting, videoURL: string, thumb?: File): Promise<ICreateSocialPublisherTaskResponse> {
+    async publishRepostVideoByFacebook(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<ICreateSocialPublisherTaskResponse> {
         // Validate Facebook video URL
         const facebookUrlPattern = /^https?:\/\/(www\.)?(facebook\.com|fb\.watch)\/(reel|watch|.*\/videos)\/.*/i;
         if (!facebookUrlPattern.test(videoURL)) {
             throw new Error('Invalid Facebook video URL');
         }
 
-        let thumbURL: string | undefined;
         this.checkFromPlatform(settings);
 
-        // Upload thumbnail if provided
-        if (thumb) {
-            // Validate thumbnail file
-            if (thumb.size > this.maxImageUploadSizeBytes) {
-                throw new Error(`Thumbnail file size (${thumb.size} bytes) exceeds maximum allowed size (${this.maxImageUploadSizeBytes} bytes)`);
-            }
-
-            const uploadUrlsResponse = await this.generateUploadUrls({
-                thumbFileType: thumb.type
-            });
-
-            if (uploadUrlsResponse.uploadThumb) {
-                const thumbFormData = new FormData();
-
-                // Add all fields from the signed URL configuration
-                Object.entries(uploadUrlsResponse.uploadThumb.fields).forEach(([key, value]) => {
-                    thumbFormData.append(key, value);
-                });
-
-                // Add the file last (required by AWS S3/R2)
-                thumbFormData.append('file', thumb);
-
-                // Upload to R2
-                await fetch(uploadUrlsResponse.uploadThumb.url, {
-                    method: 'POST',
-                    body: thumbFormData,
-                });
-
-                thumbURL = uploadUrlsResponse.thumbUploadFileURL;
-            }
-        }
+        // Handle thumbnail upload (File or URL)
+        const thumbURL = await this.handleThumbnailUpload(thumb);
 
         // Create task with Facebook video URL
         const taskSettings: ICreateSocialPublisherTaskRequest = {
@@ -320,50 +292,20 @@ export class SocialPublisherTaskClient {
      * Publish a repost video from TikTok
      * @param settings - Task creation settings
      * @param videoURL - TikTok video URL (tiktok.com, vm.tiktok.com)
-     * @param thumb - Optional thumbnail image file
+     * @param thumb - Optional thumbnail image file or URL string
      * @returns Created task response
      */
-    async publishRepostVideoByTiktok(settings: ITaskSetting, videoURL: string, thumb?: File): Promise<ICreateSocialPublisherTaskResponse> {
+    async publishRepostVideoByTiktok(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<ICreateSocialPublisherTaskResponse> {
         // Validate TikTok video URL
         const tiktokUrlPattern = /^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com)\/@?.*\/(video\/\d+|.*)/i;
         if (!tiktokUrlPattern.test(videoURL)) {
             throw new Error('Invalid TikTok video URL');
         }
 
-        let thumbURL: string | undefined;
         this.checkFromPlatform(settings);
 
-        // Upload thumbnail if provided
-        if (thumb) {
-            // Validate thumbnail file
-            if (thumb.size > this.maxImageUploadSizeBytes) {
-                throw new Error(`Thumbnail file size (${thumb.size} bytes) exceeds maximum allowed size (${this.maxImageUploadSizeBytes} bytes)`);
-            }
-
-            const uploadUrlsResponse = await this.generateUploadUrls({
-                thumbFileType: thumb.type
-            });
-
-            if (uploadUrlsResponse.uploadThumb) {
-                const thumbFormData = new FormData();
-
-                // Add all fields from the signed URL configuration
-                Object.entries(uploadUrlsResponse.uploadThumb.fields).forEach(([key, value]) => {
-                    thumbFormData.append(key, value);
-                });
-
-                // Add the file last (required by AWS S3/R2)
-                thumbFormData.append('file', thumb);
-
-                // Upload to R2
-                await fetch(uploadUrlsResponse.uploadThumb.url, {
-                    method: 'POST',
-                    body: thumbFormData,
-                });
-
-                thumbURL = uploadUrlsResponse.thumbUploadFileURL;
-            }
-        }
+        // Handle thumbnail upload (File or URL)
+        const thumbURL = await this.handleThumbnailUpload(thumb);
 
         // Create task with TikTok video URL
         const taskSettings: ICreateSocialPublisherTaskRequest = {
@@ -380,50 +322,20 @@ export class SocialPublisherTaskClient {
      * Publish a repost video from YouTube Shorts
      * @param settings - Task creation settings
      * @param videoURL - YouTube Shorts URL (youtube.com/shorts/, youtu.be/)
-     * @param thumb - Optional thumbnail image file
+     * @param thumb - Optional thumbnail image file or URL string
      * @returns Created task response
      */
-    async publishRepostVideoByYoutube(settings: ITaskSetting, videoURL: string, thumb?: File): Promise<ICreateSocialPublisherTaskResponse> {
+    async publishRepostVideoByYoutube(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<ICreateSocialPublisherTaskResponse> {
         // Validate YouTube Shorts URL
         const youtubeUrlPattern = /^https?:\/\/(www\.)?(youtube\.com\/shorts\/|youtu\.be\/)[A-Za-z0-9_-]+/i;
         if (!youtubeUrlPattern.test(videoURL)) {
             throw new Error('Invalid YouTube Shorts URL');
         }
 
-        let thumbURL: string | undefined;
         this.checkFromPlatform(settings);
 
-        // Upload thumbnail if provided
-        if (thumb) {
-            // Validate thumbnail file
-            if (thumb.size > this.maxImageUploadSizeBytes) {
-                throw new Error(`Thumbnail file size (${thumb.size} bytes) exceeds maximum allowed size (${this.maxImageUploadSizeBytes} bytes)`);
-            }
-
-            const uploadUrlsResponse = await this.generateUploadUrls({
-                thumbFileType: thumb.type
-            });
-
-            if (uploadUrlsResponse.uploadThumb) {
-                const thumbFormData = new FormData();
-
-                // Add all fields from the signed URL configuration
-                Object.entries(uploadUrlsResponse.uploadThumb.fields).forEach(([key, value]) => {
-                    thumbFormData.append(key, value);
-                });
-
-                // Add the file last (required by AWS S3/R2)
-                thumbFormData.append('file', thumb);
-
-                // Upload to R2
-                await fetch(uploadUrlsResponse.uploadThumb.url, {
-                    method: 'POST',
-                    body: thumbFormData,
-                });
-
-                thumbURL = uploadUrlsResponse.thumbUploadFileURL;
-            }
-        }
+        // Handle thumbnail upload (File or URL)
+        const thumbURL = await this.handleThumbnailUpload(thumb);
 
         // Create task with YouTube video URL
         const taskSettings: ICreateSocialPublisherTaskRequest = {
