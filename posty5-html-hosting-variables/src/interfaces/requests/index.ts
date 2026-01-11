@@ -8,6 +8,18 @@ export interface ICreateHtmlHostingVariableRequest {
     key: string;
     /** Variable value (required) */
     value: string;
+    /**
+     * Tag (optional)
+     * Use this field to filter variables by tag.
+     * You can pass any custom value from your system.
+     */
+    tag?: string;
+    /**
+     * Reference ID (optional)
+     * Use this field to filter variables by reference ID.
+     * You can pass any custom identifier from your system.
+     */
+    refId?: string;
 }
 
 export interface IListParams {
@@ -17,4 +29,20 @@ export interface IListParams {
     key?: string;
     /** Variable value (optional) */
     value?: string;
+    /**
+     * API Key ID (optional)
+     * You can use this field to filter variables by API key
+     */
+    apiKeyId?: string;
+    /**
+     * Tag (optional)
+     * You can use this field to filter variables by tag
+     */
+    tag?: string;
+    /**
+     * Reference ID (optional)
+     * You can use this field to filter variables by reference ID
+     */
+    refId?: string;
 }
+

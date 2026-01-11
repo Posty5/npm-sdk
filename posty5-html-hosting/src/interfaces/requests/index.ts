@@ -87,6 +87,11 @@ export interface IListParams {
     name?: string;
     htmlHostingId?: string;
     /**
+     * API Key ID (optional)
+     * You can use this field to filter HTML pages by API key
+     */
+    apiKeyId?: string;
+    /**
      * Tag (optional)
      * You can use this field to filter HTML pages by tag
      */

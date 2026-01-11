@@ -51,6 +51,18 @@ export interface ICreateSocialPublisherTaskRequest {
     thumbURL?: string;
     postURL?: string;
     schedule?: IScheduleConfig;
+    /**
+     * Tag (optional)
+     * Use this field to filter tasks by tag.
+     * You can pass any custom value from your system.
+     */
+    tag?: string;
+    /**
+     * Reference ID (optional)
+     * Use this field to filter tasks by reference ID.
+     * You can pass any custom identifier from your system.
+     */
+    refId?: string;
 }
 
 
