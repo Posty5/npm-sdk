@@ -11,8 +11,8 @@ function getFile() {
 
   // Create a File object from HTML content
   const blob = new Blob([htmlContent], { type: "text/html" });
-  const file = new File([blob], "contact_form.html", { type: "text/html" });
-  return file;
+  //const file = new File([blob], "contact_form.html", { type: "text/html" });
+  return blob;
 }
 describe("HTML Hosting SDK", () => {
   let httpClient: HttpClient;

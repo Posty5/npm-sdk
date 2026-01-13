@@ -1,4 +1,4 @@
-import { HttpClient, IPaginationParams } from "@posty5/core";
+import { HttpClient, IPaginationParams, uploadToR2 } from "@posty5/core";
 import {
   IHtmlPageResponse,
   ISearchHtmlPagesResponse,
@@ -36,7 +36,7 @@ export class HtmlHostingClient {
   /**
    * Create an HTML page by uploading a file to R2 storage
    * @param data - Create request data with file information
-   * @param file - HTML file to upload (File, Blob, or ReadableStream for better performance)
+   * @param file - HTML file to upload (File or Blob)
    * @returns Created page with ID, shorter link, and file URL
    *
    * @example
@@ -45,13 +45,12 @@ export class HtmlHostingClient {
    * const file = new File([htmlContent], 'page.html', { type: 'text/html' });
    * await client.createWithFile({ name: 'My Page', fileName: 'page.html' }, file);
    *
-   * // Using ReadableStream for better performance (Node.js)
-   * import { createReadStream } from 'fs';
-   * const stream = createReadStream('page.html');
-   * await client.createWithFile({ name: 'My Page', fileName: 'page.html' }, stream);
+   * // Using Blob
+   * const blob = new Blob([htmlContent], { type: 'text/html' });
+   * await client.createWithFile({ name: 'My Page', fileName: 'page.html' }, blob);
    * ```
    */
-  async createWithFile(data: ICreateHtmlPageRequestWithFile, file: File | Blob | ReadableStream): Promise<IHtmlPageCreateWithFileResponse> {
+  async createWithFile(data: ICreateHtmlPageRequestWithFile, file: File | Blob): Promise<IHtmlPageCreateWithFileResponse> {
     // Step 1: Create the HTML page record and get upload configuration
     const response = await this.http.post<ICreateHtmlPageResponse>(this.basePath, {
       ...data,
@@ -60,48 +59,10 @@ export class HtmlHostingClient {
     const result = response.result!.details;
     const uploadConfig = response.result!.uplaodFileConfig;
 
-    // Step 2: Upload HTML file to R2 using pre-signed URL
-    const formData = new FormData();
-
-    // Add all fields from the signed URL configuration
-    // Object.entries(uploadConfig.fields).forEach(([key, value]) => {
-    //   formData.append(key, value);
-    // });
-
-    // Add the file last (required by AWS S3)
-    // Support File, Blob, or ReadableStream
-    if (file instanceof ReadableStream) {
-      // Convert ReadableStream to Blob for FormData compatibility
-      const chunks: BlobPart[] = [];
-      const reader = file.getReader();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-        }
-      } finally {
-        reader.releaseLock();
-      }
-
-      const blob = new Blob(chunks, { type: "text/html" });
-      formData.append("file", blob, data.fileName);
-    } else {
-      // File or Blob
-      formData.append("file", file, data.fileName);
-    }
-
-    // Upload to R2
-   var res= await fetch(uploadConfig.uploadUrl, {
-      method: "PUT",
-      body: formData,
+    // Step 2: Upload HTML file to R2 using uploadToR2 utility
+    await uploadToR2(uploadConfig.uploadUrl, file, {
+      contentType: file instanceof File ? file.type : 'text/html'
     });
-
-    //Check upload response
-    if (!res.ok) {
-      throw new Error(`File upload failed with status ${res.status}`);
-    }
 
     // Step 3: Publish the HTML page
     await this.publish(result._id);
@@ -147,10 +108,10 @@ export class HtmlHostingClient {
    * Update an HTML page with a new file upload to R2 storage
    * @param id - HTML page ID to update
    * @param data - Update request data with file information
-   * @param file - New HTML file to upload (File, Blob, or ReadableStream for better performance)
+   * @param file - New HTML file to upload (File or Blob)
    * @returns Updated page with ID, shorter link, and file URL
    */
-  async updateWithNewFile(id: string, data: IUpdateHtmlPageRequestWithFile, file: File | Blob | ReadableStream): Promise<IHtmlPageCreateWithFileResponse> {
+  async updateWithNewFile(id: string, data: IUpdateHtmlPageRequestWithFile, file: File | Blob): Promise<IHtmlPageCreateWithFileResponse> {
     // Step 1: Update the HTML page record and get upload configuration
     const response = await this.http.put<IUpdateHtmlPageResponse>(`${this.basePath}/${id}`, {
       ...data,
@@ -161,52 +122,13 @@ export class HtmlHostingClient {
     const result = response.result!.details;
     const uploadConfig = response.result!.uplaodFileConfig;
 
-    // Step 2: Upload HTML file to R2 using pre-signed URL
+    // Step 2: Upload HTML file to R2 using uploadToR2 utility
     if (uploadConfig) {
-      const formData = new FormData();
-
-      // Add all fields from the signed URL configuration
-      // Object.entries(uploadConfig.fields).forEach(([key, value]) => {
-      //   formData.append(key, value);
-      // });
-
-      // Add the file last (required by AWS S3)
-      // Support File, Blob, or ReadableStream
-      if (file instanceof ReadableStream) {
-        // Convert ReadableStream to Blob for FormData compatibility
-        const chunks: BlobPart[] = [];
-        const reader = file.getReader();
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-          }
-        } finally {
-          reader.releaseLock();
-        }
-
-        const blob = new Blob(chunks, { type: "text/html" });
-        formData.append("file", blob, data.fileName);
-      } else {
-        // File or Blob
-        formData.append("file", file, data.fileName);
-      }
-
-      // Upload to R2
-       var res= await fetch(uploadConfig.uploadUrl, {
-        method: "PUT",
-        body: formData,
+      await uploadToR2(uploadConfig.uploadUrl, file, {
+        contentType: file instanceof File ? file.type : 'text/html'
       });
-
-         //Check upload response
-    if (!res.ok) {
-      throw new Error(`File upload failed with status ${res.status}`);
-    }
     }
 
-    
     // Step 3: Publish the HTML page
     await this.publish(result._id);
 

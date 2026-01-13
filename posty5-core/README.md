@@ -14,6 +14,7 @@ npm install @posty5/core
 - 🔐 **Authentication** - Built-in support for API key authentication
 - ⚠️ **Error Handling** - Typed error classes for different scenarios
 - 🔄 **Retry Logic** - Automatic retry for failed requests
+- 📤 **File Upload** - Utilities for uploading files to Cloudflare R2 with progress tracking
 - 📝 **TypeScript** - Full TypeScript support with type definitions
 - 🎯 **Dual Module** - Supports both ESM and CommonJS
 
@@ -83,6 +84,33 @@ try {
   }
 }
 ```
+
+### R2 File Upload
+
+Upload files to Cloudflare R2 storage with progress tracking:
+
+```typescript
+import { uploadToR2 } from '@posty5/core';
+
+// Basic upload
+const url = await uploadToR2(presignedUrl, file);
+
+// Upload with progress tracking
+const url = await uploadToR2(presignedUrl, file, {
+  contentType: 'image/jpeg',
+  onProgress: (progress) => {
+    console.log(`Upload progress: ${progress}%`);
+  },
+  onSuccess: (url) => {
+    console.log('Upload successful:', url);
+  },
+  onError: (error) => {
+    console.error('Upload failed:', error);
+  }
+});
+```
+
+For detailed documentation and examples, see [UPLOAD_UTILITY.md](./UPLOAD_UTILITY.md).
 
 ## API Reference
 

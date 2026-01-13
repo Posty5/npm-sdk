@@ -1,4 +1,4 @@
-import { HttpClient, IPaginationParams } from "@posty5/core";
+import { HttpClient, IPaginationParams, uploadToR2 } from "@posty5/core";
 import {
   ICreateSocialPublisherTaskRequest,
   IGenerateUploadUrlsRequest,
@@ -14,8 +14,6 @@ import {
   IQuickPublishTikTokOptions,
   IQuickPublishFacebookOptions,
   IQuickPublishInstagramOptions,
-  IQuickPublishAllOptions,
-  IUploadConfig,
 } from "./interfaces";
 
 /**
@@ -148,27 +146,10 @@ export class SocialPublisherTaskClient {
       }
 
       if (uploadUrlsResponse.thumb.uploadFileURL) {
-        const thumbFormData = new FormData();
-
-        // Add all fields from the signed URL configuration
-        // Object.entries(uploadUrlsResponse.uploadThumb.fields).forEach(([key, value]) => {
-        //     thumbFormData.append(key, value);
-        // });
-
-        // Add the file last (required by AWS S3/R2)
-        thumbFormData.append("file", thumb);
-
-        // Upload to R2
-        var res = await fetch(uploadUrlsResponse.thumb.uploadFileURL, {
-          method: "PUT",
-          body: thumbFormData,
+        // Upload to R2 using uploadToR2 utility
+        await uploadToR2(uploadUrlsResponse.thumb.uploadFileURL, thumb, {
+          contentType: thumb.type
         });
-
-
-        //Check upload response
-        if (!res.ok) {
-          throw new Error(`File upload failed with status ${res.status}`);
-        }
 
         return { thumbFileURL: uploadUrlsResponse.thumb.fileURL, taskId: uploadUrlsResponse.taskId };
       }
@@ -204,27 +185,10 @@ export class SocialPublisherTaskClient {
       videoFileType: video.type,
     });
 
-    // Step 2: Upload video
-    const videoFormData = new FormData();
-
-    // Add all fields from the signed URL configuration
-    // Object.entries(uploadUrlsResponse.uploadVideo.fields).forEach(([key, value]) => {
-    //     videoFormData.append(key, value);
-    // });
-
-    // Add the file last (required by AWS S3/R2)
-    videoFormData.append("file", video);
-
-    // Upload to R2
-    var res = await fetch(uploadUrlsResponse.video.uploadFileURL!, {
-      method: "PUT",
-      body: videoFormData,
+    // Step 2: Upload video using uploadToR2 utility
+    await uploadToR2(uploadUrlsResponse.video.uploadFileURL!, video, {
+      contentType: video.type
     });
-
-    //Check upload response
-    if (!res.ok) {
-      throw new Error(`File upload failed with status ${res.status}`);
-    }
 
     // Step 3: Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb, uploadUrlsResponse);
@@ -447,9 +411,9 @@ export class SocialPublisherTaskClient {
       instagram: options.instagram,
       schedule: options.schedule
         ? {
-            type: options.schedule === "now" ? "now" : "schedule",
-            scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
-          }
+          type: options.schedule === "now" ? "now" : "schedule",
+          scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
+        }
         : undefined,
     };
 

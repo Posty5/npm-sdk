@@ -7,3 +7,6 @@ export * from './errors';
 // Types and interfaces
 export * from './types';
 
+// Utilities
+export * from './utils';
+
