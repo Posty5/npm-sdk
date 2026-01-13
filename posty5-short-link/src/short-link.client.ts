@@ -32,7 +32,7 @@ export class ShortLinkClient {
      * @param pagination - Pagination parameters
      * @returns Paginated list of short links
      */
-    async search(params?: IListParams, pagination?: IPaginationParams): Promise<ISearchShortLinkResponse> {
+    async list(params?: IListParams, pagination?: IPaginationParams): Promise<ISearchShortLinkResponse> {
         const response = await this.http.get<ISearchShortLinkResponse>(this.basePath, {
             params: {
                 ...params,

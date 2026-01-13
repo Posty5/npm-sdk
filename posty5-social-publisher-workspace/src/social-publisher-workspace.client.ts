@@ -30,7 +30,7 @@ export class SocialPublisherWorkspaceClient {
      * @param params - Search filters
      * @param pagination - Pagination options
      */
-    async search(params?: ISearchSocialPublisherWorkspaceParams, pagination?: IPaginationParams): Promise<ISearchSocialPublisherWorkspaceResponse> {
+    async list(params?: ISearchSocialPublisherWorkspaceParams, pagination?: IPaginationParams): Promise<ISearchSocialPublisherWorkspaceResponse> {
         const response = await this.http.get<ISearchSocialPublisherWorkspaceResponse>(this.basePath, {
             params: {
                 ...params,

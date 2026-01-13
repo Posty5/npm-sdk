@@ -24,11 +24,21 @@ npm install @posty5/core
 ```typescript
 import { HttpClient } from '@posty5/core';
 
+// Minimal configuration (uses default baseUrl: https://api.posty5.com)
 const client = new HttpClient({
-  baseUrl: 'https://api.posty5.com',
   apiKey: 'your-api-key',
-  timeout: 30000,
-  maxRetries: 3,
+});
+
+// With debug logging enabled
+const debugClient = new HttpClient({
+  apiKey: 'your-api-key',
+  debug: true,
+});
+
+// Or with custom baseUrl
+const customClient = new HttpClient({
+  baseUrl: 'https://custom-api.example.com',
+  apiKey: 'your-api-key',
 });
 
 // Make requests
@@ -40,8 +50,8 @@ const result = await client.post('/api/endpoint', { key: 'value' });
 
 ```typescript
 const client = new HttpClient({
-  baseUrl: 'https://api.posty5.com',
   apiKey: 'your-api-key',
+  // baseUrl defaults to https://api.posty5.com
 });
 
 // Update API key later
@@ -81,15 +91,17 @@ try {
 #### Constructor Options
 
 ```typescript
-interface HttpClientConfig {
-  baseUrl: string;
-  apiKey?: string;
-  timeout?: number; // default: 30000ms
-  maxRetries?: number; // default: 3
-  retryDelay?: number; // default: 1000ms
-  headers?: Record<string, string>;
-  debug?: boolean;
+interface Posty5Config {
+  baseUrl?: string;  // default: 'https://api.posty5.com'
+  apiKey?: string;   // Your API key from dashboard
+  debug?: boolean;   // Enable debug logging (default: false)
 }
+
+// Internal settings (not configurable by users):
+// - timeout: 30000ms (30 seconds)
+// - maxRetries: 3
+// - retryDelay: 1000ms (1 second)
+```
 ```
 
 #### Methods

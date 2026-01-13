@@ -144,7 +144,7 @@ async function listQRCodes() {
     );
 
     console.log(`Total QR codes: ${result.pagination.pageSize}`);
-    result.data.forEach(qr => {
+    result.items.forEach(qr => {
         console.log(`- ${qr.name}: ${qr.numberOfVisitors} visitors`);
     });
 

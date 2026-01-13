@@ -32,25 +32,22 @@ npm install
 
 ### 2. Configure API Key
 
-**Option A: Using .env file (Recommended)**
+**Create .env.test file (Required)**
 
 ```bash
 # Copy the example file
-cp .env.example .env
+cp .env.test.example .env.test
 
-# Edit .env and add your API key
+# Edit .env.test and add your API key
 POSTY5_API_KEY=your-actual-api-key
+POSTY5_BASE_URL=https://api.posty5.com
 ```
 
-**Option B: Using environment variables**
-
-```bash
-# Windows PowerShell
-$env:POSTY5_API_KEY="your-api-key"
-
-# Linux/Mac
-export POSTY5_API_KEY="your-api-key"
-```
+**Important Notes:**
+- ✅ `.env.test` is gitignored - your credentials are safe
+- ✅ Use `.env.test.example` as a template
+- ✅ Tests will fail if `POSTY5_API_KEY` is not set
+- ✅ Get your API key from: https://posty5.com/dashboard/settings/api-keys
 
 ### 3. Run Tests
 
@@ -275,10 +272,11 @@ module.exports = {
 
 ## 🔒 Security
 
-- **Never commit** `.env` files with real API keys
+- **Never commit** `.env.test` files with real API keys (already in .gitignore)
 - **Use test accounts** - Don't test with production data
 - **Rotate keys** - Change API keys regularly
 - **Limit permissions** - Use API keys with minimal required permissions
+- **Template only** - Only `.env.test.example` should be committed
 
 ## 🆘 Troubleshooting
 
@@ -291,9 +289,10 @@ testTimeout: 60000 // 60 seconds
 
 ### API Key Not Found
 
-Make sure `.env` file exists and contains:
+Make sure `.env.test` file exists and contains:
 ```
 POSTY5_API_KEY=your-key-here
+POSTY5_BASE_URL=https://api.posty5.com
 ```
 
 ### Tests Fail with 401 Unauthorized

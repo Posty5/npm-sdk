@@ -1,3 +1,5 @@
+import { IInvalidField } from "../types";
+
 /**
  * Base error class for all Posty5 SDK errors
  */
@@ -44,11 +46,11 @@ export class AuthorizationError extends Posty5Error {
  * Validation error (400)
  */
 export class ValidationError extends Posty5Error {
-    public readonly errors?: Array<{ field: string; message: string }>;
+    public readonly errors?: Array<IInvalidField>;
 
     constructor(
         message: string = 'Validation failed',
-        errors?: Array<{ field: string; message: string }>,
+        errors?: Array<IInvalidField>,
         details?: any
     ) {
         super(message, 'VALIDATION_ERROR', 400, details);

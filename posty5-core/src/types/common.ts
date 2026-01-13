@@ -23,10 +23,17 @@ export interface IApiErrorResponse {
     /** HTTP status code */
     statusCode: number;
     /** Validation errors */
-    errors?: Array<{
-        field: string;
-        message: string;
-    }>;
+    exception?: IInvalidField[]|{message: string} | string| null;
     /** Additional error details */
     details?: any;
+}
+
+export interface IInvalidField {
+context:{
+label: string;
+key: string;
+}
+message: string;
+path: string[];
+type: string;
 }

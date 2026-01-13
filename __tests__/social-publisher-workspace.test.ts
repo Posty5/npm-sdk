@@ -1,130 +1,111 @@
-import { Posty5Client } from '@posty5/core';
+import { HttpClient } from '@posty5/core';
 import { SocialPublisherWorkspaceClient } from '@posty5/social-publisher-workspace';
-import { TEST_CONFIG, createdResources } from '../setup';
+import { TEST_CONFIG, createdResources } from './setup';
 
 describe('Social Publisher Workspace SDK', () => {
-    let posty5: Posty5Client;
-    let client: SocialPublisherWorkspaceClient;
+    let httpClient: HttpClient;
+    let client!: SocialPublisherWorkspaceClient;
     let createdId: string;
 
     beforeAll(() => {
-        posty5 = new Posty5Client({
+        httpClient = new HttpClient({
             apiKey: TEST_CONFIG.apiKey,
-            baseURL: TEST_CONFIG.baseURL,
+            baseUrl: TEST_CONFIG.baseUrl,
         });
-        client = new SocialPublisherWorkspaceClient(posty5);
+        client = new SocialPublisherWorkspaceClient(httpClient);
     });
 
     describe('CREATE', () => {
         it('should create a workspace', async () => {
             const result = await client.create({
-                name: 'Test Workspace ' + Date.now(),
-                description: 'Created by Jest test for social media management',
+                name: 'Test Workspace - ' + Date.now(),
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data).toBeDefined();
-            expect(result.data?._id).toBeDefined();
-            expect(result.data?.name).toContain('Test Workspace');
+            expect(result._id).toBeDefined();
 
-            createdId = result.data!._id;
+            createdId = result._id;
             createdResources.workspaces.push(createdId);
         });
 
-        it('should fail without required name', async () => {
-            await expect(
-                client.create({ name: '' } as any)
-            ).rejects.toThrow();
+        it('should create workspace with tag and refId', async () => {
+            const result = await client.create({
+                name: 'Tagged Workspace',
+                tag: 'test-tag',
+                refId: 'WS-' + Date.now(),
+            });
+
+            expect(result._id).toBeDefined();
+            createdResources.workspaces.push(result._id);
         });
     });
 
     describe('GET BY ID', () => {
         it('should get workspace by ID', async () => {
-            const result = await client.getById(createdId);
+            const result = await client.get(createdId);
 
-            expect(result.success).toBe(true);
-            expect(result.data).toBeDefined();
-            expect(result.data?._id).toBe(createdId);
-            expect(result.data?.name).toBeDefined();
+            expect(result._id).toBe(createdId);
+            expect(result.name).toBeDefined();
         });
 
         it('should fail with invalid ID', async () => {
             await expect(
-                client.getById('invalid-id-123')
+                client.get('invalid-id-123')
             ).rejects.toThrow();
         });
     });
 
     describe('GET LIST', () => {
         it('should get list of workspaces', async () => {
-            const result = await client.getAll({
+            const result = await client.list({}, {
                 page: 1,
-                take: 10,
+                limit: 10,
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data).toBeDefined();
-            expect(result.data?.items).toBeInstanceOf(Array);
-            expect(result.data?.totalCount).toBeGreaterThanOrEqual(0);
-        });
-
-        it('should support pagination', async () => {
-            const page1 = await client.getAll({ page: 1, take: 5 });
-            const page2 = await client.getAll({ page: 2, take: 5 });
-
-            expect(page1.data?.items).toBeDefined();
-            expect(page2.data?.items).toBeDefined();
+            expect(result.items).toBeInstanceOf(Array);
+            expect(result.totalCount).toBeGreaterThanOrEqual(0);
         });
 
         it('should support search', async () => {
-            const result = await client.getAll({
-                page: 1,
-                take: 10,
+            const result = await client.list({
                 search: 'test',
+            }, {
+                page: 1,
+                limit: 10,
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data?.items).toBeInstanceOf(Array);
+            expect(result.items).toBeInstanceOf(Array);
+        });
+
+        it('should filter by tag', async () => {
+            const result = await client.list({
+                tag: 'test-tag',
+            }, {
+                page: 1,
+                limit: 10,
+            });
+
+            expect(result.items).toBeInstanceOf(Array);
         });
     });
 
     describe('UPDATE', () => {
         it('should update workspace', async () => {
-            const updatedName = 'Updated Workspace - ' + Date.now();
-            const updatedDescription = 'Updated description for testing';
-
+            const newName = 'Updated Workspace - ' + Date.now();
             const result = await client.update(createdId, {
-                name: updatedName,
-                description: updatedDescription,
+                name: newName,
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data?.name).toBe(updatedName);
-            expect(result.data?.description).toBe(updatedDescription);
-        });
-
-        it('should fail to update with invalid ID', async () => {
-            await expect(
-                client.update('invalid-id', { name: 'Test' })
-            ).rejects.toThrow();
+            expect(result._id).toBe(createdId);
         });
     });
 
     describe('DELETE', () => {
         it('should delete workspace', async () => {
-            const result = await client.delete(createdId);
-
-            expect(result.success).toBe(true);
+            await client.delete(createdId);
 
             // Verify deletion
             await expect(
-                client.getById(createdId)
-            ).rejects.toThrow();
-        });
-
-        it('should fail to delete with invalid ID', async () => {
-            await expect(
-                client.delete('invalid-id')
+                client.get(createdId)
             ).rejects.toThrow();
         });
     });

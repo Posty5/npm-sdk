@@ -107,11 +107,11 @@ export class HtmlHostingVariablesClient {
      *   limit: 10,
      *   search: 'api'
      * });
-     * console.log(result.data); // Array of variables
+     * console.log(result.items); // Array of variables
      * console.log(result.total); // Total count
      * ```
      */
-    async search(params?: IListParams, pagination?: IPaginationParams): Promise<ISearchHtmlHostingVariablesResponse> {
+    async list(params?: IListParams, pagination?: IPaginationParams): Promise<ISearchHtmlHostingVariablesResponse> {
         const response = await this.http.get<ISearchHtmlHostingVariablesResponse>(this.basePath, {
             params: {
                 ...params,

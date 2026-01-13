@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import axiosRetry from 'axios-retry';
-import { IHttpClientConfig, IRequestConfig } from '../types';
+import { IHttpClientConfig, IPosty5Config, IRequestConfig } from '../types';
 import { transformError } from '../errors';
 import { IResponse } from '../interface';
 
@@ -11,8 +11,10 @@ export class HttpClient {
     private axiosInstance: AxiosInstance;
     private config: IHttpClientConfig;
 
-    constructor(config: IHttpClientConfig) {
+    constructor(config: IPosty5Config = {}) {
+        // Merge user config with internal defaults
         this.config = {
+            baseUrl: 'https://api.posty5.com',
             timeout: 30000,
             maxRetries: 3,
             retryDelay: 1000,

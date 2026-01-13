@@ -172,7 +172,7 @@ const result = await variablesClient.list({
   search: 'api'
 });
 
-console.log(result.data); // Array of variables
+console.log(result.items); // Array of variables
 console.log(result.total); // Total count
 console.log(result.page); // Current page
 console.log(result.limit); // Items per page
@@ -275,7 +275,7 @@ const apiVariables = await variablesClient.list({
 // Paginate through all variables
 for (let page = 1; page <= 5; page++) {
   const result = await variablesClient.list({ page, limit: 10 });
-  console.log(`Page ${page}:`, result.data);
+  console.log(`Page ${page}:`, result.items);
 }
 ```
 

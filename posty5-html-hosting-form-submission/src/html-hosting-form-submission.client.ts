@@ -72,11 +72,11 @@ export class HtmlHostingFormSubmissionClient {
      *   htmlHostingId: 'html_hosting_id',
      *   status: 'New'
      * });
-     * console.log(result.data); // Array of submissions
+     * console.log(result.items); // Array of submissions
      * console.log(result.total); // Total count
      * ```
      */
-    async search(
+    async list(
         params?: IListParams,
         pagination?: IPaginationParams
     ): Promise<ISearchFormSubmissionsResponse> {

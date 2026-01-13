@@ -523,7 +523,7 @@ export class QRCodeClient {
      * ```typescript
      * // List all QR codes
      * const result = await qrCodeClient.list();
-     * console.log(result.data);
+     * console.log(result.items);
      * console.log(result.pagination);
      * 
      * // List with filters
@@ -533,7 +533,7 @@ export class QRCodeClient {
      * );
      * ```
      */
-    async search(params?: IListParams, pagination?: IPaginationParams): Promise<ISearchQRCodesResponse> {
+    async list(params?: IListParams, pagination?: IPaginationParams): Promise<ISearchQRCodesResponse> {
         const response = await this.http.get<ISearchQRCodesResponse>(this.basePath, {
             params: {
                 ...params,

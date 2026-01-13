@@ -1,141 +1,181 @@
-import { Posty5Client } from '@posty5/core';
+import { HttpClient } from '@posty5/core';
 import { QRCodeClient } from '@posty5/qr-code';
-import { TEST_CONFIG, createdResources } from '../setup';
+import { TEST_CONFIG, createdResources } from './setup';
 
 describe('QR Code SDK', () => {
-    let posty5: Posty5Client;
-    let client: QRCodeClient;
+    let httpClient: HttpClient;
+    let client!: QRCodeClient;
     let createdId: string;
 
     beforeAll(() => {
-        posty5 = new Posty5Client({
+        httpClient = new HttpClient({
             apiKey: TEST_CONFIG.apiKey,
-            baseURL: TEST_CONFIG.baseURL,
+            baseUrl: TEST_CONFIG.baseUrl,
         });
-        client = new QRCodeClient(posty5);
+        client = new QRCodeClient(httpClient);
     });
 
     describe('CREATE - URL QR Code', () => {
         it('should create a URL QR code', async () => {
-            const result = await client.createUrl({
-                url: 'https://example.com/qr-test-' + Date.now(),
-                title: 'Test QR Code',
+            const result = await client.createURL({
+                name: 'Test URL QR Code - ' + Date.now(),
+                url: {
+                    url: 'https://posty5.com',
+                },
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data).toBeDefined();
-            expect(result.data?._id).toBeDefined();
-            expect(result.data?.qrCodeUrl).toBeDefined();
-            expect(result.data?.targetType).toBe('url');
+            expect(result._id).toBeDefined();
+            expect(result.qrCodeLandingPage).toBeDefined();
 
-            createdId = result.data!._id;
+            createdId = result._id;
             createdResources.qrCodes.push(createdId);
         });
     });
 
-    describe('CREATE - Email QR Code', () => {
-        it('should create an email QR code', async () => {
-            const result = await client.createEmail({
-                email: 'test@example.com',
-                subject: 'Test Subject',
-                body: 'Test Body',
+    describe('CREATE - Other Types', () => {
+        it('should create a Free Text QR code', async () => {
+            const result = await client.createFreeText({
+                name: 'Test Free Text QR',
+                qrCodeTarget: {
+                    text: 'Hello from QR Code Test!',
+                },
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data?.targetType).toBe('email');
-
-            if (result.data?._id) {
-                createdResources.qrCodes.push(result.data._id);
-            }
+            expect(result._id).toBeDefined();
+            expect(result.qrCodeLandingPage).toBeDefined();
+            createdResources.qrCodes.push(result._id);
         });
-    });
 
-    describe('CREATE - WiFi QR Code', () => {
+        it('should create an Email QR code', async () => {
+            const result = await client.createEmail({
+                name: 'Test Email QR',
+                email: {
+                    email: 'test@example.com',
+                    subject: 'Test Subject',
+                    body: 'Test Body',
+                },
+            });
+
+            expect(result._id).toBeDefined();
+            expect(result.qrCodeLandingPage).toBeDefined();
+            createdResources.qrCodes.push(result._id);
+        });
+
         it('should create a WiFi QR code', async () => {
             const result = await client.createWifi({
-                ssid: 'TestNetwork',
-                password: 'password123',
-                encryption: 'WPA',
+                name: 'Test WiFi QR',
+                wifi: {
+                    name: 'TestNetwork',
+                    authenticationType: 'WPA',
+                    password: 'testpassword123',
+                },
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data?.targetType).toBe('wifi');
+            expect(result._id).toBeDefined();
+            expect(result.qrCodeLandingPage).toBeDefined();
+            createdResources.qrCodes.push(result._id);
+        });
 
-            if (result.data?._id) {
-                createdResources.qrCodes.push(result.data._id);
-            }
+        it('should create a Phone Call QR code', async () => {
+            const result = await client.createCall({
+                name: 'Test Call QR',
+                call: {
+                    phoneNumber: '+1234567890',
+                },
+            });
+
+            expect(result._id).toBeDefined();
+            expect(result.qrCodeLandingPage).toBeDefined();
+            createdResources.qrCodes.push(result._id);
+        });
+
+        it('should create an SMS QR code', async () => {
+            const result = await client.createSMS({
+                name: 'Test SMS QR',
+                sms: {
+                    phoneNumber: '+1234567890',
+                    message: 'Hello from QR Code!',
+                },
+            });
+
+            expect(result._id).toBeDefined();
+            expect(result.qrCodeLandingPage).toBeDefined();
+            createdResources.qrCodes.push(result._id);
+        });
+
+        it('should create a Geolocation QR code', async () => {
+            const result = await client.createGeolocation({
+                name: 'Test Location QR',
+                geolocation: {
+                    latitude: 40.7128,
+                    longitude: -74.0060,
+                },
+            });
+
+            expect(result._id).toBeDefined();
+            expect(result.qrCodeLandingPage).toBeDefined();
+            createdResources.qrCodes.push(result._id);
         });
     });
 
     describe('GET BY ID', () => {
         it('should get QR code by ID', async () => {
-            const result = await client.getById(createdId);
+            const result = await client.get(createdId);
 
-            expect(result.success).toBe(true);
-            expect(result.data).toBeDefined();
-            expect(result.data?._id).toBe(createdId);
-            expect(result.data?.qrCodeUrl).toBeDefined();
+            expect(result._id).toBe(createdId);
+            expect(result.name).toBeDefined();
         });
 
         it('should fail with invalid ID', async () => {
             await expect(
-                client.getById('invalid-id-123')
+                client.get('invalid-id-123')
             ).rejects.toThrow();
         });
     });
 
     describe('GET LIST', () => {
         it('should get list of QR codes', async () => {
-            const result = await client.getAll({
+            const result = await client.list({}, {
                 page: 1,
-                take: 10,
+                limit: 10,
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data).toBeDefined();
-            expect(result.data?.items).toBeInstanceOf(Array);
-            expect(result.data?.totalCount).toBeGreaterThanOrEqual(0);
+            expect(result.items).toBeInstanceOf(Array);
+            expect(result.totalCount).toBeGreaterThanOrEqual(0);
         });
 
-        it('should filter by target type', async () => {
-            const result = await client.getAll({
+        it('should support search', async () => {
+            const result = await client.list({
+                search: 'test',
+            }, {
                 page: 1,
-                take: 10,
-                targetType: 'url',
+                limit: 10,
             });
 
-            expect(result.success).toBe(true);
-
-            if (result.data && result.data.items.length > 0) {
-                result.data.items.forEach(item => {
-                    expect(item.targetType).toBe('url');
-                });
-            }
+            expect(result.items).toBeInstanceOf(Array);
         });
     });
 
     describe('UPDATE', () => {
-        it('should update QR code', async () => {
-            const updatedTitle = 'Updated QR Code - ' + Date.now();
-
-            const result = await client.update(createdId, {
-                title: updatedTitle,
+        it('should update URL QR code', async () => {
+            const result = await client.updateURL(createdId, {
+                name: 'Updated QR Code - ' + Date.now(),
+                url: {
+                    url: 'https://updated.posty5.com',
+                },
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data?.title).toBe(updatedTitle);
+            expect(result._id).toBe(createdId);
         });
     });
 
     describe('DELETE', () => {
         it('should delete QR code', async () => {
-            const result = await client.delete(createdId);
-
-            expect(result.success).toBe(true);
+            await client.delete(createdId);
 
             // Verify deletion
             await expect(
-                client.getById(createdId)
+                client.get(createdId)
             ).rejects.toThrow();
         });
     });

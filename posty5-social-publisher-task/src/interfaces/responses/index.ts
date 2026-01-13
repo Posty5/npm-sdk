@@ -7,11 +7,37 @@ export interface IUploadConfig {
 }
 
 export interface IGenerateUploadUrlsResponse {
-    uploadVideo: IUploadConfig;
-    uploadThumb?: IUploadConfig;
-    videoUplaodFileURL: string;
-    thumbUploadFileURL?: string;
-    workspace: any;
+  taskId: string;
+
+  thumb: {
+    /**
+     * Public URL to access file from Cloud Bucket
+     */
+    fileURL: string | undefined;
+    /**
+     * Upload URL to upload file to Cloud Bucket (Signed URL)
+     */
+    uploadFileURL: string | undefined;
+    /**
+     * Path in Cloud Bucket
+     */
+    bucketFilePath: string | undefined;
+  };
+
+  video: {
+    /**
+     * Public URL to access file from Cloud Bucket
+     */
+    fileURL: string | undefined;
+    /**
+     * Upload URL to upload file to Cloud Bucket (Signed URL)
+     */
+    uploadFileURL: string | undefined;
+    /**
+     * Path in Cloud Bucket
+     */
+    bucketFilePath: string | undefined;
+  };
 }
 
 export interface ISocialPublisherTaskStatusLog {

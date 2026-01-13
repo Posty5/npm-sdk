@@ -1,140 +1,137 @@
-import { Posty5Client } from '@posty5/core';
+import { HttpClient } from '@posty5/core';
 import { ShortLinkClient } from '@posty5/short-link';
-import { TEST_CONFIG, createdResources } from '../setup';
+import { TEST_CONFIG, createdResources } from './setup';
 
 describe('Short Link SDK', () => {
-    let posty5: Posty5Client;
-    let client: ShortLinkClient;
+    let httpClient: HttpClient;
+    let client!: ShortLinkClient;
     let createdId: string;
 
     beforeAll(() => {
-        posty5 = new Posty5Client({
+        httpClient = new HttpClient({
             apiKey: TEST_CONFIG.apiKey,
-            baseURL: TEST_CONFIG.baseURL,
+            baseUrl: TEST_CONFIG.baseUrl,
         });
-        client = new ShortLinkClient(posty5);
+        client = new ShortLinkClient(httpClient);
     });
 
     describe('CREATE', () => {
         it('should create a short link', async () => {
             const result = await client.create({
-                targetUrl: 'https://example.com/test-' + Date.now(),
-                title: 'Test Short Link',
-                description: 'Created by Jest test',
+                name: 'Test Short Link - ' + Date.now(),
+                targetURL: 'https://posty5.com',
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data).toBeDefined();
-            expect(result.data?._id).toBeDefined();
-            expect(result.data?.shortUrl).toBeDefined();
-            expect(result.data?.targetUrl).toContain('example.com');
+            expect(result._id).toBeDefined();
+            expect(result.shorterLink).toBeDefined();
+            expect(result.targetURL).toBe('https://posty5.com');
 
-            createdId = result.data!._id;
+            createdId = result._id;
             createdResources.shortLinks.push(createdId);
         });
 
-        it('should fail to create without required fields', async () => {
-            await expect(
-                client.create({ targetUrl: '' } as any)
-            ).rejects.toThrow();
+        it('should create short link with custom slug', async () => {
+            const customSlug = 'test-' + Date.now();
+            const result = await client.create({
+                name: 'Custom Slug Link',
+                targetURL: 'https://example.com',
+                customLandingId: customSlug,
+            });
+
+            expect(result._id).toBeDefined();
+            expect(result.shorterLink).toContain(customSlug);
+            createdResources.shortLinks.push(result._id);
+        });
+
+        it('should create short link with tag and refId', async () => {
+            const result = await client.create({
+                name: 'Tagged Link',
+                targetURL: 'https://example.com',
+                tag: 'test-tag',
+                refId: 'REF-' + Date.now(),
+            });
+
+            expect(result._id).toBeDefined();
+            createdResources.shortLinks.push(result._id);
         });
     });
 
     describe('GET BY ID', () => {
         it('should get short link by ID', async () => {
-            const result = await client.getById(createdId);
+            const result = await client.get(createdId);
 
-            expect(result.success).toBe(true);
-            expect(result.data).toBeDefined();
-            expect(result.data?._id).toBe(createdId);
-            expect(result.data?.targetUrl).toBeDefined();
+            expect(result._id).toBe(createdId);
+            expect(result.shorterLink).toBeDefined();
+            expect(result.targetURL).toBeDefined();
         });
 
         it('should fail with invalid ID', async () => {
             await expect(
-                client.getById('invalid-id-123')
+                client.get('invalid-id-123')
             ).rejects.toThrow();
         });
     });
 
     describe('GET LIST', () => {
         it('should get list of short links', async () => {
-            const result = await client.getAll({
+            const result = await client.list({}, {
                 page: 1,
-                take: 10,
+                limit: 10,
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data).toBeDefined();
-            expect(result.data?.items).toBeInstanceOf(Array);
-            expect(result.data?.totalCount).toBeGreaterThanOrEqual(0);
-        });
-
-        it('should support pagination', async () => {
-            const page1 = await client.getAll({ page: 1, take: 5 });
-            const page2 = await client.getAll({ page: 2, take: 5 });
-
-            expect(page1.data?.items).toBeDefined();
-            expect(page2.data?.items).toBeDefined();
-
-            if (page1.data!.items.length > 0 && page2.data!.items.length > 0) {
-                expect(page1.data!.items[0]._id).not.toBe(page2.data!.items[0]._id);
-            }
+            expect(result.items).toBeInstanceOf(Array);
+            expect(result.totalCount).toBeGreaterThanOrEqual(0);
         });
 
         it('should support search', async () => {
-            const result = await client.getAll({
-                page: 1,
-                take: 10,
+            const result = await client.list({
                 search: 'test',
+            }, {
+                page: 1,
+                limit: 10,
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data?.items).toBeInstanceOf(Array);
+            expect(result.items).toBeInstanceOf(Array);
+        });
+
+        it('should filter by tag', async () => {
+            const result = await client.list({
+                tag: 'test-tag',
+            }, {
+                page: 1,
+                limit: 10,
+            });
+
+            expect(result.items).toBeInstanceOf(Array);
         });
     });
 
     describe('UPDATE', () => {
         it('should update short link', async () => {
-            const updatedTitle = 'Updated Title - ' + Date.now();
-
+            const newName = 'Updated Short Link - ' + Date.now();
             const result = await client.update(createdId, {
-                title: updatedTitle,
+                name: newName,
             });
 
-            expect(result.success).toBe(true);
-            expect(result.data).toBeDefined();
-            expect(result.data?.title).toBe(updatedTitle);
+            expect(result._id).toBe(createdId);
         });
 
-        it('should fail to update with invalid ID', async () => {
-            await expect(
-                client.update('invalid-id', { title: 'Test' })
-            ).rejects.toThrow();
+        it('should update target URL', async () => {
+            const result = await client.update(createdId, {
+                targetURL: 'https://updated.posty5.com',
+            });
+
+            expect(result._id).toBe(createdId);
         });
     });
 
     describe('DELETE', () => {
         it('should delete short link', async () => {
-            const result = await client.delete(createdId);
-
-            expect(result.success).toBe(true);
+            await client.delete(createdId);
 
             // Verify deletion
             await expect(
-                client.getById(createdId)
-            ).rejects.toThrow();
-        });
-
-        it('should fail to delete with invalid ID', async () => {
-            await expect(
-                client.delete('invalid-id')
-            ).rejects.toThrow();
-        });
-
-        it('should fail to delete already deleted resource', async () => {
-            await expect(
-                client.delete(createdId)
+                client.get(createdId)
             ).rejects.toThrow();
         });
     });

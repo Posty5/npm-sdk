@@ -165,9 +165,9 @@ export type ILookupFormsResponse = IFormLookupItem[];
  */
 export interface IUploadFileConfig {
     /** Pre-signed URL for uploading */
-    url: string;
+     uploadUrl: string;
     /** Form fields for the upload */
-    fields: Record<string, string>;
+    // fields: Record<string, string>;
 }
 
 /**

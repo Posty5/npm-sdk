@@ -1,4 +1,3 @@
-import { IPaginationParams } from "@posty5/core";
 import { HtmlHostingSourceType, HtmlHostingStatusType } from "../types/type";
 
 /**

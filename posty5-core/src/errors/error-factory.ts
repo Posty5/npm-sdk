@@ -9,7 +9,7 @@ import {
     NetworkError,
     ServerError,
 } from './base-error';
-import { IApiErrorResponse } from '../types';
+import { IApiErrorResponse, IInvalidField } from '../types';
 
 /**
  * Transform axios errors into Posty5 SDK errors
@@ -39,7 +39,7 @@ export function transformError(error: any): Posty5Error {
         // Map HTTP status codes to specific errors
         switch (status) {
             case 400:
-                return new ValidationError(message, data?.errors, details);
+                return new ValidationError(message, data?.exception as IInvalidField[], details);
             case 401:
                 return new AuthenticationError(message, details);
             case 403:

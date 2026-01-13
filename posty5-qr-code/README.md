@@ -330,7 +330,7 @@ const result = await qrCodeClient.list(
 );
 
 console.log(`Total: ${result.pagination.pageSize}`);
-result.data.forEach(qr => {
+result.items.forEach(qr => {
   console.log(`${qr.name}: ${qr.qrCodeLandingPage}`);
 });
 ```

@@ -413,7 +413,7 @@ const rejected = await submissionClient.list({
 // Paginate through all submissions
 for (let page = 1; page <= 10; page++) {
   const result = await submissionClient.list({ page, limit: 50 });
-  console.log(`Page ${page}:`, result.data.length);
+  console.log(`Page ${page}:`, result.items.length);
 }
 ```
 

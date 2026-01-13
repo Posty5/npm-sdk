@@ -56,7 +56,7 @@ const result = await shortLinkClient.create({
   refId: 'campaign-123',   // Optional: Your custom reference ID
 });
 
-console.log('Short URL:', result.data?.shortUrl);
+console.log('Short URL:', result.items?.shortUrl);
 ```
 
 ## 🏷️ Tag and RefId Features

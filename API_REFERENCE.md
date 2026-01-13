@@ -666,7 +666,7 @@ try {
   });
   
   if (result.success) {
-    console.log('Created:', result.data);
+    console.log('Created:', result.items);
   } else {
     console.error('Error:', result.error?.message);
   }

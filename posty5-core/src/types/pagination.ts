@@ -31,9 +31,9 @@ export interface IPaginationMeta {
 /**
  * Paginated response wrapper
  */
-export interface IPaginationResponse<T> {
+export interface IPaginationResponse<T> extends IPaginationMeta {
     /** Array of items */
-    data: T[];
+    items: T[];
     /** Pagination metadata */
-    pagination: IPaginationMeta;
+    // pagination: IPaginationMeta;
 }
