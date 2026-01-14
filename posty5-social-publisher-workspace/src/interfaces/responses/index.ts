@@ -10,10 +10,10 @@ export interface ISocialPublisherAccountSampleDetails {
 }
 
 export interface ISocialPublisherWorkspaceAccount {
-    youtubeChannel?: ISocialPublisherAccountSampleDetails | any;
-    facebookPage?: ISocialPublisherAccountSampleDetails | any;
-    instagramAccount?: ISocialPublisherAccountSampleDetails | any;
-    tiktokAccount?: ISocialPublisherAccountSampleDetails | any;
+    youtube?: ISocialPublisherAccountSampleDetails | any;
+    facebook?: ISocialPublisherAccountSampleDetails | any;
+    instagram?: ISocialPublisherAccountSampleDetails | any;
+    tiktok?: ISocialPublisherAccountSampleDetails | any;
     facebookPlatformPageId?: string;
     instagramPlatformAccountId?: string;
 }

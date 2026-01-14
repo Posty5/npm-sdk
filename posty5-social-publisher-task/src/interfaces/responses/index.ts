@@ -70,14 +70,18 @@ export interface ISocialPublisherTaskResponse {
   caption: string;
   createdAt: Date;
   currentStatus: SocialPublisherTaskStatusType;
-  isAllowYoutubeChannel: boolean;
+  isAllowYoutube: boolean;
   isAllowFacebookPage: boolean;
-  isAllowInstagramAccount: boolean;
-  isAllowTiktokAccount: boolean;
+  isAllowInstagram: boolean;
+  isAllowTiktok: boolean;
   workspaceName: string;
   scheduleType: "schedule" | "now";
   scheduleScheduledAt: Date | null;
   scheduleExecutedAt: Date | null;
+
+  refId: string;
+  tag: string;
+  apiKeyName: string;
 }
 
 export interface ISocialPublisherTaskStatusResponse {
@@ -106,10 +110,10 @@ export interface ISocialPublisherTaskStatusResponse {
   currentStatusChangedAt: string;
 
   statusHistoryGrouped: IBaseStatusHistoryGroupedDay<SocialPublisherTaskStatusType>[];
-  tiktokAccount?: ISocialPublisherTaskTikTokPostDetails;
-  facebookPage?: ISocialPublisherTaskFacebookPagePostDetails;
-  instagramAccount?: ISocialPublisherTaskInstagramAccountPostDetails;
-  youtubeChannel?: ISocialPublisherTaskYouTubePostDetails;
+  tiktok?: ISocialPublisherTaskTikTokPostDetails;
+  facebook?: ISocialPublisherTaskFacebookPagePostDetails;
+  instagram?: ISocialPublisherTaskInstagramPostDetails;
+  youtube?: ISocialPublisherTaskYouTubePostDetails;
 
   workspace: ISocialPublisherWorkspace;
   createdAt: Date;
@@ -127,10 +131,10 @@ export interface ISocialPublisherWorkspace {
   description: string;
   createdAt: Date;
   account: {
-    youtubeChannel?: ISocialPublisherAccount;
-    tiktokAccount?: ISocialPublisherAccount;
-    facebookPage?: ISocialPublisherAccount;
-    instagramAccount?: ISocialPublisherAccount;
+    youtube?: ISocialPublisherAccount;
+    tiktok?: ISocialPublisherAccount;
+    facebook?: ISocialPublisherAccount;
+    instagram?: ISocialPublisherAccount;
   };
 }
 
@@ -166,7 +170,7 @@ export interface ISocialPublisherTaskFacebookPagePostDetails extends ISocialPubl
   title: string;
 }
 
-export interface ISocialPublisherTaskInstagramAccountPostDetails extends ISocialPublisherTaskAccount {
+export interface ISocialPublisherTaskInstagramPostDetails extends ISocialPublisherTaskAccount {
   description: string;
   share_to_feed: boolean;
   is_published_to_both_feed_and_story: boolean;

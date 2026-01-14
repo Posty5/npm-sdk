@@ -100,7 +100,7 @@ export class SocialPublisherTaskClient {
    */
   private async create(data: ICreateSocialPublisherTaskRequest, id?: string): Promise<string> {
     const url = id ? `${this.basePath}/short-video/${id}` : `${this.basePath}/short-video`;
-    const response = await this.http.post<{_id:string}>(url, {
+    const response = await this.http.post<{ _id: string }>(url, {
       ...data,
       createdFrom: "npmPackage",
     });
@@ -398,7 +398,7 @@ export class SocialPublisherTaskClient {
       isAllowInstagram: options.platforms.includes("instagram"),
       youTube: options.youtube,
       tiktok: options.tiktok,
-      facebookPage: options.facebook,
+      facebook: options.facebook,
       instagram: options.instagram,
       schedule: options.schedule
         ? {
@@ -406,7 +406,7 @@ export class SocialPublisherTaskClient {
           scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
         }
         : undefined,
-        source:"video-file",
+      source: "video-file",
     };
 
     // Auto-detect video source type
@@ -416,31 +416,31 @@ export class SocialPublisherTaskClient {
     switch (source.type) {
       case "file":
         {
-settings.source="video-file";
+          settings.source = "video-file";
           return this.publishShortVideoByFile(settings, source.video as File, options.thumbnail);
         }
 
       case "url":
         {
-          settings.source="video-url";
+          settings.source = "video-url";
           return this.publishShortVideoByURL(settings, source.video as string, options.thumbnail);
         }
 
       case "facebook":
-       {
-          settings.source="facebook-video";
-         return this.publishRepostVideoByFacebook(settings, source.video as string, options.thumbnail);
-       }
+        {
+          settings.source = "facebook-video";
+          return this.publishRepostVideoByFacebook(settings, source.video as string, options.thumbnail);
+        }
 
       case "tiktok":
         {
-          settings.source="tiktok-video";
+          settings.source = "tiktok-video";
           return this.publishRepostVideoByTiktok(settings, source.video as string, options.thumbnail);
         }
 
       case "youtube":
         {
-          settings.source="youtube-video";
+          settings.source = "youtube-video";
           return this.publishRepostVideoByYoutube(settings, source.video as string, options.thumbnail);
         }
 
@@ -623,7 +623,7 @@ settings.source="video-file";
   // }
 
   checkFromPlatform(settings: ITaskSetting) {
-    if (settings.isAllowFacebookPage && !settings.facebookPage) {
+    if (settings.isAllowFacebookPage && !settings.facebook) {
       throw new Error("Facebook page is required");
     }
     if (settings.isAllowInstagram && !settings.instagram) {

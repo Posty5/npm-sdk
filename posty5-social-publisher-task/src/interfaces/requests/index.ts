@@ -45,7 +45,7 @@ export interface ICreateSocialPublisherTaskRequest {
     isAllowInstagram: boolean;
     youTube?: IYouTubeConfig;
     tiktok?: ITikTokConfig;
-    facebookPage?: IFacebookPageConfig;
+    facebook?: IFacebookPageConfig;
     instagram?: IInstagramConfig;
     videoURL?: string;
     thumbURL?: string;
@@ -75,7 +75,7 @@ export interface ITaskSetting {
     isAllowInstagram: boolean;
     youTube?: IYouTubeConfig;
     tiktok?: ITikTokConfig;
-    facebookPage?: IFacebookPageConfig;
+    facebook?: IFacebookPageConfig;
     instagram?: IInstagramConfig;
     schedule?: IScheduleConfig;
     source: SocialPublisherTaskSourceType;

@@ -12,7 +12,7 @@ export type SocialPublisherTaskStatusType =
 
 export type SocialPublisherTaskType = "shortVideo";
 
-export type SocialPublisherTaskAccountType = "youtubeChannel" | "facebookPage" | "instagramAccount" | "tiktokAccount";
+export type SocialPublisherTaskAccountType = "youtube" | "facebook" | "instagram" | "tiktok";
 
 export type SocialPublisherTaskScheduleType = "now" | "schedule";
 
@@ -20,6 +20,6 @@ export type SocialPublisherTaskSourceType = "video-file" | "video-url" | "facebo
 // | "instagram-video";
 
 export type SocialPublisherAccountType = "youtube" | "facebook" | "tiktok";
-export type SocialPublisherAccountAccountType = "facebookPage" | "instagramAccount" | "youtubeChannel" | "tiktokAccount";
+export type SocialPublisherAccountAccountType = "facebook" | "instagram" | "youtube" | "tiktok";
 
 export type SocialPublisherAccountStatusType = "active" | "inactive" | "authenticationExpired";
