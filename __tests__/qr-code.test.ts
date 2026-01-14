@@ -1,7 +1,7 @@
 import { HttpClient } from '@posty5/core';
 import { QRCodeClient } from '@posty5/qr-code';
 import { TEST_CONFIG, createdResources } from './setup';
-
+const templateId="68d190bc4b42b89ef76e1398";
 describe('QR Code SDK', () => {
     let httpClient: HttpClient;
     let client!: QRCodeClient;
@@ -11,6 +11,7 @@ describe('QR Code SDK', () => {
         httpClient = new HttpClient({
             apiKey: TEST_CONFIG.apiKey,
             baseUrl: TEST_CONFIG.baseUrl,
+            debug:true,
         });
         client = new QRCodeClient(httpClient);
     });
@@ -19,6 +20,7 @@ describe('QR Code SDK', () => {
         it('should create a URL QR code', async () => {
             const result = await client.createURL({
                 name: 'Test URL QR Code - ' + Date.now(),
+                templateId,
                 url: {
                     url: 'https://posty5.com',
                 },
@@ -36,9 +38,8 @@ describe('QR Code SDK', () => {
         it('should create a Free Text QR code', async () => {
             const result = await client.createFreeText({
                 name: 'Test Free Text QR',
-                qrCodeTarget: {
+                templateId, 
                     text: 'Hello from QR Code Test!',
-                },
             });
 
             expect(result._id).toBeDefined();
@@ -49,6 +50,7 @@ describe('QR Code SDK', () => {
         it('should create an Email QR code', async () => {
             const result = await client.createEmail({
                 name: 'Test Email QR',
+                templateId,
                 email: {
                     email: 'test@example.com',
                     subject: 'Test Subject',
@@ -64,6 +66,7 @@ describe('QR Code SDK', () => {
         it('should create a WiFi QR code', async () => {
             const result = await client.createWifi({
                 name: 'Test WiFi QR',
+                templateId,
                 wifi: {
                     name: 'TestNetwork',
                     authenticationType: 'WPA',
@@ -79,6 +82,7 @@ describe('QR Code SDK', () => {
         it('should create a Phone Call QR code', async () => {
             const result = await client.createCall({
                 name: 'Test Call QR',
+                templateId,
                 call: {
                     phoneNumber: '+1234567890',
                 },
@@ -92,6 +96,7 @@ describe('QR Code SDK', () => {
         it('should create an SMS QR code', async () => {
             const result = await client.createSMS({
                 name: 'Test SMS QR',
+                templateId,
                 sms: {
                     phoneNumber: '+1234567890',
                     message: 'Hello from QR Code!',
@@ -106,6 +111,7 @@ describe('QR Code SDK', () => {
         it('should create a Geolocation QR code', async () => {
             const result = await client.createGeolocation({
                 name: 'Test Location QR',
+                templateId,
                 geolocation: {
                     latitude: 40.7128,
                     longitude: -74.0060,
@@ -137,7 +143,7 @@ describe('QR Code SDK', () => {
         it('should get list of QR codes', async () => {
             const result = await client.list({}, {
                 page: 1,
-                limit: 10,
+                pageSize: 10,
             });
 
             expect(result.items).toBeInstanceOf(Array);
@@ -146,10 +152,10 @@ describe('QR Code SDK', () => {
 
         it('should support search', async () => {
             const result = await client.list({
-                search: 'test',
+                name: 'test',
             }, {
                 page: 1,
-                limit: 10,
+                pageSize: 10,
             });
 
             expect(result.items).toBeInstanceOf(Array);
@@ -160,6 +166,7 @@ describe('QR Code SDK', () => {
         it('should update URL QR code', async () => {
             const result = await client.updateURL(createdId, {
                 name: 'Updated QR Code - ' + Date.now(),
+                templateId, 
                 url: {
                     url: 'https://updated.posty5.com',
                 },

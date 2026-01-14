@@ -78,6 +78,7 @@ export interface ITaskSetting {
     facebookPage?: IFacebookPageConfig;
     instagram?: IInstagramConfig;
     schedule?: IScheduleConfig;
+    source: SocialPublisherTaskSourceType;
 }
 
 

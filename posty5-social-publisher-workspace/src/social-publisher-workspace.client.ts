@@ -67,9 +67,8 @@ export class SocialPublisherWorkspaceClient {
      * @param id - Workspace ID
      * @param data - Workspace data
      */
-    async update(id: string, data: IUpdateSocialPublisherWorkspaceRequest): Promise<IUpdateSocialPublisherWorkspaceResponse> {
-        const response = await this.http.put<IUpdateSocialPublisherWorkspaceResponse>(`${this.basePath}/${id}`, data);
-        return response.result!;
+    async update(id: string, data: IUpdateSocialPublisherWorkspaceRequest): Promise<void> {
+       await this.http.put<IUpdateSocialPublisherWorkspaceResponse>(`${this.basePath}/${id}`, data);
     }
 
     /**

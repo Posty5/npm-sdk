@@ -79,15 +79,15 @@ export interface IDeleteQRCodeResponse {
     message: string;
 }
 
-/**
- * Search QR codes response with pagination
- */
-export interface ISearchQRCodesResponse {
-    /** Array of QR codes */
-    data: IQRCode[];
-    /** Pagination metadata */
-    pagination: IPaginationMeta;
-}
+// /**
+//  * Search QR codes response with pagination
+//  */
+// export interface ISearchQRCodesResponse {
+//     /** Array of QR codes */
+//     data: IQRCode[];
+//     /** Pagination metadata */
+//     pagination: IPaginationMeta;
+// }
 
 /**
  * Lookup item for QR code selection

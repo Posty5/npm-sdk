@@ -1,6 +1,7 @@
 import { HttpClient } from '@posty5/core';
 import { ShortLinkClient } from '@posty5/short-link';
 import { TEST_CONFIG, createdResources } from './setup';
+const templateId="68d190bc4b42b89ef76e1398";
 
 describe('Short Link SDK', () => {
     let httpClient: HttpClient;
@@ -11,6 +12,8 @@ describe('Short Link SDK', () => {
         httpClient = new HttpClient({
             apiKey: TEST_CONFIG.apiKey,
             baseUrl: TEST_CONFIG.baseUrl,
+            debug:true,
+
         });
         client = new ShortLinkClient(httpClient);
     });
@@ -19,12 +22,13 @@ describe('Short Link SDK', () => {
         it('should create a short link', async () => {
             const result = await client.create({
                 name: 'Test Short Link - ' + Date.now(),
-                targetURL: 'https://posty5.com',
+                baseUrl: 'https://posty5.com',
+                templateId
             });
 
             expect(result._id).toBeDefined();
             expect(result.shorterLink).toBeDefined();
-            expect(result.targetURL).toBe('https://posty5.com');
+            expect(result.baseUrl).toBe('https://posty5.com');
 
             createdId = result._id;
             createdResources.shortLinks.push(createdId);
@@ -34,8 +38,9 @@ describe('Short Link SDK', () => {
             const customSlug = 'test-' + Date.now();
             const result = await client.create({
                 name: 'Custom Slug Link',
-                targetURL: 'https://example.com',
+                baseUrl: 'https://example.com',
                 customLandingId: customSlug,
+                templateId
             });
 
             expect(result._id).toBeDefined();
@@ -46,9 +51,10 @@ describe('Short Link SDK', () => {
         it('should create short link with tag and refId', async () => {
             const result = await client.create({
                 name: 'Tagged Link',
-                targetURL: 'https://example.com',
+                baseUrl: 'https://example.com',
                 tag: 'test-tag',
                 refId: 'REF-' + Date.now(),
+                templateId
             });
 
             expect(result._id).toBeDefined();
@@ -62,7 +68,7 @@ describe('Short Link SDK', () => {
 
             expect(result._id).toBe(createdId);
             expect(result.shorterLink).toBeDefined();
-            expect(result.targetURL).toBeDefined();
+            expect(result.baseUrl).toBeDefined();
         });
 
         it('should fail with invalid ID', async () => {
@@ -74,9 +80,9 @@ describe('Short Link SDK', () => {
 
     describe('GET LIST', () => {
         it('should get list of short links', async () => {
-            const result = await client.list({}, {
+            const result = await client.search({}, {
                 page: 1,
-                limit: 10,
+                pageSize: 10,
             });
 
             expect(result.items).toBeInstanceOf(Array);
@@ -84,22 +90,22 @@ describe('Short Link SDK', () => {
         });
 
         it('should support search', async () => {
-            const result = await client.list({
-                search: 'test',
+            const result = await client.search({
+                name: 'test',
             }, {
                 page: 1,
-                limit: 10,
+                pageSize: 10,
             });
 
             expect(result.items).toBeInstanceOf(Array);
         });
 
         it('should filter by tag', async () => {
-            const result = await client.list({
+            const result = await client.search({
                 tag: 'test-tag',
             }, {
                 page: 1,
-                limit: 10,
+                pageSize: 10,
             });
 
             expect(result.items).toBeInstanceOf(Array);
@@ -111,6 +117,8 @@ describe('Short Link SDK', () => {
             const newName = 'Updated Short Link - ' + Date.now();
             const result = await client.update(createdId, {
                 name: newName,
+                baseUrl: 'https://guide.posty5.com',
+                templateId
             });
 
             expect(result._id).toBe(createdId);
@@ -118,7 +126,8 @@ describe('Short Link SDK', () => {
 
         it('should update target URL', async () => {
             const result = await client.update(createdId, {
-                targetURL: 'https://updated.posty5.com',
+                baseUrl: 'https://updated.posty5.com',
+                templateId
             });
 
             expect(result._id).toBe(createdId);

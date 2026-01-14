@@ -65,6 +65,9 @@ export class HttpClient {
                 return config;
             },
             (error) => {
+                      if (this.config.debug) {
+                    console.log('[Posty5 SDK] Request Error:',error);
+                }
                 return Promise.reject(transformError(error));
             }
         );
@@ -82,7 +85,7 @@ export class HttpClient {
             },
             (error) => {
                 if (this.config.debug) {
-                    console.error('[Posty5 SDK] Error:', error);
+                    console.error('[Posty5 SDK] Error:', JSON.stringify(error.response?.data || error.message));
                 }
                 return Promise.reject(transformError(error));
             }
@@ -159,6 +162,9 @@ export class HttpClient {
             );
             return response.data;
         } catch (error) {
+               if (this.config.debug) {
+                    console.log('[Posty5 SDK] PATCH Request Error:',error);
+                }
             throw transformError(error);
         }
     }
@@ -174,6 +180,9 @@ export class HttpClient {
             );
             return response.data;
         } catch (error) {
+              if (this.config.debug) {
+                    console.log('[Posty5 SDK] DELETE Request Error:',error);
+                }
             throw transformError(error);
         }
     }

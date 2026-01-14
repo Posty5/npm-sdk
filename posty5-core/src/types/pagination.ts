@@ -26,6 +26,8 @@ export interface IPaginationParams {
 export interface IPaginationMeta {
     page: number;
     pageSize: number;
+    totalCount: number;
+    totalPages: number;
 }
 
 /**

@@ -11,6 +11,8 @@ describe('Social Publisher Workspace SDK', () => {
         httpClient = new HttpClient({
             apiKey: TEST_CONFIG.apiKey,
             baseUrl: TEST_CONFIG.baseUrl,
+            debug:true,
+
         });
         client = new SocialPublisherWorkspaceClient(httpClient);
     });
@@ -19,23 +21,25 @@ describe('Social Publisher Workspace SDK', () => {
         it('should create a workspace', async () => {
             const result = await client.create({
                 name: 'Test Workspace - ' + Date.now(),
+                description: 'Workspace created during SDK tests',
             });
 
-            expect(result._id).toBeDefined();
+            expect(result).toBeDefined();
 
-            createdId = result._id;
+            createdId = result;
             createdResources.workspaces.push(createdId);
         });
 
         it('should create workspace with tag and refId', async () => {
             const result = await client.create({
-                name: 'Tagged Workspace',
+                name: 'Tagged Workspace'+ Date.now() ,
                 tag: 'test-tag',
                 refId: 'WS-' + Date.now(),
+                description: 'Workspace with tag created during SDK tests',
             });
 
-            expect(result._id).toBeDefined();
-            createdResources.workspaces.push(result._id);
+            expect(result).toBeDefined();
+            createdResources.workspaces.push(result);
         });
     });
 
@@ -58,7 +62,7 @@ describe('Social Publisher Workspace SDK', () => {
         it('should get list of workspaces', async () => {
             const result = await client.list({}, {
                 page: 1,
-                limit: 10,
+                pageSize: 10,
             });
 
             expect(result.items).toBeInstanceOf(Array);
@@ -67,10 +71,10 @@ describe('Social Publisher Workspace SDK', () => {
 
         it('should support search', async () => {
             const result = await client.list({
-                search: 'test',
+                name: 'test',
             }, {
                 page: 1,
-                limit: 10,
+                pageSize: 10,
             });
 
             expect(result.items).toBeInstanceOf(Array);
@@ -81,7 +85,7 @@ describe('Social Publisher Workspace SDK', () => {
                 tag: 'test-tag',
             }, {
                 page: 1,
-                limit: 10,
+                pageSize: 10,
             });
 
             expect(result.items).toBeInstanceOf(Array);
@@ -91,11 +95,10 @@ describe('Social Publisher Workspace SDK', () => {
     describe('UPDATE', () => {
         it('should update workspace', async () => {
             const newName = 'Updated Workspace - ' + Date.now();
-            const result = await client.update(createdId, {
+            const result = await client.update(createdResources.workspaces[0], {
                 name: newName,
+                description: 'Updated description',
             });
-
-            expect(result._id).toBe(createdId);
         });
     });
 

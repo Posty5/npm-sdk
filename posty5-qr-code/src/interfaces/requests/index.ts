@@ -118,12 +118,8 @@ export interface IQRCodeRequest {
 }
 
 export interface ICreateFreeTextQRCodeRequest extends IQRCodeRequest {
-    /** QR code target configuration */
-    qrCodeTarget: {
-
-        /** QR code text */
+   /** QR code text */
         text: string;
-    }
 }
 export interface ICreateEmailQRCodeRequest extends IQRCodeRequest {
     /** Email configuration (when type is 'email') */
