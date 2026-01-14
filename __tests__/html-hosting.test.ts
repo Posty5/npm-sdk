@@ -187,9 +187,9 @@ describe("HTML Hosting SDK", () => {
       );
 
       expect(result.items).toBeInstanceOf(Array);
-      
-      expect(result.page).toBe(1);
-      expect(result.pageSize).toBe(10);
+
+      expect(result.pagination.page).toBe(1);
+      expect(result.pagination.pageSize).toBe(10);
     });
 
     it("should search by name", async () => {
