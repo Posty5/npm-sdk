@@ -1,7 +1,7 @@
 import { HttpClient } from '@posty5/core';
 import { QRCodeClient } from '@posty5/qr-code';
 import { TEST_CONFIG, createdResources } from './setup';
-const templateId="68d190bc4b42b89ef76e1398";
+const templateId = "68d190bc4b42b89ef76e1398";
 describe('QR Code SDK', () => {
     let httpClient: HttpClient;
     let client!: QRCodeClient;
@@ -11,7 +11,7 @@ describe('QR Code SDK', () => {
         httpClient = new HttpClient({
             apiKey: TEST_CONFIG.apiKey,
             baseUrl: TEST_CONFIG.baseUrl,
-            debug:true,
+            debug: true,
         });
         client = new QRCodeClient(httpClient);
     });
@@ -38,8 +38,8 @@ describe('QR Code SDK', () => {
         it('should create a Free Text QR code', async () => {
             const result = await client.createFreeText({
                 name: 'Test Free Text QR',
-                templateId, 
-                    text: 'Hello from QR Code Test!',
+                templateId,
+                text: 'Hello from QR Code Test!',
             });
 
             expect(result._id).toBeDefined();
@@ -147,7 +147,7 @@ describe('QR Code SDK', () => {
             });
 
             expect(result.items).toBeInstanceOf(Array);
-            expect(result.totalCount).toBeGreaterThanOrEqual(0);
+            expect(result.pagination.totalCount).toBeGreaterThanOrEqual(0);
         });
 
         it('should support search', async () => {
@@ -166,7 +166,7 @@ describe('QR Code SDK', () => {
         it('should update URL QR code', async () => {
             const result = await client.updateURL(createdId, {
                 name: 'Updated QR Code - ' + Date.now(),
-                templateId, 
+                templateId,
                 url: {
                     url: 'https://updated.posty5.com',
                 },

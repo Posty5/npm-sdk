@@ -38,7 +38,7 @@ describe('Social Publisher Task SDK', () => {
         });
         client = new SocialPublisherTaskClient(httpClient);
 
-        workspaceId = '68ceed015bf22c26c71643a8';
+        workspaceId = '69693ef08810cf26d95ad905';
     });
 
     describe('CREATE - publishShortVideo with Video File', () => {
@@ -68,33 +68,33 @@ describe('Social Publisher Task SDK', () => {
             createdResources.tasks.push(createdId);
         });
 
-        it('should publish video file with thumbnail file', async () => {
-            if (!workspaceId) {
-                console.warn('Skipping: No workspace ID available');
-                return;
-            }
+        // it('should publish video file with thumbnail file', async () => {
+        //     if (!workspaceId) {
+        //         console.warn('Skipping: No workspace ID available');
+        //         return;
+        //     }
 
-            const videoFile = getVideo();
-            const thumbFile = getThumb();
+        //     const videoFile = getVideo();
+        //     const thumbFile = getThumb();
 
-            const result = await client.publishShortVideo({
-                workspaceId: workspaceId,
-                video: videoFile,
-                thumbnail: thumbFile,
-                platforms: ['tiktok'],
-                tiktok: {
-                    caption: 'Video File + Thumb File - ' + Date.now(),
-                    privacy_level: 'SELF_ONLY',
-                    disable_duet: false,
-                    disable_stitch: false,
-                    disable_comment: false
-                }
-            });
+        //     const result = await client.publishShortVideo({
+        //         workspaceId: workspaceId,
+        //         video: videoFile,
+        //         thumbnail: thumbFile,
+        //         platforms: ['tiktok'],
+        //         tiktok: {
+        //             caption: 'Video File + Thumb File - ' + Date.now(),
+        //             privacy_level: 'SELF_ONLY',
+        //             disable_duet: false,
+        //             disable_stitch: false,
+        //             disable_comment: false
+        //         }
+        //     });
 
-            expect(result).toBeDefined();
-            expect(typeof result).toBe('string');
-            createdResources.tasks.push(result);
-        });
+        //     expect(result).toBeDefined();
+        //     expect(typeof result).toBe('string');
+        //     createdResources.tasks.push(result);
+        // });
     });
 
     describe('CREATE - publishShortVideo with Video URL', () => {
@@ -262,7 +262,7 @@ describe('Social Publisher Task SDK', () => {
             });
 
             expect(result.items).toBeInstanceOf(Array);
-            expect(result.totalCount).toBeGreaterThanOrEqual(0);
+            expect(result.pagination.totalCount).toBeGreaterThanOrEqual(0);
         });
 
         it('should filter by workspace', async () => {

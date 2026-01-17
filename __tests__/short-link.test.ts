@@ -1,7 +1,7 @@
 import { HttpClient } from '@posty5/core';
 import { ShortLinkClient } from '@posty5/short-link';
 import { TEST_CONFIG, createdResources } from './setup';
-const templateId="68d190bc4b42b89ef76e1398";
+const templateId = "68d190bc4b42b89ef76e1398";
 
 describe('Short Link SDK', () => {
     let httpClient: HttpClient;
@@ -12,7 +12,7 @@ describe('Short Link SDK', () => {
         httpClient = new HttpClient({
             apiKey: TEST_CONFIG.apiKey,
             baseUrl: TEST_CONFIG.baseUrl,
-            debug:true,
+            debug: true,
 
         });
         client = new ShortLinkClient(httpClient);
@@ -80,17 +80,17 @@ describe('Short Link SDK', () => {
 
     describe('GET LIST', () => {
         it('should get list of short links', async () => {
-            const result = await client.search({}, {
+            const result = await client.list({}, {
                 page: 1,
                 pageSize: 10,
             });
 
             expect(result.items).toBeInstanceOf(Array);
-            expect(result.totalCount).toBeGreaterThanOrEqual(0);
+            expect(result.pagination.totalCount).toBeGreaterThanOrEqual(0);
         });
 
         it('should support search', async () => {
-            const result = await client.search({
+            const result = await client.list({
                 name: 'test',
             }, {
                 page: 1,
@@ -101,7 +101,7 @@ describe('Short Link SDK', () => {
         });
 
         it('should filter by tag', async () => {
-            const result = await client.search({
+            const result = await client.list({
                 tag: 'test-tag',
             }, {
                 page: 1,

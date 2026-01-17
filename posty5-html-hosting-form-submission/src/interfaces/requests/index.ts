@@ -1,4 +1,3 @@
-import { IPaginationParams } from "@posty5/core";
 import { IFormStatusType } from "../types/type";
 
 

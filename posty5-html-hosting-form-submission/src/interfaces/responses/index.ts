@@ -1,5 +1,6 @@
 import { IPaginationResponse } from '@posty5/core';
-import { IFormStatusType } from '../requests';
+import { IFormStatusType } from '../types/type';
+
 
 /**
  * Status history entry
