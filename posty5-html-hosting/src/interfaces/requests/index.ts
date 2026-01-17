@@ -82,7 +82,7 @@ export interface IUpdateHtmlPageRequestWithGithub extends IUpdateHtmlPageRequest
 }
 
 export interface IListParams {
-
+    /** Enter Name To Search */
     name?: string;
     htmlHostingId?: string;
     /**
@@ -105,5 +105,6 @@ export interface IListParams {
     isEnableMonetization?: boolean;
     autoSaveInGoogleSheet?: boolean;
     isTemp?: boolean;
+    isCachedInLocalStorage?: boolean;
 }
 

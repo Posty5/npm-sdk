@@ -1,7 +1,6 @@
 import { HttpClient, IPaginationParams } from '@posty5/core';
 import {
     ISearchShortLinkResponse,
-    ILookupShortLinkResponse,
     IShortLinkResponse,
     ICreateShortLinkResponse,
     IUpdateShortLinkResponse,

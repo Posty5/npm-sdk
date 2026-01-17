@@ -273,7 +273,6 @@ interface IHtmlHostingFormSubmissionResponse {
   numbering: number;                // Submission numbering
   data: Record<string, any>;        // Form data (key-value pairs)
   fields?: string[];                // Form fields list
-  ownerUserId: string;              // Owner user ID
   status: IFormStatusType;          // Current status
   statusHistory: IStatusHistoryEntry[]; // Status history
   syncing: ISyncingStatus;          // Google Sheets syncing status

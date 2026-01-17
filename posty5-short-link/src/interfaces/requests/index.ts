@@ -31,18 +31,20 @@ export interface IUpdateShortLinkRequest {
 }
 
 export interface IListParams {
+
+    /** Enter Part Or Full URL To Search */
+    baseUrl?: string;
+    /** Enter Name To Search */
     name?: string;
-    tag?: string;
-    refId?: string;
-    shortLinkId?: string;
-    status?: string;
+    /** Enter Page Title To Search */
+    "pageinfo.title"?: string;
     createdFrom?: string;
-    userId?: string;
+    shortLinkId?: string;
+    refId?: string;
+    tag?: string;
     templateId?: string;
     apiKeyId?: string;
+    status?: string;
     isForDeepLink?: boolean;
-    isSupportAndroidDeepUrl?: boolean;
-    isSupportIOSDeepUrl?: boolean;
     isEnableMonetization?: boolean;
-    isEnableLandingPage?: boolean;
 }

@@ -118,8 +118,8 @@ export interface IQRCodeRequest {
 }
 
 export interface ICreateFreeTextQRCodeRequest extends IQRCodeRequest {
-   /** QR code text */
-        text: string;
+    /** QR code text */
+    text: string;
 }
 export interface ICreateEmailQRCodeRequest extends IQRCodeRequest {
     /** Email configuration (when type is 'email') */
@@ -196,8 +196,6 @@ export interface IListParams {
     name?: string;
     /** Filter by QR code ID */
     qrCodeId?: string;
-    /** Filter by user ID */
-    userId?: string;
     /** Filter by API key ID */
     apiKeyId?: string;
     /** Filter by template ID */
@@ -207,7 +205,7 @@ export interface IListParams {
     /** Filter by reference ID */
     refId?: string;
     /** Filter by landing page enabled */
-    isEnableLandingPage?: boolean;
+    //isEnableLandingPage?: boolean;
     /** Filter by monetization enabled */
     isEnableMonetization?: boolean;
     /** Filter by status */

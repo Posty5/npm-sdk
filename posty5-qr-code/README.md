@@ -360,7 +360,6 @@ qrCodes.forEach(qr => {
 interface IListParams {
   name?: string;              // Filter by QR code name
   qrCodeId?: string;          // Filter by QR code ID
-  userId?: string;            // Filter by user ID
   apiKeyId?: string;          // Filter by API key ID
   templateId?: string;        // Filter by template ID
   tag?: string;               // Filter by custom tag

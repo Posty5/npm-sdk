@@ -1,4 +1,4 @@
-export interface ISocialPublisherWorkspaceRequest {
+export interface IWorkspaceRequest {
     name: string;
     description: string;
     /**
@@ -16,13 +16,12 @@ export interface ISocialPublisherWorkspaceRequest {
 
 }
 
-export type ICreateSocialPublisherWorkspaceRequest = ISocialPublisherWorkspaceRequest;
-export type IUpdateSocialPublisherWorkspaceRequest = ISocialPublisherWorkspaceRequest;
+export type ICreateWorkspaceRequest = IWorkspaceRequest;
+export type IUpdateWorkspaceRequest = IWorkspaceRequest;
 
-export interface ISearchSocialPublisherWorkspaceParams {
+export interface IListParams {
     name?: string;
     description?: string;
-    userId?: string;
     /**
      * API Key ID (optional)
      * You can use this field to filter workspaces by API key

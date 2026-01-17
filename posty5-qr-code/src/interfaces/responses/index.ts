@@ -20,8 +20,6 @@ export interface IQRCode {
     _id: string;
     /** QR code unique identifier */
     qrCodeId: string;
-    /** User ID who created the QR code */
-    userId?: string;
     /** Template ID used */
     templateId?: string;
     /** Number of visitors */

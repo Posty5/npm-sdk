@@ -98,7 +98,7 @@ export class HtmlHostingVariablesClient {
 
     /**
      * List HTML hosting variables with pagination and optional search
-     * @param params - Pagination parameters with optional search query and userId filter
+     * @param params - Pagination parameters with optional search query  
      * @returns Paginated list of variables
      * @example
      * ```typescript

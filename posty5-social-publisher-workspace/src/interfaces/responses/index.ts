@@ -1,7 +1,7 @@
 import { IPaginationResponse } from '@posty5/core';
 export type SocialPublisherAccountStatusType = "active" | "inactive" | "authenticationExpired";
 
-export interface ISocialPublisherAccountSampleDetails {
+export interface IAccountSampleDetails {
     link: string;
     name: string;
     thumbnail: string;
@@ -9,27 +9,26 @@ export interface ISocialPublisherAccountSampleDetails {
     status: SocialPublisherAccountStatusType;
 }
 
-export interface ISocialPublisherWorkspaceAccount {
-    youtube?: ISocialPublisherAccountSampleDetails | any;
-    facebook?: ISocialPublisherAccountSampleDetails | any;
-    instagram?: ISocialPublisherAccountSampleDetails | any;
-    tiktok?: ISocialPublisherAccountSampleDetails | any;
+export interface IWorkspaceAccount {
+    youtube?: IAccountSampleDetails | any;
+    facebook?: IAccountSampleDetails | any;
+    instagram?: IAccountSampleDetails | any;
+    tiktok?: IAccountSampleDetails | any;
     facebookPlatformPageId?: string;
     instagramPlatformAccountId?: string;
 }
 
-export interface ISocialPublisherWorkspaceResponse {
+export interface IWorkspaceResponse {
     _id: string;
     name: string;
-    account: ISocialPublisherWorkspaceAccount;
+    account: IWorkspaceAccount;
 }
 
-export interface ISocialPublisherWorkspaceSampleDetails {
+export interface IWorkspaceSampleDetails {
     _id: string;
     name: string;
     description: string;
     imageUrl?: string; // URL to workspace logo/image
-    userId?: string | any;
     createdAt?: string;
 }
 
@@ -49,9 +48,9 @@ export interface IWorkspaceWithUploadConfig {
     uploadImageConfig: IUploadImageConfig | null;
 }
 
-export type ISearchSocialPublisherWorkspaceResponse = IPaginationResponse<ISocialPublisherWorkspaceSampleDetails>;
-export type ICreateSocialPublisherWorkspaceResponse = IWorkspaceWithUploadConfig; // Returns workspace and upload config
-export type IUpdateSocialPublisherWorkspaceResponse = IWorkspaceWithUploadConfig; // Returns workspace and upload config
-export interface IDeleteSocialPublisherWorkspaceResponse {
+export type ISearchWorkspaceResponse = IPaginationResponse<IWorkspaceSampleDetails>;
+export type ICreateWorkspaceResponse = IWorkspaceWithUploadConfig; // Returns workspace and upload config
+export type IUpdateWorkspaceResponse = IWorkspaceWithUploadConfig; // Returns workspace and upload config
+export interface IDeleteWorkspaceResponse {
     message?: string;
 }

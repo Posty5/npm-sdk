@@ -1,13 +1,13 @@
 import { HttpClient, IPaginationParams, uploadToR2 } from '@posty5/core';
 import {
-    ICreateSocialPublisherWorkspaceRequest,
-    IUpdateSocialPublisherWorkspaceRequest,
-    ISearchSocialPublisherWorkspaceParams,
-    ISearchSocialPublisherWorkspaceResponse,
-    ISocialPublisherWorkspaceResponse,
-    ICreateSocialPublisherWorkspaceResponse,
-    IUpdateSocialPublisherWorkspaceResponse,
-    IDeleteSocialPublisherWorkspaceResponse
+    ICreateWorkspaceRequest,
+    IUpdateWorkspaceRequest,
+    IListParams,
+    ISearchWorkspaceResponse,
+    ICreateWorkspaceResponse,
+    IUpdateWorkspaceResponse,
+    IDeleteWorkspaceResponse,
+    IWorkspaceResponse
 } from './interfaces';
 
 /**
@@ -30,8 +30,8 @@ export class SocialPublisherWorkspaceClient {
      * @param params - Search filters
      * @param pagination - Pagination options
      */
-    async list(params?: ISearchSocialPublisherWorkspaceParams, pagination?: IPaginationParams): Promise<ISearchSocialPublisherWorkspaceResponse> {
-        const response = await this.http.get<ISearchSocialPublisherWorkspaceResponse>(this.basePath, {
+    async list(params?: IListParams, pagination?: IPaginationParams): Promise<ISearchWorkspaceResponse> {
+        const response = await this.http.get<ISearchWorkspaceResponse>(this.basePath, {
             params: {
                 ...params,
                 ...pagination
@@ -44,8 +44,8 @@ export class SocialPublisherWorkspaceClient {
      * Get workspace by ID
      * @param id - Workspace ID
      */
-    async get(id: string): Promise<ISocialPublisherWorkspaceResponse> {
-        const response = await this.http.get<ISocialPublisherWorkspaceResponse>(`${this.basePath}/${id}`);
+    async get(id: string): Promise<IWorkspaceResponse> {
+        const response = await this.http.get<IWorkspaceResponse>(`${this.basePath}/${id}`);
         return response.result!;
     }
 
@@ -67,9 +67,9 @@ export class SocialPublisherWorkspaceClient {
      *   file
      * );
      */
-    async create(data: ICreateSocialPublisherWorkspaceRequest, logo?: File | Blob): Promise<string> {
+    async create(data: ICreateWorkspaceRequest, logo?: File | Blob): Promise<string> {
         // Step 1: Create workspace and get upload config
-        const response = await this.http.post<ICreateSocialPublisherWorkspaceResponse>(this.basePath, {
+        const response = await this.http.post<ICreateWorkspaceResponse>(this.basePath, {
             ...data,
             hasImage: !!logo,
             createdFrom: "npmPackage"
@@ -104,9 +104,9 @@ export class SocialPublisherWorkspaceClient {
      * await client.update(
      *   'workspace-id',
      */
-    async update(id: string, data: IUpdateSocialPublisherWorkspaceRequest, logo?: File | Blob): Promise<void> {
+    async update(id: string, data: IUpdateWorkspaceRequest, logo?: File | Blob): Promise<void> {
         // Step 1: Update workspace and get upload config
-        const response = await this.http.put<IUpdateSocialPublisherWorkspaceResponse>(`${this.basePath}/${id}`, {
+        const response = await this.http.put<IUpdateWorkspaceResponse>(`${this.basePath}/${id}`, {
             ...data,
             hasImage: !!logo
         });
@@ -125,6 +125,6 @@ export class SocialPublisherWorkspaceClient {
      * @param id - Workspace ID
      */
     async delete(id: string): Promise<void> {
-        await this.http.delete<IDeleteSocialPublisherWorkspaceResponse>(`${this.basePath}/${id}`);
+        await this.http.delete<IDeleteWorkspaceResponse>(`${this.basePath}/${id}`);
     }
 }

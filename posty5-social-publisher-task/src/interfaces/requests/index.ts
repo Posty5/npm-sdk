@@ -384,3 +384,17 @@ export interface IQuickPublishAllOptions extends IQuickPublishBaseOptions {
     caption: string;
 }
 
+export interface IListParams {
+    caption?: string;
+
+    numbering?: string;
+    currentStatus?: string;
+    workspaceId?: string;
+    apiKeyId?: string;
+    refId?: string;
+    tag?: string;
+    "youtube.postInfo.isAllow"?: boolean;
+    "facebook.postInfo.isAllow"?: boolean;
+    "instagram.postInfo.isAllow"?: boolean;
+    "tiktok.postInfo.isAllow"?: boolean;
+}

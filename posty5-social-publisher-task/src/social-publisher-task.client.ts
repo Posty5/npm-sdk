@@ -9,6 +9,7 @@ import {
   IDefaultSettingsResponse,
   ITaskSetting,
   IPublishOptions,
+  IListParams,
 } from "./interfaces";
 
 
@@ -33,7 +34,7 @@ export class SocialPublisherTaskClient {
    * @param params - Search parameters (optional)
    * @param pagination - Pagination parameters
    */
-  async list(params?: any, pagination?: IPaginationParams): Promise<ISearchSocialPublisherTaskResponse> {
+  async list(params?: IListParams, pagination?: IPaginationParams): Promise<ISearchSocialPublisherTaskResponse> {
     const response = await this.http.get<ISearchSocialPublisherTaskResponse>(this.basePath, {
       params: {
         ...params,
