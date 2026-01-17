@@ -13,6 +13,16 @@ export interface ISocialPublisherWorkspaceRequest {
      * You can pass any custom identifier from your system.
      */
     refId?: string;
+    /**
+     * Has Image (optional)
+     * Set to true if you will upload an image for this workspace
+     */
+    hasImage?: boolean;
+    /**
+     * Image URL (optional)
+     * URL to workspace logo/image in R2 storage
+     */
+    imageUrl?: string;
 }
 
 export type ICreateSocialPublisherWorkspaceRequest = ISocialPublisherWorkspaceRequest;

@@ -1,4 +1,4 @@
-import { HttpClient, IPaginationParams } from '@posty5/core';
+import { HttpClient, IPaginationParams, uploadToR2 } from '@posty5/core';
 import {
     ICreateSocialPublisherWorkspaceRequest,
     IUpdateSocialPublisherWorkspaceRequest,
@@ -7,7 +7,8 @@ import {
     ISocialPublisherWorkspaceResponse,
     ICreateSocialPublisherWorkspaceResponse,
     IUpdateSocialPublisherWorkspaceResponse,
-    IDeleteSocialPublisherWorkspaceResponse
+    IDeleteSocialPublisherWorkspaceResponse,
+    ISocialPublisherWorkspaceSampleDetails
 } from './interfaces';
 
 /**
@@ -50,25 +51,92 @@ export class SocialPublisherWorkspaceClient {
     }
 
     /**
-     * Create workspace
+     * Create workspace with optional image upload
      * @param data - Workspace data
-     * @returns Workspace ID
+     * @param image - Optional image file (File or Blob)
+     * @returns Workspace details
+     * 
+     * @example
+     * ```typescript
+     * // Create without image
+     * const workspace = await client.create({ name: 'My Workspace', description: 'Description' });
+     * 
+     * // Create with image
+     * const file = new File([imageBlob], 'logo.png', { type: 'image/png' });
+     * const workspace = await client.create(
+     *   { name: 'My Workspace', description: 'Description' },
+     *   file
+     * );
+     * ```
      */
-    async create(data: ICreateSocialPublisherWorkspaceRequest): Promise<ICreateSocialPublisherWorkspaceResponse> {
+    async create(data: ICreateSocialPublisherWorkspaceRequest, image?: File | Blob): Promise<ISocialPublisherWorkspaceSampleDetails> {
+        // Step 1: Create workspace and get upload config
         const response = await this.http.post<ICreateSocialPublisherWorkspaceResponse>(this.basePath, {
             ...data,
+            hasImage: !!image,
             createdFrom: "npmPackage"
         });
-        return response.result!;
+
+        const workspace = response.result!.workspace;
+        const uploadConfig = response.result!.uploadImageConfig;
+
+        // Step 2: Upload image if provided
+        if (image && uploadConfig) {
+            await uploadToR2(uploadConfig.uploadUrl, image, {
+                contentType: image instanceof File ? image.type : 'image/png'
+            });
+
+            // Step 3: Update workspace with imageUrl
+            await this.update(workspace._id, { imageUrl: uploadConfig.imageUrl });
+            workspace.imageUrl = uploadConfig.imageUrl;
+        }
+
+        return workspace;
     }
 
     /**
-     * Update workspace
+     * Update workspace with optional image upload
      * @param id - Workspace ID
      * @param data - Workspace data
+     * @param image - Optional new image file (File or Blob)
+     * @returns Workspace details
+     * 
+     * @example
+     * ```typescript
+     * // Update without changing image
+     * await client.update('workspace-id', { name: 'New Name', description: 'New Description' });
+     * 
+     * // Update with new image
+     * const file = new File([imageBlob], 'new-logo.png', { type: 'image/png' });
+     * await client.update(
+     *   'workspace-id',
+     *   { name: 'New Name', description: 'New Description' },
+     *   file
+     * );
+     * ```
      */
-    async update(id: string, data: IUpdateSocialPublisherWorkspaceRequest): Promise<void> {
-       await this.http.put<IUpdateSocialPublisherWorkspaceResponse>(`${this.basePath}/${id}`, data);
+    async update(id: string, data: IUpdateSocialPublisherWorkspaceRequest, image?: File | Blob): Promise<ISocialPublisherWorkspaceSampleDetails> {
+        // Step 1: Update workspace and get upload config
+        const response = await this.http.put<IUpdateSocialPublisherWorkspaceResponse>(`${this.basePath}/${id}`, {
+            ...data,
+            hasImage: !!image
+        });
+
+        const workspace = response.result!.workspace;
+        const uploadConfig = response.result!.uploadImageConfig;
+
+        // Step 2: Upload image if provided
+        if (image && uploadConfig) {
+            await uploadToR2(uploadConfig.uploadUrl, image, {
+                contentType: image instanceof File ? image.type : 'image/png'
+            });
+
+            // Step 3: Update workspace with imageUrl
+            await this.update(workspace._id, { imageUrl: uploadConfig.imageUrl });
+            workspace.imageUrl = uploadConfig.imageUrl;
+        }
+
+        return workspace;
     }
 
     /**
