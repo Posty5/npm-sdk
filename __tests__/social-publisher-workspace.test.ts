@@ -1,7 +1,15 @@
 import { HttpClient } from '@posty5/core';
 import { SocialPublisherWorkspaceClient } from '@posty5/social-publisher-workspace';
 import { TEST_CONFIG, createdResources } from './setup';
-
+import * as fs from "fs";
+import * as path from "path";
+function getFile() {
+    const filePath = path.join(__dirname, "assets", "logo.png");
+    const fileContent = fs.readFileSync(filePath);
+    const blob = new Blob([fileContent], { type: "image/png" });
+    const file = new File([blob], "logo.png", { type: "image/png" });
+    return file;
+}
 describe('Social Publisher Workspace SDK', () => {
     let httpClient: HttpClient;
     let client!: SocialPublisherWorkspaceClient;
@@ -11,7 +19,7 @@ describe('Social Publisher Workspace SDK', () => {
         httpClient = new HttpClient({
             apiKey: TEST_CONFIG.apiKey,
             baseUrl: TEST_CONFIG.baseUrl,
-            debug:true,
+            debug: true,
 
         });
         client = new SocialPublisherWorkspaceClient(httpClient);
@@ -21,8 +29,8 @@ describe('Social Publisher Workspace SDK', () => {
         it('should create a workspace', async () => {
             const result = await client.create({
                 name: 'Test Workspace - ' + Date.now(),
-                description: 'Workspace created during SDK tests',
-            });
+                description: 'Workspace created during SDK tests'
+            }, getFile());
 
             expect(result).toBeDefined();
 
@@ -32,7 +40,7 @@ describe('Social Publisher Workspace SDK', () => {
 
         it('should create workspace with tag and refId', async () => {
             const result = await client.create({
-                name: 'Tagged Workspace'+ Date.now() ,
+                name: 'Tagged Workspace' + Date.now(),
                 tag: 'test-tag',
                 refId: 'WS-' + Date.now(),
                 description: 'Workspace with tag created during SDK tests',
@@ -66,7 +74,7 @@ describe('Social Publisher Workspace SDK', () => {
             });
 
             expect(result.items).toBeInstanceOf(Array);
-            expect(result.totalCount).toBeGreaterThanOrEqual(0);
+            expect(result.pagination.totalCount).toBeGreaterThanOrEqual(0);
         });
 
         it('should support search', async () => {

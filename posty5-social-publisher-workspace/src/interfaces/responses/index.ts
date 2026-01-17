@@ -45,7 +45,7 @@ export interface IUploadImageConfig {
  * Workspace details with upload config
  */
 export interface IWorkspaceWithUploadConfig {
-    workspace: ISocialPublisherWorkspaceSampleDetails;
+    workspaceId: string;
     uploadImageConfig: IUploadImageConfig | null;
 }
 

@@ -52,25 +52,7 @@ await client.publishShortVideoToYouTubeOnly({
 
 ### Basic Setup
 
-```typescript
 const client = new SocialPublisherTaskClient(http);
-```
-
-### Custom Configuration
-
-```typescript
-const client = new SocialPublisherTaskClient(http, {
-  maxVideoUploadSizeBytes: 2147483648, // 2GB
-  maxImageUploadSizeBytes: 10485760,   // 10MB
-});
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `maxVideoUploadSizeBytes` | `number` | `1073741824` (1GB) | Maximum video file size |
-| `maxImageUploadSizeBytes` | `number` | `8388608` (8MB) | Maximum thumbnail size |
-
----
 
 ## 📤 Publishing Methods
 

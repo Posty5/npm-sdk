@@ -1,3 +1,9 @@
 {
-  "jest.autoRun": "off"
+  "jest.autoRun": "off",
+  "jest.runAllTests": "off",
+  "jest.runTestsByEnclosingType": "off",
+  "jest.runTestsByFileName": "off",
+  "jest.runTestsBySuiteName": "off",
+  "jest.runTestsByTag": "off",
+  "jest.runTestsByTestName": "off"
 }

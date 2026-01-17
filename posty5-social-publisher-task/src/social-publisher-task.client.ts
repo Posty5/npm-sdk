@@ -11,22 +11,7 @@ import {
   IPublishOptions,
 } from "./interfaces";
 
-/**
- * Configuration options for Social Publisher Task Client
- */
-export interface ISocialPublisherTaskClientConfig {
-  /**
-   * Maximum video upload size in bytes
-   * @default 1073741824 (1GB)
-   */
-  maxVideoUploadSizeBytes?: number;
 
-  /**
-   * Maximum image/thumbnail upload size in bytes
-   * @default 8388608 (8MB)
-   */
-  maxImageUploadSizeBytes?: number;
-}
 
 /**
  * Social Publisher Task Client
@@ -37,10 +22,10 @@ export class SocialPublisherTaskClient {
   public readonly maxVideoUploadSizeBytes: number;
   public readonly maxImageUploadSizeBytes: number;
 
-  constructor(http: HttpClient, config?: ISocialPublisherTaskClientConfig) {
+  constructor(http: HttpClient) {
     this.http = http;
-    this.maxVideoUploadSizeBytes = config?.maxVideoUploadSizeBytes ?? 1073741824; // 1GB default
-    this.maxImageUploadSizeBytes = config?.maxImageUploadSizeBytes ?? 8388608; // 8MB default
+    this.maxVideoUploadSizeBytes = 2147483648; //2GB default
+    this.maxImageUploadSizeBytes = 1073741824; // 1GB default
   }
 
   /**
