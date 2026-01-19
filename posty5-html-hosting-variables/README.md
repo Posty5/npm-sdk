@@ -13,13 +13,13 @@ npm install @posty5/html-hosting-variables @posty5/core
 ## Quick Start
 
 ```typescript
-import { Posty5Client } from '@posty5/core';
-import { HtmlHostingVariablesClient } from '@posty5/html-hosting-variables';
+import { Posty5Client } from "@posty5/core";
+import { HtmlHostingVariablesClient } from "@posty5/html-hosting-variables";
 
 // Initialize the core client
 const posty5 = new Posty5Client({
-  apiKey: 'your-api-key',
-  baseURL: 'https://api.posty5.com'
+  apiKey: "your-api-key",
+  baseURL: "https://api.posty5.com",
 });
 
 // Create the HTML hosting variables client
@@ -27,15 +27,15 @@ const variablesClient = new HtmlHostingVariablesClient(posty5.http);
 
 // Create a variable
 await variablesClient.create({
-  name: 'API Key',
-  key: 'api_key',
-  value: 'sk_test_123456'
+  name: "API Key",
+  key: "api_key",
+  value: "sk_test_123456",
 });
 
 // List all variables
 const variables = await variablesClient.list({
   page: 1,
-  limit: 10
+  limit: 10,
 });
 
 console.log(variables.data);
@@ -54,6 +54,7 @@ new HtmlHostingVariablesClient(http: HttpClient)
 ```
 
 **Parameters:**
+
 - `http` - HTTP client instance from `@posty5/core`
 
 ---
@@ -67,16 +68,18 @@ async create(data: ICreateHtmlHostingVariableRequest): Promise<void>
 ```
 
 **Parameters:**
+
 - `data.name` (string, required) - Variable name
 - `data.key` (string, required) - Variable key (will be trimmed)
 - `data.value` (string, required) - Variable value
 
 **Example:**
+
 ```typescript
 await variablesClient.create({
-  name: 'API Key',
-  key: 'api_key',
-  value: 'sk_test_123456'
+  name: "API Key",
+  key: "api_key",
+  value: "sk_test_123456",
 });
 ```
 
@@ -91,14 +94,17 @@ async get(id: string): Promise<IGetHtmlHostingVariableResponse>
 ```
 
 **Parameters:**
+
 - `id` (string) - Variable ID
 
 **Returns:**
+
 - `IGetHtmlHostingVariableResponse` - Variable details
 
 **Example:**
+
 ```typescript
-const variable = await variablesClient.get('variable_id_123');
+const variable = await variablesClient.get("variable_id_123");
 console.log(variable.key, variable.value);
 ```
 
@@ -113,17 +119,19 @@ async update(id: string, data: ICreateHtmlHostingVariableRequest): Promise<void>
 ```
 
 **Parameters:**
+
 - `id` (string) - Variable ID to update
 - `data.name` (string, required) - Updated variable name
 - `data.key` (string, required) - Updated variable key
 - `data.value` (string, required) - Updated variable value
 
 **Example:**
+
 ```typescript
-await variablesClient.update('variable_id_123', {
-  name: 'Updated API Key',
-  key: 'api_key',
-  value: 'sk_live_789012'
+await variablesClient.update("variable_id_123", {
+  name: "Updated API Key",
+  key: "api_key",
+  value: "sk_live_789012",
 });
 ```
 
@@ -138,11 +146,13 @@ async delete(id: string): Promise<void>
 ```
 
 **Parameters:**
+
 - `id` (string) - Variable ID to delete
 
 **Example:**
+
 ```typescript
-await variablesClient.delete('variable_id_123');
+await variablesClient.delete("variable_id_123");
 ```
 
 ---
@@ -156,20 +166,23 @@ async list(params?: IPaginationParams & { search?: string; userId?: string }): P
 ```
 
 **Parameters:**
+
 - `params.page` (number, optional) - Page number (default: 1)
 - `params.limit` (number, optional) - Items per page (default: 10)
 - `params.search` (string, optional) - Search query (searches in name, key, and value)
 - `params.userId` (string, optional) - Filter by user ID (admin only)
 
 **Returns:**
+
 - `ISearchHtmlHostingVariablesResponse` - Paginated list of variables
 
 **Example:**
+
 ```typescript
 const result = await variablesClient.list({
   page: 1,
   limit: 10,
-  search: 'api'
+  search: "api",
 });
 
 console.log(result.items); // Array of variables
@@ -188,9 +201,9 @@ console.log(result.limit); // Items per page
 
 ```typescript
 interface ICreateHtmlHostingVariableRequest {
-  name: string;      // Variable name
-  key: string;       // Variable key (will be trimmed)
-  value: string;     // Variable value
+  name: string; // Variable name
+  key: string; // Variable key (will be trimmed)
+  value: string; // Variable value
 }
 ```
 
@@ -200,13 +213,13 @@ interface ICreateHtmlHostingVariableRequest {
 
 ```typescript
 interface IHtmlHostingVariableResponse {
-  _id: string;           // Variable ID
-  name: string;          // Variable name
-  key: string;           // Variable key
-  value: string;         // Variable value
-  userId: string;        // Owner user ID
-  createdAt: string;     // Created date (ISO 8601)
-  updatedAt?: string;    // Updated date (ISO 8601)
+  _id: string; // Variable ID
+  name: string; // Variable name
+  key: string; // Variable key
+  value: string; // Variable value
+  userId: string; // Owner user ID
+  createdAt: string; // Created date (ISO 8601)
+  updatedAt?: string; // Updated date (ISO 8601)
 }
 ```
 
@@ -217,10 +230,10 @@ type ISearchHtmlHostingVariablesResponse = IPaginationResponse<IHtmlHostingVaria
 
 // IPaginationResponse structure:
 interface IPaginationResponse<T> {
-  data: T[];          // Array of items
-  total: number;      // Total count
-  page: number;       // Current page
-  limit: number;      // Items per page
+  data: T[]; // Array of items
+  total: number; // Total count
+  page: number; // Current page
+  limit: number; // Items per page
   totalPages: number; // Total pages
 }
 ```
@@ -234,15 +247,15 @@ interface IPaginationResponse<T> {
 ```typescript
 // Store API keys, tokens, or configuration values
 await variablesClient.create({
-  name: 'Stripe API Key',
-  key: 'stripe_api_key',
-  value: 'sk_test_...'
+  name: "Stripe API Key",
+  key: "stripe_api_key",
+  value: "sk_test_...",
 });
 
 await variablesClient.create({
-  name: 'Google Analytics ID',
-  key: 'ga_id',
-  value: 'UA-123456-1'
+  name: "Google Analytics ID",
+  key: "ga_id",
+  value: "UA-123456-1",
 });
 ```
 
@@ -251,15 +264,15 @@ await variablesClient.create({
 ```typescript
 // Create variables that can be used in your HTML pages
 await variablesClient.create({
-  name: 'Company Name',
-  key: 'company_name',
-  value: 'Acme Corporation'
+  name: "Company Name",
+  key: "company_name",
+  value: "Acme Corporation",
 });
 
 await variablesClient.create({
-  name: 'Support Email',
-  key: 'support_email',
-  value: 'support@acme.com'
+  name: "Support Email",
+  key: "support_email",
+  value: "support@acme.com",
 });
 ```
 
@@ -268,8 +281,8 @@ await variablesClient.create({
 ```typescript
 // Search for variables containing "api"
 const apiVariables = await variablesClient.list({
-  search: 'api',
-  limit: 20
+  search: "api",
+  limit: 20,
 });
 
 // Paginate through all variables
@@ -283,13 +296,13 @@ for (let page = 1; page <= 5; page++) {
 
 ```typescript
 // Get a variable
-const variable = await variablesClient.get('variable_id_123');
+const variable = await variablesClient.get("variable_id_123");
 
 // Update it
 await variablesClient.update(variable._id, {
   name: variable.name,
   key: variable.key,
-  value: 'new_value'
+  value: "new_value",
 });
 ```
 
@@ -302,16 +315,17 @@ All methods throw exceptions on API errors. Always wrap calls in try-catch block
 ```typescript
 try {
   await variablesClient.create({
-    name: 'Test Variable',
-    key: 'test_key',
-    value: 'test_value'
+    name: "Test Variable",
+    key: "test_key",
+    value: "test_value",
   });
 } catch (error) {
-  console.error('Failed to create variable:', error.message);
+  console.error("Failed to create variable:", error.message);
 }
 ```
 
 Common errors:
+
 - **"Key Is Already Added Before"** - The key already exists for this user
 - **"Enter Valid Values"** - Invalid request data (missing required fields)
 - **"Item Is Not Found"** - Variable with the given ID doesn't exist
@@ -336,4 +350,4 @@ MIT
 
 ## Support
 
-For issues and questions, please visit [Posty5 Support](https://posty5.com/support)
+For issues and questions, please visit [Posty5 Support](https://posty5.com/en/contact-us)
