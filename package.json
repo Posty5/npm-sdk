@@ -3,6 +3,10 @@
     "version": "1.0.0",
     "description": "Posty5 SDK - TypeScript/JavaScript client libraries for Posty5 API",
     "private": true,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Posty5/npm-sdk"
+    },
     "scripts": {
         "test": "jest",
         "test:watch": "jest --watch",
