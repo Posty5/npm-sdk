@@ -44,6 +44,7 @@ export class HtmlHostingVariablesClient {
         await this.http.post<ICreateHtmlHostingVariableResponse>(this.basePath, {
             ...data,
             createdFrom: "npmPackage"
+
         });
     }
 

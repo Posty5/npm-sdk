@@ -55,6 +55,7 @@ export class HtmlHostingClient {
     const response = await this.http.post<ICreateHtmlPageResponse>(this.basePath, {
       ...data,
       sourceType: "file",
+      createdFrom: "npmPackage"
     });
     const result = response.result!.details;
     const uploadConfig = response.result!.uplaodFileConfig;
@@ -84,6 +85,7 @@ export class HtmlHostingClient {
     const response = await this.http.post<ICreateHtmlPageResponse>(this.basePath, {
       ...data,
       sourceType: "github",
+      createdFrom: "npmPackage"
     });
     const result = response.result!.details;
 
@@ -117,7 +119,6 @@ export class HtmlHostingClient {
       ...data,
       sourceType: "file",
       isNewFile: true,
-      createdFrom: "npmPackage",
     });
     const result = response.result!.details;
     const uploadConfig = response.result!.uplaodFileConfig;
