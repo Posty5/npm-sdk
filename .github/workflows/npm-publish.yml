@@ -30,7 +30,7 @@ jobs:
       # run: npm test
 
       - name: Build packages
-        run: npm run build
+        run: npm run build:all
 
       - name: Publish posty5-core
         working-directory: ./posty5-core
