@@ -7,8 +7,7 @@
     "types": "./dist/index.d.ts",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Posty5/npm-sdk.git",
-        "directory": "posty5-html-hosting"
+        "url": "https://github.com/Posty5/npm-sdk/tree/main/posty5-html-hosting"
     },
     "exports": {
         ".": {
