@@ -1,6 +1,6 @@
 {
     "name": "@posty5/html-hosting",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "HTML page hosting and management SDK for Posty5 API",
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",
@@ -46,7 +46,7 @@
     "author": "Posty5",
     "license": "MIT",
     "peerDependencies": {
-        "@posty5/core": "^1.0.1"
+        "@posty5/core": "^1.0.2"
     },
     "devDependencies": {
         "@posty5/core": "file:../posty5-core",
