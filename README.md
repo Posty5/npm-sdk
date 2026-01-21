@@ -26,14 +26,14 @@ This monorepo contains the following packages:
 
 | Package                                                                       | Description                       | Version | NPM                                                |
 | ----------------------------------------------------------------------------- | --------------------------------- | ------- | -------------------------------------------------- |
-| [@posty5/core](./posty5-core)                                                 | Core HTTP client and utilities    | 1.0.0   | `npm install @posty5/core`                         |
-| [@posty5/short-link](./posty5-short-link)                                     | URL shortener client              | 1.0.0   | `npm install @posty5/short-link`                   |
-| [@posty5/qr-code](./posty5-qr-code)                                           | QR code generator client          | 1.0.0   | `npm install @posty5/qr-code`                      |
-| [@posty5/html-hosting](./posty5-html-hosting)                                 | HTML hosting client               | 1.0.0   | `npm install @posty5/html-hosting`                 |
-| [@posty5/html-hosting-variables](./posty5-html-hosting-variables)             | HTML hosting variables client     | 1.0.0   | `npm install @posty5/html-hosting-variables`       |
-| [@posty5/html-hosting-form-submission](./posty5-html-hosting-form-submission) | Form submission client            | 1.0.0   | `npm install @posty5/html-hosting-form-submission` |
-| [@posty5/social-publisher-workspace](./posty5-social-publisher-workspace)     | Social publisher workspace client | 1.0.0   | `npm install @posty5/social-publisher-workspace`   |
-| [@posty5/social-publisher-task](./posty5-social-publisher-task)               | Social publisher task client      | 1.0.0   | `npm install @posty5/social-publisher-task`        |
+| [@posty5/core](./posty5-core)                                                 | Core HTTP client and utilities    | 1.0.1   | `npm install @posty5/core`                         |
+| [@posty5/short-link](./posty5-short-link)                                     | URL shortener client              | 1.0.1   | `npm install @posty5/short-link`                   |
+| [@posty5/qr-code](./posty5-qr-code)                                           | QR code generator client          | 1.0.1   | `npm install @posty5/qr-code`                      |
+| [@posty5/html-hosting](./posty5-html-hosting)                                 | HTML hosting client               | 1.0.1   | `npm install @posty5/html-hosting`                 |
+| [@posty5/html-hosting-variables](./posty5-html-hosting-variables)             | HTML hosting variables client     | 1.0.1   | `npm install @posty5/html-hosting-variables`       |
+| [@posty5/html-hosting-form-submission](./posty5-html-hosting-form-submission) | Form submission client            | 1.0.1   | `npm install @posty5/html-hosting-form-submission` |
+| [@posty5/social-publisher-workspace](./posty5-social-publisher-workspace)     | Social publisher workspace client | 1.0.1   | `npm install @posty5/social-publisher-workspace`   |
+| [@posty5/social-publisher-task](./posty5-social-publisher-task)               | Social publisher task client      | 1.0.1   | `npm install @posty5/social-publisher-task`        |
 
 ---
 

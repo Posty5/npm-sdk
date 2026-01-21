@@ -44,7 +44,7 @@
     "author": "Posty5",
     "license": "MIT",
     "peerDependencies": {
-        "@posty5/core": "^1.0.0"
+        "@posty5/core": "^1.0.1"
     },
     "devDependencies": {
         "@posty5/core": "file:../posty5-core",
