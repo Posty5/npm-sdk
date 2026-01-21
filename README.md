@@ -503,7 +503,7 @@ MIT License - see LICENSE file for details
 
 ## 🆘 Support
 
-- Issues: [GitHub Issues](https://github.com/posty5/sdk/issues)
+- Issues: [GitHub Issues](https://github.com/Posty5/npm-sdk/issues)
 
 ---
 
