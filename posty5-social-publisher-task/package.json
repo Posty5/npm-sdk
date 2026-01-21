@@ -9,6 +9,10 @@
         "type": "git",
         "url": "https://github.com/Posty5/npm-sdk/tree/main/posty5-social-publisher-task"
     },
+    "homepage": "https://github.com/Posty5/npm-sdk#readme",
+    "publishConfig": {
+        "access": "public"
+    },
     "exports": {
         ".": {
             "import": "./dist/index.mjs",
