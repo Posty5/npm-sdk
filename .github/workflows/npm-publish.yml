@@ -24,7 +24,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       #   - name: Run tests
       # run: npm test
@@ -37,53 +37,45 @@ jobs:
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: true
 
       - name: Publish posty5-html-hosting
         working-directory: ./posty5-html-hosting
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: true
 
       - name: Publish posty5-html-hosting-form-submission
         working-directory: ./posty5-html-hosting-form-submission
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: true
 
       - name: Publish posty5-html-hosting-variables
         working-directory: ./posty5-html-hosting-variables
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: true
 
       - name: Publish posty5-qr-code
         working-directory: ./posty5-qr-code
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: true
 
       - name: Publish posty5-short-link
         working-directory: ./posty5-short-link
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: true
 
       - name: Publish posty5-social-publisher-task
         working-directory: ./posty5-social-publisher-task
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: true
 
       - name: Publish posty5-social-publisher-workspace
         working-directory: ./posty5-social-publisher-workspace
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: true
