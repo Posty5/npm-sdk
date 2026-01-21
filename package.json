@@ -1,6 +1,6 @@
 {
     "name": "@posty5/sdk",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Posty5 SDK - TypeScript/JavaScript client libraries for Posty5 API",
     "private": true,
     "repository": {

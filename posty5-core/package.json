@@ -1,6 +1,6 @@
 {
   "name": "@posty5/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Core utilities and HTTP client for Posty5 SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

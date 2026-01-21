@@ -1,6 +1,6 @@
 {
     "name": "@posty5/html-hosting-form-submission",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "HTML hosting form submission management SDK for Posty5 API",
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",
