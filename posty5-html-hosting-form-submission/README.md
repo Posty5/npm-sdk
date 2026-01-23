@@ -170,7 +170,7 @@ Search and filter form submissions with advanced pagination and filtering option
   - `formId` (string, optional): Filter by specific form ID
   - `numbering` (string, optional): Search by submission number
   - `status` (IFormStatusType, optional): Filter by status
-  - `filtredFields` (string, optional): Comma-separated field names to enable search on (e.g., "name,phone,email")
+  - `filteredFields` (string, optional): Comma-separated field names to enable search on (e.g., "name,phone,email")
 - `pagination` (IPaginationParams, optional): Pagination options
   - `page` (number, optional): Page number (default: 1)
   - `pageSize` (number, optional): Items per page (default: 10)
@@ -235,7 +235,7 @@ const submission = await formSubmissions.list({
 // This allows searching within form data fields
 const searchableSubmissions = await formSubmissions.list({
   htmlHostingId: "html-page-123",
-  filtredFields: "name,email,phone", // Enable search on these fields
+  filteredFields: "name,email,phone", // Enable search on these fields
 });
 ```
 

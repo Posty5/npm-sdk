@@ -20,7 +20,7 @@ export interface IListParams {
     /** Filtered fields (optional), Pass form fields to allows search on it 
      * @example name,phone,email
      */
-    filtredFields?: string;
+    filteredFields?: string;
 
     /** Html hosting id , pass the target page landing id 
      */

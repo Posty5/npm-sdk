@@ -40,7 +40,7 @@ export interface IHtmlHostingFormSubmissionResponse {
   /** Visitor ID (reference) */
   visitorId: string;
   /** Submission numbering */
-  numbering: number;
+  numbering: string;
   /** Form data (key-value pairs) */
   data: Record<string, any>;
   /** Form fields list */

@@ -66,7 +66,7 @@ export class SocialPublisherTaskClient {
    * @param data - File information
    */
   private async generateUploadUrls(data: IGenerateUploadUrlsRequest): Promise<IGenerateUploadUrlsResponse> {
-    const response = await this.http.post<IGenerateUploadUrlsResponse>(`${this.basePath}/generate-uplaod-signd-urls`, data);
+    const response = await this.http.post<IGenerateUploadUrlsResponse>(`${this.basePath}/generate-upload-urls`, data);
     return response.result!;
   }
 
@@ -84,8 +84,22 @@ export class SocialPublisherTaskClient {
    * @param data - Task creation data
    * @param id - Optional ID for updating/retrying? (Based on route :id?)
    */
-  private async create(data: ICreateSocialPublisherTaskRequest, id?: string): Promise<string> {
-    const url = id ? `${this.basePath}/short-video/${id}` : `${this.basePath}/short-video`;
+  private async createByFile(data: ICreateSocialPublisherTaskRequest, id?: string): Promise<string> {
+    const url = id ? `${this.basePath}/short-video/by-file/${id}` : `${this.basePath}/short-video/by-file`;
+    const response = await this.http.post<{ _id: string }>(url, {
+      ...data,
+      createdFrom: "npmPackage",
+    });
+    return response.result?._id!;
+  }
+
+  /**
+ * Create a new task (publish video)
+ * @param data - Task creation data
+ * @param id - Optional ID for updating/retrying? (Based on route :id?)
+ */
+  private async createByURL(data: ICreateSocialPublisherTaskRequest, id?: string): Promise<string> {
+    const url = id ? `${this.basePath}/short-video/by-url/${id}` : `${this.basePath}/short-video/by-url`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
       createdFrom: "npmPackage",
@@ -159,7 +173,6 @@ export class SocialPublisherTaskClient {
       throw new Error(`Invalid video file type. Allowed types: ${allowedVideoTypes.join(", ")}`);
     }
 
-    this.checkFromPlatform(settings);
 
     // Step 1: Generate upload URLs for video
     const uploadUrlsResponse = await this.generateUploadUrls({
@@ -182,7 +195,7 @@ export class SocialPublisherTaskClient {
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.create(taskSettings, uploadUrlsResponse.taskId);
+    return await this.createByFile(taskSettings, uploadUrlsResponse.taskId);
   }
 
   /**
@@ -193,20 +206,6 @@ export class SocialPublisherTaskClient {
    * @returns Created task response
    */
   private async publishShortVideoByURL(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
-    // Validate video URL
-    const videoUrlPattern = /(http:\/\/)..*|(https:\/\/)..*/gi;
-    if (!videoUrlPattern.test(videoURL)) {
-      throw new Error("Invalid video URL format");
-    }
-
-    // Validate video URL extension
-    const allowedVideoExtensions = [".mp4", ".mov", ".avi", ".mkv", ".webm"];
-    const hasValidExtension = allowedVideoExtensions.some((ext) => videoURL.toLowerCase().includes(ext));
-    if (!hasValidExtension) {
-      throw new Error(`Invalid video URL. Must contain one of: ${allowedVideoExtensions.join(", ")}`);
-    }
-
-    this.checkFromPlatform(settings);
 
     // Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb);
@@ -218,37 +217,9 @@ export class SocialPublisherTaskClient {
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.create(taskSettings, uploadThumb?.taskId);
+    return await this.createByURL(taskSettings, uploadThumb?.taskId);
   }
 
-  /**
-   * Publish a repost video from Facebook
-   * @param settings - Task creation settings
-   * @param videoURL - Facebook video URL (facebook.com, fb.watch)
-   * @param thumb - Optional thumbnail image file or URL string
-   * @returns Created task response
-   */
-  private async publishRepostVideoByFacebook(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
-    // Validate Facebook video URL
-    const facebookUrlPattern = /^https?:\/\/(www\.)?(facebook\.com|fb\.watch)\/(reel|watch|.*\/videos)\/.*/i;
-    if (!facebookUrlPattern.test(videoURL)) {
-      throw new Error("Invalid Facebook video URL");
-    }
-
-    this.checkFromPlatform(settings);
-
-    // Handle thumbnail upload (File or URL)
-    const uploadThumb = await this.handleThumbnailUpload(thumb);
-
-    // Create task with Facebook video URL
-    const taskSettings: ICreateSocialPublisherTaskRequest = {
-      ...settings,
-      postURL: videoURL,
-      thumbURL: uploadThumb?.thumbFileURL,
-    };
-
-    return await this.create(taskSettings, uploadThumb?.taskId);
-  }
 
   /**
    * Publish a repost video from TikTok
@@ -257,15 +228,7 @@ export class SocialPublisherTaskClient {
    * @param thumb - Optional thumbnail image file or URL string
    * @returns Created task response
    */
-  private async publishRepostVideoByTiktok(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
-    // Validate TikTok video URL
-    const tiktokUrlPattern = /^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com)\/@?.*\/(video\/\d+|.*)/i;
-    if (!tiktokUrlPattern.test(videoURL)) {
-      throw new Error("Invalid TikTok video URL");
-    }
-
-    this.checkFromPlatform(settings);
-
+  private async publishRepostVideo(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
     // Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb);
 
@@ -276,37 +239,9 @@ export class SocialPublisherTaskClient {
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.create(taskSettings, uploadThumb?.taskId);
+    return await this.createByURL(taskSettings, uploadThumb?.taskId);
   }
 
-  /**
-   * Publish a repost video from YouTube Shorts
-   * @param settings - Task creation settings
-   * @param videoURL - YouTube Shorts URL (youtube.com/shorts/, youtu.be/)
-   * @param thumb - Optional thumbnail image file or URL string
-   * @returns Created task response
-   */
-  private async publishRepostVideoByYoutube(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
-    // Validate YouTube Shorts URL
-    const youtubeUrlPattern = /^https?:\/\/(www\.)?(youtube\.com\/shorts\/|youtu\.be\/)[A-Za-z0-9_-]+/i;
-    if (!youtubeUrlPattern.test(videoURL)) {
-      throw new Error("Invalid YouTube Shorts URL");
-    }
-
-    this.checkFromPlatform(settings);
-
-    // Handle thumbnail upload (File or URL)
-    const uploadThumb = await this.handleThumbnailUpload(thumb);
-
-    // Create task with YouTube video URL
-    const taskSettings: ICreateSocialPublisherTaskRequest = {
-      ...settings,
-      postURL: videoURL,
-      thumbURL: uploadThumb?.thumbFileURL,
-    };
-
-    return await this.create(taskSettings, uploadThumb?.taskId);
-  }
 
   /**
    * Publish a video to multiple social media platforms with auto-detection
@@ -399,39 +334,22 @@ export class SocialPublisherTaskClient {
     const source = this.detectVideoSource(options.video);
 
     // Route to appropriate method based on detected source
-    switch (source.type) {
+    switch (source) {
       case "file":
         {
-          settings.source = "video-file";
-          return this.publishShortVideoByFile(settings, source.video as File, options.thumbnail);
+          return this.publishShortVideoByFile(settings, options.video as File, options.thumbnail);
         }
 
       case "url":
         {
-          settings.source = "video-url";
-          return this.publishShortVideoByURL(settings, source.video as string, options.thumbnail);
+          return this.publishShortVideoByURL(settings, options.video as string, options.thumbnail);
         }
-
-      case "facebook":
+      case "repost":
         {
-          settings.source = "facebook-video";
-          return this.publishRepostVideoByFacebook(settings, source.video as string, options.thumbnail);
+          return this.publishRepostVideo(settings, options.video as string, options.thumbnail);
         }
-
-      case "tiktok":
-        {
-          settings.source = "tiktok-video";
-          return this.publishRepostVideoByTiktok(settings, source.video as string, options.thumbnail);
-        }
-
-      case "youtube":
-        {
-          settings.source = "youtube-video";
-          return this.publishRepostVideoByYoutube(settings, source.video as string, options.thumbnail);
-        }
-
       default:
-        throw new Error(`Unknown video source type: ${source.type}`);
+        throw new Error(`Unknown video source type: ${source}`);
     }
   }
 
@@ -440,186 +358,36 @@ export class SocialPublisherTaskClient {
    * @param video - File or URL string
    * @returns Detected source type and video
    */
-  private detectVideoSource(video: File | string): { type: "file" | "url" | "facebook" | "tiktok" | "youtube"; video: File | string } {
+  private detectVideoSource(video: File | string): "file" | "url" | "repost" {
     // Check if it's a File object
     if (video instanceof File) {
-      return { type: "file", video };
+      return "file";
     }
 
     // Check for platform-specific URLs
     if (typeof video === "string") {
       // Facebook video URL
       if (/^https?:\/\/(www\.)?(facebook\.com|fb\.watch)\/(reel|watch|.*\/videos)\/.*/i.test(video)) {
-        return { type: "facebook", video };
+        return "repost";
       }
 
       // TikTok video URL
       if (/^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com)\/@?.*\/(video\/\d+|.*)/i.test(video)) {
-        return { type: "tiktok", video };
+        return "repost";
       }
 
       // YouTube Shorts URL
       if (/^https?:\/\/(www\.)?(youtube\.com\/shorts\/|youtu\.be\/)[A-Za-z0-9_-]+/i.test(video)) {
-        return { type: "youtube", video };
+        return "repost";
       }
 
       // Generic video URL
-      return { type: "url", video };
+      return "url";
     }
 
     throw new Error("Invalid video type. Must be File or string URL");
   }
 
-  // /**
-  //  * Publish a short video to YouTube only
-  //  *
-  //  * @param options - YouTube publish options
-  //  * @returns Created task response
-  //  *
-  //  * @example
-  //  * ```typescript
-  //  * await client.publishShortVideoToYouTubeOnly({
-  //  *     workspaceId: 'workspace-123',
-  //  *     video: videoFile,
-  //  *     title: 'My Video',
-  //  *     description: 'Video description',
-  //  *     tags: ['tag1', 'tag2'],
-  //  *     thumbnail: thumbFile
-  //  * });
-  //  * ```
-  //  */
-  // async publishShortVideoToYouTubeOnly(options: IQuickPublishYouTubeOptions): Promise<ICreateSocialPublisherTaskResponse> {
-  //   return this.publishShortVideo({
-  //     workspaceId: options.workspaceId,
-  //     video: options.video,
-  //     thumbnail: options.thumbnail,
-  //     platforms: ["youtube"],
-  //     youtube: {
-  //       title: options.title,
-  //       description: options.description,
-  //       tags: options.tags,
-  //       madeForKids: options.madeForKids,
-  //     },
-  //     schedule: options.schedule,
-  //     tag: options.tag,
-  //     refId: options.refId,
-  //   });
-  // }
 
-  // /**
-  //  * Publish a short video to TikTok only
-  //  *
-  //  * @param options - TikTok publish options
-  //  * @returns Created task response
-  //  *
-  //  * @example
-  //  * ```typescript
-  //  * await client.publishShortVideoToTiktokOnly({
-  //  *     workspaceId: 'workspace-123',
-  //  *     video: videoFile,
-  //  *     caption: 'My TikTok video #viral',
-  //  *     thumbnail: thumbFile,
-  //  *     privacy_level: 'public'
-  //  * });
-  //  * ```
-  //  */
-  // async publishShortVideoToTiktokOnly(options: IQuickPublishTikTokOptions): Promise<ICreateSocialPublisherTaskResponse> {
-  //   return this.publishShortVideo({
-  //     workspaceId: options.workspaceId,
-  //     video: options.video,
-  //     thumbnail: options.thumbnail,
-  //     platforms: ["tiktok"],
-  //     tiktok: {
-  //       caption: options.caption,
-  //       privacy_level: options.privacy_level || "public",
-  //       disable_duet: options.disable_duet ?? false,
-  //       disable_stitch: options.disable_stitch ?? false,
-  //       disable_comment: options.disable_comment ?? false,
-  //     },
-  //     schedule: options.schedule,
-  //     tag: options.tag,
-  //     refId: options.refId,
-  //   });
-  // }
 
-  // /**
-  //  * Publish a short video to Facebook only
-  //  *
-  //  * @param options - Facebook publish options
-  //  * @returns Created task response
-  //  *
-  //  * @example
-  //  * ```typescript
-  //  * await client.publishShortVideoToFacebookOnly({
-  //  *     workspaceId: 'workspace-123',
-  //  *     video: videoFile,
-  //  *     title: 'My Video',
-  //  *     description: 'Video description',
-  //  *     thumbnail: thumbFile
-  //  * });
-  //  * ```
-  //  */
-  // async publishShortVideoToFacebookOnly(options: IQuickPublishFacebookOptions): Promise<ICreateSocialPublisherTaskResponse> {
-  //   return this.publishShortVideo({
-  //     workspaceId: options.workspaceId,
-  //     video: options.video,
-  //     thumbnail: options.thumbnail,
-  //     platforms: ["facebook"],
-  //     facebook: {
-  //       title: options.title,
-  //       description: options.description,
-  //     },
-  //     schedule: options.schedule,
-  //     tag: options.tag,
-  //     refId: options.refId,
-  //   });
-  // }
-
-  // /**
-  //  * Publish a short video to Instagram only
-  //  *
-  //  * @param options - Instagram publish options
-  //  * @returns Created task response
-  //  *
-  //  * @example
-  //  * ```typescript
-  //  * await client.publishShortVideoToInstagramOnly({
-  //  *     workspaceId: 'workspace-123',
-  //  *     video: videoFile,
-  //  *     description: 'Video description',
-  //  *     thumbnail: thumbFile
-  //  * });
-  //  * ```
-  //  */
-  // async publishShortVideoToInstagramOnly(options: IQuickPublishInstagramOptions): Promise<ICreateSocialPublisherTaskResponse> {
-  //   return this.publishShortVideo({
-  //     workspaceId: options.workspaceId,
-  //     video: options.video,
-  //     thumbnail: options.thumbnail,
-  //     platforms: ["instagram"],
-  //     instagram: {
-  //       description: options.description,
-  //       share_to_feed: options.share_to_feed,
-  //       is_published_to_both_feed_and_story: options.is_published_to_both_feed_and_story,
-  //     },
-  //     schedule: options.schedule,
-  //     tag: options.tag,
-  //     refId: options.refId,
-  //   });
-  // }
-
-  checkFromPlatform(settings: ITaskSetting) {
-    if (settings.isAllowFacebookPage && !settings.facebook) {
-      throw new Error("Facebook page is required");
-    }
-    if (settings.isAllowInstagram && !settings.instagram) {
-      throw new Error("Instagram is required");
-    }
-    if (settings.isAllowTiktok && !settings.tiktok) {
-      throw new Error("Tiktok is required");
-    }
-    if (settings.isAllowYouTube && !settings.youTube) {
-      throw new Error("YouTube is required");
-    }
-  }
 }
