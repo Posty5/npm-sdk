@@ -27,8 +27,6 @@ export interface IQRCode {
     name: string;
     /** Last visitor date */
     lastVisitorDate?: string;
-    /** API key ID */
-    apiKeyId?: string;
     /** Reference ID */
     refId?: string;
     /** Tag */
@@ -46,7 +44,7 @@ export interface IQRCode {
     /** Updated at timestamp */
     updatedAt?: string;
     /** QR code landing page URL */
-    qrCodeLandingPage?: string;
+    qrCodeLandingPageURL?: string;
     /** Shorter link URL */
     shorterLink?: string;
 }

@@ -37,7 +37,7 @@ async function createUrlQRCode() {
         }
     });
 
-    console.log('QR Code created:', qrCode.qrCodeLandingPage);
+    console.log('QR Code created:', qrCode.qrCodeLandingPageURL);
     return qrCode;
 }
 
@@ -61,7 +61,7 @@ async function createWiFiQRCode() {
         }
     });
 
-    console.log('WiFi QR Code:', qrCode.qrCodeLandingPage);
+    console.log('WiFi QR Code:', qrCode.qrCodeLandingPageURL);
     return qrCode;
 }
 
@@ -120,7 +120,7 @@ async function createQRCodeWithLandingPage() {
         }
     });
 
-    console.log('Landing page URL:', qrCode.qrCodeLandingPage);
+    console.log('Landing page URL:', qrCode.qrCodeLandingPageURL);
     // Access at: https://qr.posty5.com/summer-sale-2024
     return qrCode;
 }
@@ -281,7 +281,7 @@ async function createQRCodeWithErrorHandling() {
             }
         });
 
-        console.log('Success:', qrCode.qrCodeLandingPage);
+        console.log('Success:', qrCode.qrCodeLandingPageURL);
     } catch (error: any) {
         if (error.statusCode === 401) {
             console.error('Authentication failed - check your API key');

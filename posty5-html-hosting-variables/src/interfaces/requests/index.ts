@@ -30,11 +30,6 @@ export interface IListParams {
     /** Variable value (optional) */
     value?: string;
     /**
-     * API Key ID (optional)
-     * You can use this field to filter variables by API key
-     */
-    apiKeyId?: string;
-    /**
      * Tag (optional)
      * You can use this field to filter variables by tag
      */

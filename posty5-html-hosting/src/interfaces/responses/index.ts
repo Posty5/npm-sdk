@@ -76,7 +76,7 @@ export interface IHtmlPageResponse {
     /** Form submission data */
     formSubmission?: IFormSubmissionData;
     /** QR code landing page URL */
-    // qrCodeLandingPage: string;
+    // qrCodeLandingPageURL: string;
     /** QR code download URL */
     // qrCodeDownloadURL: string;
     /** Shorter link URL */
@@ -165,7 +165,7 @@ export type ILookupFormsResponse = IFormLookupItem[];
  */
 export interface IUploadFileConfig {
     /** Pre-signed URL for uploading */
-     uploadUrl: string;
+    uploadUrl: string;
     /** Form fields for the upload */
     // fields: Record<string, string>;
 }

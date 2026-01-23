@@ -23,11 +23,6 @@ export interface IListParams {
     name?: string;
     description?: string;
     /**
-     * API Key ID (optional)
-     * You can use this field to filter workspaces by API key
-     */
-    apiKeyId?: string;
-    /**
      * Tag (optional)
      * You can use this field to filter workspaces by tag
      */

@@ -27,7 +27,7 @@ describe('QR Code SDK', () => {
             });
 
             expect(result._id).toBeDefined();
-            expect(result.qrCodeLandingPage).toBeDefined();
+            expect(result.qrCodeLandingPageURL).toBeDefined();
 
             createdId = result._id;
             createdResources.qrCodes.push(createdId);
@@ -43,7 +43,7 @@ describe('QR Code SDK', () => {
             });
 
             expect(result._id).toBeDefined();
-            expect(result.qrCodeLandingPage).toBeDefined();
+            expect(result.qrCodeLandingPageURL).toBeDefined();
             createdResources.qrCodes.push(result._id);
         });
 
@@ -59,7 +59,7 @@ describe('QR Code SDK', () => {
             });
 
             expect(result._id).toBeDefined();
-            expect(result.qrCodeLandingPage).toBeDefined();
+            expect(result.qrCodeLandingPageURL).toBeDefined();
             createdResources.qrCodes.push(result._id);
         });
 
@@ -75,7 +75,7 @@ describe('QR Code SDK', () => {
             });
 
             expect(result._id).toBeDefined();
-            expect(result.qrCodeLandingPage).toBeDefined();
+            expect(result.qrCodeLandingPageURL).toBeDefined();
             createdResources.qrCodes.push(result._id);
         });
 
@@ -89,7 +89,7 @@ describe('QR Code SDK', () => {
             });
 
             expect(result._id).toBeDefined();
-            expect(result.qrCodeLandingPage).toBeDefined();
+            expect(result.qrCodeLandingPageURL).toBeDefined();
             createdResources.qrCodes.push(result._id);
         });
 
@@ -104,7 +104,7 @@ describe('QR Code SDK', () => {
             });
 
             expect(result._id).toBeDefined();
-            expect(result.qrCodeLandingPage).toBeDefined();
+            expect(result.qrCodeLandingPageURL).toBeDefined();
             createdResources.qrCodes.push(result._id);
         });
 
@@ -119,7 +119,7 @@ describe('QR Code SDK', () => {
             });
 
             expect(result._id).toBeDefined();
-            expect(result.qrCodeLandingPage).toBeDefined();
+            expect(result.qrCodeLandingPageURL).toBeDefined();
             createdResources.qrCodes.push(result._id);
         });
     });

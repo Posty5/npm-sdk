@@ -43,7 +43,6 @@ export interface IListParams {
     refId?: string;
     tag?: string;
     templateId?: string;
-    apiKeyId?: string;
     status?: string;
     isForDeepLink?: boolean;
     isEnableMonetization?: boolean;

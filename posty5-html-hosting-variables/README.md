@@ -343,7 +343,6 @@ console.log(`Page ${page2.pagination.page} of ${page2.pagination.totalPages}`);
 ```typescript
 // Filter by API key (for multi-tenant scenarios)
 const apiKeyVariables = await variables.list({
-  apiKeyId: "api-key-123",
 });
 ```
 

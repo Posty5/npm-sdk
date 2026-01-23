@@ -90,7 +90,7 @@ const shortLink = await shortLinks.create({
 
 console.log("Short Link:", shortLink.shorterLink);
 console.log("QR Code:", shortLink.qrCodeDownloadURL);
-console.log("Landing Page:", shortLink.qrCodeLandingPage);
+console.log("Landing Page:", shortLink.qrCodeLandingPageURL);
 
 // List all short links
 const allLinks = await shortLinks.list(
@@ -147,7 +147,7 @@ Create a new short link with optional custom slug, landing page, and tracking pa
 - `shorterLink` (string): The actual short URL
 - `baseUrl` (string): Destination URL
 - `qrCodeDownloadURL` (string): QR code download link
-- `qrCodeLandingPage` (string): QR code landing page
+- `qrCodeLandingPageURL` (string): QR code landing page
 - `numberOfVisitors` (number): Click count
 - `status` (string): Link status
 - `createdAt` (string): Creation timestamp
@@ -193,7 +193,7 @@ const linkWithLanding = await shortLinks.create({
   tag: "webinars",
 });
 
-console.log("Landing page:", linkWithLanding.qrCodeLandingPage);
+console.log("Landing page:", linkWithLanding.qrCodeLandingPageURL);
 ```
 
 ```typescript
@@ -246,7 +246,7 @@ Retrieve complete details of a specific short link by ID.
 - `numberOfVisitors` (number): Total clicks
 - `lastVisitorDate` (string): Last click timestamp
 - `qrCodeDownloadURL` (string): QR code URL
-- `qrCodeLandingPage` (string): Landing page URL
+- `qrCodeLandingPageURL` (string): Landing page URL
 - `status` (string): Link status
 - `tag` (string): Custom tag
 - `refId` (string): External reference

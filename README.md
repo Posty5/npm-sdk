@@ -458,7 +458,6 @@ All resources are automatically associated with the API key used to create them.
 ```typescript
 const resources = await shortLinks.list(
   {
-    apiKeyId: "your-api-key-id",
   },
   { page: 1, pageSize: 50 },
 );
@@ -486,7 +485,6 @@ const filtered = await client.list(
     name: "search term", // Search in name/title
     tag: "marketing", // Filter by tag
     refId: "campaign-123", // Filter by your reference ID
-    apiKeyId: "key-id", // Filter by API key
     // ... package-specific filters
   },
   {

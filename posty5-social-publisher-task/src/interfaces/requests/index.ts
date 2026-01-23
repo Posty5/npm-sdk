@@ -390,7 +390,6 @@ export interface IListParams {
     numbering?: string;
     currentStatus?: string;
     workspaceId?: string;
-    apiKeyId?: string;
     refId?: string;
     tag?: string;
     "youtube.postInfo.isAllow"?: boolean;

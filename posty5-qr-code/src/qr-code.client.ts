@@ -61,7 +61,7 @@ export class QRCodeClient {
   constructor(http: HttpClient) {
     this.http = http;
   }
-   
+
   /**
    * Create a free text QR code with custom text content
    *
@@ -77,7 +77,7 @@ export class QRCodeClient {
    *     text: 'Any custom text you want to encode'
    *   }
    * });
-   * console.log('QR Code URL:', qrCode.qrCodeLandingPage);
+   * console.log('QR Code URL:', qrCode.qrCodeLandingPageURL);
    * ```
    */
   async createFreeText(data: ICreateFreeTextQRCodeRequest): Promise<ICreateQRCodeResponse> {
@@ -118,7 +118,7 @@ export class QRCodeClient {
    * ```
    */
   async createEmail(data: ICreateEmailQRCodeRequest): Promise<ICreateQRCodeResponse> {
-     let qrCodeTarget = {
+    let qrCodeTarget = {
       email: data.email,
       type: "email",
     };
@@ -190,7 +190,7 @@ export class QRCodeClient {
    * ```
    */
   async createCall(data: ICreateCallQRCodeRequest): Promise<ICreateQRCodeResponse> {
-     let qrCodeTarget = {
+    let qrCodeTarget = {
       call: data.call,
       type: "call",
     };
@@ -226,7 +226,7 @@ export class QRCodeClient {
    * ```
    */
   async createSMS(data: ICreateSMSQRCodeRequest): Promise<ICreateQRCodeResponse> {
-     let qrCodeTarget = {
+    let qrCodeTarget = {
       sms: data.sms,
       type: "sms",
     };
@@ -297,7 +297,7 @@ export class QRCodeClient {
    * ```
    */
   async createGeolocation(data: ICreateGeolocationQRCodeRequest): Promise<ICreateQRCodeResponse> {
-     let qrCodeTarget = {
+    let qrCodeTarget = {
       geolocation: data.geolocation,
       type: "geolocation",
     };
@@ -314,24 +314,24 @@ export class QRCodeClient {
     return response.result!;
   }
 
-   /**
-   * Update a free text QR code with custom text content
-   *
-   * @param data - Free text QR code creation data
-   * @returns Created QR code with ID and landing page URL
-   *
-   * @example
-   * ```typescript
-   * const qrCode = await qrCodeClient.updateFreeText("qr_code_id",{
-   *   name: 'Custom Text QR',
-   *   templateId: 'template_123',
-   *   qrCodeTarget: {
-   *     text: 'Any custom text you want to encode'
-   *   }
-   * });
-   * console.log('QR Code URL:', qrCode.qrCodeLandingPage);
-   * ```
-   */
+  /**
+  * Update a free text QR code with custom text content
+  *
+  * @param data - Free text QR code creation data
+  * @returns Created QR code with ID and landing page URL
+  *
+  * @example
+  * ```typescript
+  * const qrCode = await qrCodeClient.updateFreeText("qr_code_id",{
+  *   name: 'Custom Text QR',
+  *   templateId: 'template_123',
+  *   qrCodeTarget: {
+  *     text: 'Any custom text you want to encode'
+  *   }
+  * });
+  * console.log('QR Code URL:', qrCode.qrCodeLandingPageURL);
+  * ```
+  */
   async updateFreeText(id: string, data: ICreateFreeTextQRCodeRequest): Promise<ICreateQRCodeResponse> {
     let qrCodeTarget = {
       text: data.text,
@@ -370,7 +370,7 @@ export class QRCodeClient {
    * ```
    */
   async updateEmail(id: string, data: IUpdateEmailQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-     let qrCodeTarget = {
+    let qrCodeTarget = {
       email: data.email,
       type: "email",
     };
@@ -442,8 +442,8 @@ export class QRCodeClient {
    * ```
    */
   async updateCall(id: string, data: IUpdateCallQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-     let qrCodeTarget = {
-      call: data.call,  
+    let qrCodeTarget = {
+      call: data.call,
       type: "call",
     };
     data.call = undefined as unknown as any;
@@ -478,7 +478,7 @@ export class QRCodeClient {
    * ```
    */
   async updateSMS(id: string, data: IUpdateSMSQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-     let qrCodeTarget = {
+    let qrCodeTarget = {
       sms: data.sms,
       type: "sms",
     };
@@ -549,7 +549,7 @@ export class QRCodeClient {
    * ```
    */
   async updateGeolocation(id: string, data: IUpdateGeolocationQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-     let qrCodeTarget = {
+    let qrCodeTarget = {
       geolocation: data.geolocation,
       type: "geolocation",
     };

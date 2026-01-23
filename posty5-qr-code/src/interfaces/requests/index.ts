@@ -196,8 +196,6 @@ export interface IListParams {
     name?: string;
     /** Filter by QR code ID */
     qrCodeId?: string;
-    /** Filter by API key ID */
-    apiKeyId?: string;
     /** Filter by template ID */
     templateId?: string;
     /** Filter by tag */

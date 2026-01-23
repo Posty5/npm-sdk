@@ -87,7 +87,7 @@ const qrCode = await qrCodes.createURL({
   refId: "CAMPAIGN-001", // Optional: External reference
 });
 
-console.log("QR Code Landing Page:", qrCode.qrCodeLandingPage);
+console.log("QR Code Landing Page:", qrCode.qrCodeLandingPageURL);
 console.log("Short Link:", qrCode.shorterLink);
 console.log("QR Code ID:", qrCode._id);
 
@@ -134,7 +134,7 @@ Create a URL QR code that redirects users to a website when scanned.
 
 - `_id` (string): QR code database ID
 - `qrCodeId` (string): Unique QR code identifier
-- `qrCodeLandingPage` (string): Landing page URL
+- `qrCodeLandingPageURL` (string): Landing page URL
 - `shorterLink` (string): Short URL
 - `numberOfVisitors` (number): Scan count
 - `status` (string): QR code status
@@ -151,7 +151,7 @@ const qrCode = await qrCodes.createURL({
   },
 });
 
-console.log("Scan this:", qrCode.qrCodeLandingPage);
+console.log("Scan this:", qrCode.qrCodeLandingPageURL);
 ```
 
 ```typescript
@@ -207,7 +207,7 @@ const ticketQR = await qrCodes.createFreeText({
   text: "TICKET-ID:ABC123XYZ-EVENT:CONCERT2026-SEAT:A12",
 });
 
-console.log("Ticket QR:", ticketQR.qrCodeLandingPage);
+console.log("Ticket QR:", ticketQR.qrCodeLandingPageURL);
 ```
 
 ---
@@ -258,7 +258,7 @@ const feedbackQR = await qrCodes.createEmail({
   },
 });
 
-console.log("Feedback QR:", feedbackQR.qrCodeLandingPage);
+console.log("Feedback QR:", feedbackQR.qrCodeLandingPageURL);
 ```
 
 ---
@@ -296,7 +296,7 @@ const officeWifi = await qrCodes.createWifi({
   tag: "office-infrastructure",
 });
 
-console.log("Place this QR at reception:", officeWifi.qrCodeLandingPage);
+console.log("Place this QR at reception:", officeWifi.qrCodeLandingPageURL);
 ```
 
 ```typescript
@@ -358,7 +358,7 @@ const hotlineQR = await qrCodes.createCall({
   tag: "customer-service",
 });
 
-console.log("Call us QR:", hotlineQR.qrCodeLandingPage);
+console.log("Call us QR:", hotlineQR.qrCodeLandingPageURL);
 ```
 
 ```typescript
@@ -420,7 +420,7 @@ const contestQR = await qrCodes.createSMS({
   refId: "CONTEST-2026",
 });
 
-console.log("Contest SMS QR:", contestQR.qrCodeLandingPage);
+console.log("Contest SMS QR:", contestQR.qrCodeLandingPageURL);
 ```
 
 ```typescript
@@ -483,7 +483,7 @@ const officeLocation = await qrCodes.createGeolocation({
   refId: "NYC-OFFICE",
 });
 
-console.log("Office map QR:", officeLocation.qrCodeLandingPage);
+console.log("Office map QR:", officeLocation.qrCodeLandingPageURL);
 ```
 
 ```typescript
@@ -535,7 +535,7 @@ Retrieve complete details of a specific QR code by ID.
 - `templateId` (string): Template ID used
 - `numberOfVisitors` (number): Total scan count
 - `lastVisitorDate` (string): Last scan timestamp
-- `qrCodeLandingPage` (string): Landing page URL
+- `qrCodeLandingPageURL` (string): Landing page URL
 - `shorterLink` (string): Short URL
 - `status` (string): Current status
 - `qrCodeTarget` (object): Target configuration
@@ -550,7 +550,7 @@ const qrCode = await qrCodes.get("qr-code-id-123");
 console.log("QR Code Details:");
 console.log("  Name:", qrCode.name);
 console.log("  Scans:", qrCode.numberOfVisitors);
-console.log("  Landing Page:", qrCode.qrCodeLandingPage);
+console.log("  Landing Page:", qrCode.qrCodeLandingPageURL);
 console.log("  Status:", qrCode.status);
 
 if (qrCode.lastVisitorDate) {
@@ -962,7 +962,7 @@ const wifiQR = await qrCodes.createWifi({
   refId: "WIFI-GUEST",
 });
 
-console.log("WiFi QR:", wifiQR.qrCodeLandingPage);
+console.log("WiFi QR:", wifiQR.qrCodeLandingPageURL);
 
 // Feedback SMS QR code
 const feedbackQR = await qrCodes.createSMS({
@@ -976,7 +976,7 @@ const feedbackQR = await qrCodes.createSMS({
   refId: "FEEDBACK",
 });
 
-console.log("Feedback QR:", feedbackQR.qrCodeLandingPage);
+console.log("Feedback QR:", feedbackQR.qrCodeLandingPageURL);
 
 // Location QR code
 const locationQR = await qrCodes.createGeolocation({
@@ -990,7 +990,7 @@ const locationQR = await qrCodes.createGeolocation({
   refId: "LOCATION",
 });
 
-console.log("Location QR:", locationQR.qrCodeLandingPage);
+console.log("Location QR:", locationQR.qrCodeLandingPageURL);
 
 // 2. List all restaurant QR codes
 console.log("\n📋 Restaurant QR Codes:");
@@ -1033,7 +1033,7 @@ for (const qr of restaurantQRs.items) {
     console.log(`  Last Scan: ${new Date(details.lastVisitorDate).toLocaleString()}`);
   }
 
-  console.log(`  Landing Page: ${details.qrCodeLandingPage}`);
+  console.log(`  Landing Page: ${details.qrCodeLandingPageURL}`);
   console.log(`  Short Link: ${details.shorterLink}`);
 }
 

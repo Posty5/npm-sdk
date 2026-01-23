@@ -39,13 +39,12 @@ export interface IShortLinkResponse {
     pageInfo?: IPageInfoResponse;
     //  subCategory?: number;
     //category?: number;
-    qrCodeLandingPage: string;
+    qrCodeLandingPageURL: string;
     qrCodeDownloadURL: string;
     //isForDeepLink?: boolean;
     //isSupportAndroidDeepUrl?: boolean;
     //isSupportIOSDeepUrl?: boolean;
     //createdFrom: string;
-    apiKeyId?: string | any;
     /** Preview reasons (moderation scores) */
     previewReasons?: IPreviewReason[];
 }
