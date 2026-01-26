@@ -12,8 +12,6 @@ import {
   IListParams,
 } from "./interfaces";
 
-
-
 /**
  * Social Publisher Task Client
  */
@@ -94,10 +92,10 @@ export class SocialPublisherTaskClient {
   }
 
   /**
- * Create a new task (publish video)
- * @param data - Task creation data
- * @param id - Optional ID for updating/retrying? (Based on route :id?)
- */
+   * Create a new task (publish video)
+   * @param data - Task creation data
+   * @param id - Optional ID for updating/retrying? (Based on route :id?)
+   */
   private async createByURL(data: ICreateSocialPublisherTaskRequest, id?: string): Promise<string> {
     const url = id ? `${this.basePath}/short-video/by-url/${id}` : `${this.basePath}/short-video/by-url`;
     const response = await this.http.post<{ _id: string }>(url, {
@@ -143,7 +141,7 @@ export class SocialPublisherTaskClient {
       if (uploadUrlsResponse.thumb.uploadFileURL) {
         // Upload to R2 using uploadToR2 utility
         await uploadToR2(uploadUrlsResponse.thumb.uploadFileURL, thumb, {
-          contentType: thumb.type
+          contentType: thumb.type,
         });
 
         return { thumbFileURL: uploadUrlsResponse.thumb.fileURL, taskId: uploadUrlsResponse.taskId };
@@ -172,7 +170,6 @@ export class SocialPublisherTaskClient {
     if (!allowedVideoTypes.includes(videoExtension)) {
       throw new Error(`Invalid video file type. Allowed types: ${allowedVideoTypes.join(", ")}`);
     }
-
 
     // Step 1: Generate upload URLs for video
     const uploadUrlsResponse = await this.generateUploadUrls({
@@ -206,7 +203,6 @@ export class SocialPublisherTaskClient {
    * @returns Created task response
    */
   private async publishShortVideoByURL(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
-
     // Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb);
 
@@ -219,7 +215,6 @@ export class SocialPublisherTaskClient {
 
     return await this.createByURL(taskSettings, uploadThumb?.taskId);
   }
-
 
   /**
    * Publish a repost video from TikTok
@@ -241,7 +236,6 @@ export class SocialPublisherTaskClient {
 
     return await this.createByURL(taskSettings, uploadThumb?.taskId);
   }
-
 
   /**
    * Publish a video to multiple social media platforms with auto-detection
@@ -323,9 +317,9 @@ export class SocialPublisherTaskClient {
       instagram: options.instagram,
       schedule: options.schedule
         ? {
-          type: options.schedule === "now" ? "now" : "schedule",
-          scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
-        }
+            type: options.schedule === "now" ? "now" : "schedule",
+            scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
+          }
         : undefined,
       source: "video-file",
     };
@@ -335,19 +329,16 @@ export class SocialPublisherTaskClient {
 
     // Route to appropriate method based on detected source
     switch (source) {
-      case "file":
-        {
-          return this.publishShortVideoByFile(settings, options.video as File, options.thumbnail);
-        }
+      case "file": {
+        return this.publishShortVideoByFile(settings, options.video as File, options.thumbnail);
+      }
 
-      case "url":
-        {
-          return this.publishShortVideoByURL(settings, options.video as string, options.thumbnail);
-        }
-      case "repost":
-        {
-          return this.publishRepostVideo(settings, options.video as string, options.thumbnail);
-        }
+      case "url": {
+        return this.publishShortVideoByURL(settings, options.video as string, options.thumbnail);
+      }
+      case "repost": {
+        return this.publishRepostVideo(settings, options.video as string, options.thumbnail);
+      }
       default:
         throw new Error(`Unknown video source type: ${source}`);
     }
@@ -372,7 +363,7 @@ export class SocialPublisherTaskClient {
       }
 
       // TikTok video URL
-      if (/^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com)\/@?.*\/(video\/\d+|.*)/i.test(video)) {
+      if (/^https?:\/\/(www\.)?(tiktok\.com\/@[^\/]+\/video\/\d+|vm\.tiktok\.com\/\w+|vt\.tiktok\.com\/\w+)/ii.test(video)) {
         return "repost";
       }
 
@@ -387,7 +378,4 @@ export class SocialPublisherTaskClient {
 
     throw new Error("Invalid video type. Must be File or string URL");
   }
-
-
-
 }
