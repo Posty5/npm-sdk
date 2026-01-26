@@ -363,7 +363,7 @@ export class SocialPublisherTaskClient {
       }
 
       // TikTok video URL
-      if (/^https?:\/\/(www\.)?(tiktok\.com\/@[^\/]+\/video\/\d+|vm\.tiktok\.com\/\w+|vt\.tiktok\.com\/\w+)/ii.test(video)) {
+      if (/^https?:\/\/(www\.)?(tiktok\.com\/@[^\/]+\/video\/\d+|vm\.tiktok\.com\/\w+|vt\.tiktok\.com\/\w+)/i.test(video)) {
         return "repost";
       }
 
