@@ -70,18 +70,25 @@ export interface ISocialPublisherTaskResponse {
   caption: string;
   createdAt: Date;
   currentStatus: SocialPublisherTaskStatusType;
-  isAllowYoutube: boolean;
-  isAllowFacebookPage: boolean;
-  isAllowInstagram: boolean;
-  isAllowTiktok: boolean;
-  workspaceName: string;
-  scheduleType: "schedule" | "now";
-  scheduleScheduledAt: Date | null;
-  scheduleExecutedAt: Date | null;
+  isAllow: {
+    tiktok: boolean;
+    facebookPage: boolean;
+    instagram: boolean;
+    youtube: boolean;
+  };
 
+  workspace: {
+    _id: string;
+    name: string;
+  };
+
+  schedule: {
+    type: "schedule" | "now";
+    scheduledAt: Date;
+    executedAt: Date;
+  };
   refId: string;
   tag: string;
-  apiKeyName: string;
 }
 
 export interface ISocialPublisherTaskStatusResponse {

@@ -45,8 +45,6 @@ export interface IHtmlHostingFormSubmissionResponse {
   data: Record<string, any>;
   /** Form fields list */
   fields?: string[];
-  /** Owner user ID */
-  ownerUserId: string;
   /** Current status */
   status: IFormStatusType;
   /** Status history */
