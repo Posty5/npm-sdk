@@ -220,6 +220,55 @@ describe("HTML Hosting Form Submission SDK", () => {
     });
   });
 
+  describe("PUT - Change Form Submission Status", () => {
+    it("should change form submission status", async () => {
+      // First, list submissions to get a valid ID
+      const listResult = await client.list({ htmlHostingId: testHtmlHostingId }, { page: 1, pageSize: 1 });
+
+      if (listResult.items.length === 0) {
+        console.warn("Skipping: No form submissions available");
+        return;
+      }
+
+      const submissionId = listResult.items[0]._id;
+
+      // Change the status
+      const result = await client.changeStatus(submissionId, {
+        status: "In Progress" as any,
+        notes: "Status changed via test",
+      });
+
+      expect(result).toBeDefined();
+      expect(result.statusHistory).toBeDefined();
+      expect(result.statusHistory?.length).toBeGreaterThan(0);
+
+      // Verify the submission was updated
+      const updatedSubmission = await client.get(submissionId);
+      expect(updatedSubmission.status).toBe("In Progress");
+    });
+
+    it("should change status with rejected reason", async () => {
+      const listResult = await client.list({ htmlHostingId: testHtmlHostingId }, { page: 1, pageSize: 1 });
+
+      if (listResult.items.length === 0) {
+        console.warn("Skipping: No form submissions available");
+        return;
+      }
+
+      const submissionId = listResult.items[0]._id;
+
+      // Change to rejected status
+      const result = await client.changeStatus(submissionId, {
+        status: "Rejected" as any,
+        rejectedReason: "Does not meet requirements",
+        notes: "Rejected via test",
+      });
+
+      expect(result).toBeDefined();
+      expect(result.statusHistory).toBeDefined();
+    });
+  });
+
   describe("DELETE - Delete Form Submission", () => {
     it("should delete a form submission (skipped for safety)", async () => {
       // Skip this test to avoid deleting real data
