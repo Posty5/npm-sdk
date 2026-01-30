@@ -81,20 +81,29 @@ export class QRCodeClient {
    * ```
    */
   async createFreeText(data: ICreateFreeTextQRCodeRequest): Promise<ICreateQRCodeResponse> {
-    let qrCodeTarget = {
-      text: data.text,
-      type: "freeText",
-    };
-    data.text = undefined as unknown as string;
-    const response = await this.http.post<ICreateQRCodeResponse>(this.basePath, {
-      qrCodeTarget,
-      ...data,
+    const payload = {
+      name: data.name,
+      templateId: data.templateId,
+      refId: data.refId,
+      tag: data.tag,
+      customLandingId: data.customLandingId,
+      isEnableMonetization: data.isEnableMonetization,
+      pageInfo: data.pageInfo,
+
+      qrCodeTarget: {
+        freeText: {
+          text: data.text,
+        },
+        type: "freeText",
+      },
       options: {
-        text: qrCodeTarget.text,
+        text: data.text,
       },
       templateType: "user",
       createdFrom: "npmPackage",
-    });
+    };
+    // console.log("createFreeText payload:", JSON.stringify(payload, null, 2));
+    const response = await this.http.post<ICreateQRCodeResponse>(this.basePath, payload);
     return response.result!;
   }
 
@@ -333,20 +342,29 @@ export class QRCodeClient {
   * ```
   */
   async updateFreeText(id: string, data: ICreateFreeTextQRCodeRequest): Promise<ICreateQRCodeResponse> {
-    let qrCodeTarget = {
-      text: data.text,
-      type: "freeText",
-    };
-    data.text = undefined as unknown as string;
-    const response = await this.http.put<ICreateQRCodeResponse>(`${this.basePath}/${id}`, {
-      qrCodeTarget,
-      ...data,
+    const payload = {
+      name: data.name,
+      templateId: data.templateId,
+      refId: data.refId,
+      tag: data.tag,
+      customLandingId: data.customLandingId,
+      isEnableMonetization: data.isEnableMonetization,
+      pageInfo: data.pageInfo,
+
+      qrCodeTarget: {
+        freeText: {
+          text: data.text,
+        },
+        type: "freeText",
+      },
       options: {
-        text: qrCodeTarget.text,
+        text: data.text,
       },
       templateType: "user",
       createdFrom: "npmPackage",
-    });
+    };
+
+    const response = await this.http.put<ICreateQRCodeResponse>(`${this.basePath}/${id}`, payload);
     return response.result!;
   }
 

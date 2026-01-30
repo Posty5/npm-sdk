@@ -174,6 +174,23 @@ describe('QR Code SDK', () => {
 
             expect(result._id).toBe(createdId);
         });
+
+        it('should update Free Text QR code', async () => {
+            const freeTextResult = await client.createFreeText({
+                name: 'Test Free Text QR for Update',
+                templateId,
+                text: 'Initial text',
+            });
+            createdResources.qrCodes.push(freeTextResult._id);
+
+            const result = await client.updateFreeText(freeTextResult._id, {
+                name: 'Updated Free Text QR',
+                templateId,
+                text: 'Updated text content',
+            });
+
+            expect(result._id).toBe(freeTextResult._id);
+        });
     });
 
     describe('DELETE', () => {
