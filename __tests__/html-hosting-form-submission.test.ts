@@ -234,17 +234,15 @@ describe("HTML Hosting Form Submission SDK", () => {
 
       // Change the status
       const result = await client.changeStatus(submissionId, {
-        status: "In Progress" as any,
+        status: "inProgress" as any,
         notes: "Status changed via test",
       });
 
       expect(result).toBeDefined();
-      expect(result.statusHistory).toBeDefined();
-      expect(result.statusHistory?.length).toBeGreaterThan(0);
 
       // Verify the submission was updated
       const updatedSubmission = await client.get(submissionId);
-      expect(updatedSubmission.status).toBe("In Progress");
+      expect(updatedSubmission.status).toBe("inProgress");
     });
 
     it("should change status with rejected reason", async () => {
@@ -265,7 +263,6 @@ describe("HTML Hosting Form Submission SDK", () => {
       });
 
       expect(result).toBeDefined();
-      expect(result.statusHistory).toBeDefined();
     });
   });
 

@@ -100,9 +100,9 @@ export class HtmlHostingFormSubmissionClient {
    * console.log(result.statusHistory); // Updated status history
    * ```
    */
-  async changeStatus(id: string, request: IChangeStatusRequest): Promise<IChangeStatusResponse> {
+  async changeStatus(id: string, request: IChangeStatusRequest): Promise<boolean> {
     const response = await this.http.put<IChangeStatusResponse>(`${this.basePath}/${id}/status`, request);
-    return response.result!;
+    return response.isSuccess ? true : false;
   }
 
   /**

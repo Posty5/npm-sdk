@@ -139,7 +139,7 @@ console.log("Email:", submission.data.email);
 console.log("Message:", submission.data.message);
 
 // Check current status
-console.log("Status:", submission.status); // e.g., "New", "In Progress", "Completed"
+console.log("Status:", submission.status); // e.g., "new", "inProgress", "completed"
 
 // Review status history
 submission.statusHistory.forEach((history) => {
@@ -244,7 +244,7 @@ const searchableSubmissions = await formSubmissions.list({
 const page2 = await formSubmissions.list(
   {
     htmlHostingId: "html-page-123",
-    status: "In Progress",
+    status: "inProgress",
   },
   {
     page: 2,
@@ -357,17 +357,17 @@ The following status types are available for form submissions:
 
 ```typescript
 type IFormStatusType =
-  | "New" // Just received, not yet reviewed
-  | "Pending Review" // Queued for review
-  | "In Progress" // Being actively processed
-  | "On Hold" // Temporarily paused
-  | "Need More Info" // Requires additional information
-  | "Approved" // Fully approved
-  | "Partially Approved" // Some parts approved
-  | "Rejected" // Declined or invalid
-  | "Completed" // Successfully processed
-  | "Archived" // Moved to archive
-  | "Cancelled"; // Cancelled by user or system
+  | "new" // Just received, not yet reviewed
+  | "pendingReview" // Queued for review
+  | "inProgress" // Being actively processed
+  | "onHold" // Temporarily paused
+  | "needMoreInfo" // Requires additional information
+  | "approved" // Fully approved
+  | "partiallyApproved" // Some parts approved
+  | "rejected" // Declined or invalid
+  | "completed" // Successfully processed
+  | "archived" // Moved to archive
+  | "cancelled"; // Cancelled by user or system
 ```
 
 **Example Usage:**
@@ -381,7 +381,7 @@ const newLeads = await formSubmissions.list({
 
 const inProgress = await formSubmissions.list({
   htmlHostingId: "page-123",
-  status: "In Progress",
+  status: "inProgress",
 });
 
 const completed = await formSubmissions.list({
@@ -389,7 +389,7 @@ const completed = await formSubmissions.list({
   status: "Completed",
 });
 
-console.log(`Pipeline: ${newLeads.items.length} new, ${inProgress.items.length} in progress, ${completed.items.length} completed`);
+console.log(`Pipeline: ${newLeads.items.length} new, ${inProgress.items.length} inProgress, ${completed.items.length} completed`);
 ```
 
 ---
@@ -546,22 +546,22 @@ for (const submission of newSubmissions.items) {
 const statusReport = {
   new: await formSubmissions.list({
     htmlHostingId: HTML_PAGE_ID,
-    status: "New",
+    status: "new",
   }),
   inProgress: await formSubmissions.list({
     htmlHostingId: HTML_PAGE_ID,
-    status: "In Progress",
+    status: "inProgress",
   }),
   completed: await formSubmissions.list({
     htmlHostingId: HTML_PAGE_ID,
-    status: "Completed",
+    status: "completed",
   }),
 };
 
 console.log("\n📊 Status Report:");
-console.log(`New: ${statusReport.new.pagination.totalItems}`);
-console.log(`In Progress: ${statusReport.inProgress.pagination.totalItems}`);
-console.log(`Completed: ${statusReport.completed.pagination.totalItems}`);
+console.log(`new: ${statusReport.new.pagination.totalItems}`);
+console.log(`inProgress: ${statusReport.inProgress.pagination.totalItems}`);
+console.log(`completed: ${statusReport.completed.pagination.totalItems}`);
 ```
 
 ---

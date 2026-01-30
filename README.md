@@ -249,7 +249,7 @@ Automatically capture and manage form submissions with a complete status workflo
 **Key Features:**
 
 - Automatic form submission capture from hosted pages
-- 11 status types with customizable workflows (New, In Progress, Completed, etc.)
+- 11 status types with customizable workflows (new, inProgress, completed, etc.)
 - Complete status history with timestamps and notes
 - Google Sheets auto-sync for data analysis
 - Advanced filtering by page, form, status, and custom fields
@@ -258,7 +258,7 @@ Automatically capture and manage form submissions with a complete status workflo
 - Unique sequential numbering
 - Tag and reference ID support
 
-**Status Types:** New, In Progress, Completed, Pending, On Hold, Cancelled, Rejected, Approved, Archived, Spam, Follow Up
+**Status Types:** new, inProgress, completed, pending, onHold, cancelled, rejected, approved, archived, spam, followUp
 
 **Use Cases:**
 
@@ -456,11 +456,7 @@ All resources are automatically associated with the API key used to create them.
 **Example:**
 
 ```typescript
-const resources = await shortLinks.list(
-  {
-  },
-  { page: 1, pageSize: 50 },
-);
+const resources = await shortLinks.list({}, { page: 1, pageSize: 50 });
 ```
 
 ---
