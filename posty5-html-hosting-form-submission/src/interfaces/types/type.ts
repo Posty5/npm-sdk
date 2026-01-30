@@ -1,4 +1,4 @@
 /**
  * Form status type
  */
-export type IFormStatusType = "New" | "PendingReview" | "InProgress" | "OnHold" | "NeedMoreInfo" | "Approved" | "PartiallyApproved" | "Rejected" | "Completed" | "Archived" | "Cancelled";
+export type IFormStatusType = "new" | "pendingReview" | "inProgress" | "onHold" | "needMoreInfo" | "approved" | "partiallyApproved" | "rejected" | "completed" | "archived" | "cancelled";

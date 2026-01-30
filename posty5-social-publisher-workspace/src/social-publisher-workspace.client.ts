@@ -7,7 +7,8 @@ import {
     ICreateWorkspaceResponse,
     IUpdateWorkspaceResponse,
     IDeleteWorkspaceResponse,
-    IWorkspaceResponse
+    IWorkspaceResponse,
+    IWorkspaceForNewTaskResponse
 } from './interfaces';
 
 /**
@@ -48,6 +49,26 @@ export class SocialPublisherWorkspaceClient {
         const response = await this.http.get<IWorkspaceResponse>(`${this.basePath}/${id}`);
         return response.result!;
     }
+
+    /**
+     * Get workspace details for creating new task
+     * @param id - Workspace ID
+     * @returns Workspace details with populated account information
+     * 
+     * @example
+     * ```typescript
+     * const workspace = await client.getForNewTask('workspace-id');
+     * console.log(workspace.account.youtube); // YouTube account details
+     * console.log(workspace.account.facebook?.status); // Facebook account status
+     * ```
+     */
+    async getForNewTask(id: string): Promise<IWorkspaceForNewTaskResponse> {
+        const response = await this.http.get<IWorkspaceForNewTaskResponse>(
+            `${this.basePath}/${id}/for-new-task`
+        );
+        return response.result!;
+    }
+
 
     /**
      * Create workspace with optional image upload

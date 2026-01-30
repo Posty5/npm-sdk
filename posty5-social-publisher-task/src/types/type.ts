@@ -8,7 +8,8 @@ export type SocialPublisherTaskStatusType =
   | "canceled"
   | "needsMaintenance"
   | "invalidVideoURL"
-  | "invalidPostVideoURL";
+  | "invalidPostVideoURL"
+  | "retrying";
 
 export type SocialPublisherTaskType = "shortVideo";
 

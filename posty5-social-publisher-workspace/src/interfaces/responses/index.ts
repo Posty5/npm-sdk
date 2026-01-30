@@ -57,3 +57,15 @@ export type IUpdateWorkspaceResponse = IWorkspaceWithUploadConfig; // Returns wo
 export interface IDeleteWorkspaceResponse {
   message?: string;
 }
+
+/**
+ * Workspace details formatted for new task creation with populated accounts
+ */
+export interface IWorkspaceForNewTaskResponse {
+  _id: string;
+  name: string;
+  description: string;
+  imageUrl?: string;
+  account: IWorkspaceAccount;
+}
+

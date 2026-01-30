@@ -66,6 +66,37 @@ describe('Social Publisher Workspace SDK', () => {
         });
     });
 
+    describe('GET FOR NEW TASK', () => {
+        it('should get workspace details for new task', async () => {
+            const result = await client.getForNewTask(createdId);
+
+            expect(result._id).toBe(createdId);
+            expect(result.name).toBeDefined();
+            expect(result.description).toBeDefined();
+            expect(result.account).toBeDefined();
+        });
+
+        it('should return populated account details', async () => {
+            const result = await client.getForNewTask(createdId);
+
+            // Account object should exist
+            expect(result.account).toBeDefined();
+
+            // Account properties should be defined (even if null/undefined for individual platforms)
+            expect(result.account).toHaveProperty('youtube');
+            expect(result.account).toHaveProperty('facebook');
+            expect(result.account).toHaveProperty('instagram');
+            expect(result.account).toHaveProperty('tiktok');
+        });
+
+        it('should fail with invalid ID', async () => {
+            await expect(
+                client.getForNewTask('invalid-id-123')
+            ).rejects.toThrow();
+        });
+    });
+
+
     describe('GET LIST', () => {
         it('should get list of workspaces', async () => {
             const result = await client.list({}, {
