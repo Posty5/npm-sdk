@@ -15,9 +15,9 @@
     },
     "exports": {
         ".": {
+            "types": "./dist/index.d.ts",
             "import": "./dist/index.mjs",
-            "require": "./dist/index.js",
-            "types": "./dist/index.d.ts"
+            "require": "./dist/index.js"
         }
     },
     "files": [
@@ -45,7 +45,7 @@
     "author": "Posty5",
     "license": "MIT",
     "peerDependencies": {
-        "@posty5/core": "^1.0.2"
+        "@posty5/core": "^2.0.0"
     },
     "devDependencies": {
         "@posty5/core": "file:../posty5-core",
