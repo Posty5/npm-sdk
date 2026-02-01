@@ -1,6 +1,6 @@
 {
     "name": "@posty5/social-publisher-workspace",
-    "version": "1.0.2",
+    "version": "2.0.0",
     "description": "Social Publisher Organization management SDK for Posty5 API",
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",

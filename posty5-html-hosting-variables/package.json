@@ -1,6 +1,6 @@
 {
     "name": "@posty5/html-hosting-variables",
-    "version": "1.0.2",
+    "version": "2.0.0",
     "description": "HTML hosting variables management SDK for Posty5 API",
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",
