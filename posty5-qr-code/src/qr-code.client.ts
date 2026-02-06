@@ -103,7 +103,7 @@ export class QRCodeClient {
       createdFrom: "npmPackage",
     };
     // console.log("createFreeText payload:", JSON.stringify(payload, null, 2));
-    const response = await this.http.post<ICreateQRCodeResponse>(this.basePath, payload);
+    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/freetext`, payload);
     return response.result!;
   }
 
@@ -132,7 +132,7 @@ export class QRCodeClient {
       type: "email",
     };
     data.email = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(this.basePath, {
+    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/email`, {
       ...data,
       qrCodeTarget,
       options: {
@@ -169,7 +169,7 @@ export class QRCodeClient {
       type: "wifi",
     };
     data.wifi = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(this.basePath, {
+    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/wifi`, {
       ...data,
       qrCodeTarget,
       options: {
@@ -204,7 +204,7 @@ export class QRCodeClient {
       type: "call",
     };
     data.call = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(this.basePath, {
+    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/call`, {
       ...data,
       qrCodeTarget,
       options: {
@@ -240,7 +240,7 @@ export class QRCodeClient {
       type: "sms",
     };
     data.sms = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(this.basePath, {
+    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/sms`, {
       ...data,
       qrCodeTarget,
       options: {
@@ -276,7 +276,7 @@ export class QRCodeClient {
       type: "url",
     };
     data.url = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(this.basePath, {
+    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/url`, {
       ...data,
       qrCodeTarget,
       options: {
@@ -311,7 +311,7 @@ export class QRCodeClient {
       type: "geolocation",
     };
     data.geolocation = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(this.basePath, {
+    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/geolocation`, {
       ...data,
       qrCodeTarget,
       options: {
@@ -324,23 +324,23 @@ export class QRCodeClient {
   }
 
   /**
-  * Update a free text QR code with custom text content
-  *
-  * @param data - Free text QR code creation data
-  * @returns Created QR code with ID and landing page URL
-  *
-  * @example
-  * ```typescript
-  * const qrCode = await qrCodeClient.updateFreeText("qr_code_id",{
-  *   name: 'Custom Text QR',
-  *   templateId: 'template_123',
-  *   qrCodeTarget: {
-  *     text: 'Any custom text you want to encode'
-  *   }
-  * });
-  * console.log('QR Code URL:', qrCode.qrCodeLandingPageURL);
-  * ```
-  */
+   * Update a free text QR code with custom text content
+   *
+   * @param data - Free text QR code creation data
+   * @returns Created QR code with ID and landing page URL
+   *
+   * @example
+   * ```typescript
+   * const qrCode = await qrCodeClient.updateFreeText("qr_code_id",{
+   *   name: 'Custom Text QR',
+   *   templateId: 'template_123',
+   *   qrCodeTarget: {
+   *     text: 'Any custom text you want to encode'
+   *   }
+   * });
+   * console.log('QR Code URL:', qrCode.qrCodeLandingPageURL);
+   * ```
+   */
   async updateFreeText(id: string, data: ICreateFreeTextQRCodeRequest): Promise<ICreateQRCodeResponse> {
     const payload = {
       name: data.name,
