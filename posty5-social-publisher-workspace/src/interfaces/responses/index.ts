@@ -1,4 +1,13 @@
 import { IPaginationResponse } from "@posty5/core";
+
+// ============================================================================
+// HELPER INTERFACES
+// ============================================================================
+
+// ============================================================================
+// RESPONSE INTERFACES
+// ============================================================================
+
 export type SocialPublisherAccountStatusType = "active" | "inactive" | "authenticationExpired";
 
 export interface IAccountSampleDetails {
@@ -21,6 +30,8 @@ export interface IWorkspaceAccount {
 export interface IWorkspaceResponse {
   _id: string;
   name: string;
+  description: string;
+  imageUrl?: string;
   account: IWorkspaceAccount;
 }
 
@@ -68,4 +79,3 @@ export interface IWorkspaceForNewTaskResponse {
   imageUrl?: string;
   account: IWorkspaceAccount;
 }
-

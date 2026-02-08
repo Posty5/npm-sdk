@@ -5,7 +5,6 @@ import {
   ILookupHtmlPagesResponse,
   ILookupFormsResponse,
   IDeleteHtmlPageResponse,
-  IPublishHtmlPageResponse,
   ICleanCacheResponse,
   ICreateHtmlPageRequestWithFile,
   ICreateHtmlPageRequestWithGithub,

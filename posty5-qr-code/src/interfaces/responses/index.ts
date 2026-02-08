@@ -1,6 +1,6 @@
 import { IPaginationMeta } from "@posty5/core";
 import { QrCodeStatusType } from "../types/type";
-import { IQRCodePageInfo, IQRCodeTarget } from "../requests";
+import { IQRCodePageInfo, IQRCodeTarget, IQRCodeOptions } from "../requests";
 
 /**
  * Preview reason (moderation score)
@@ -10,6 +10,22 @@ export interface IPreviewReason {
   category: string;
   /** Score value */
   score: number;
+}
+
+/**
+ * QR Code template information
+ */
+export interface IQRCodeTemplate {
+  /** Template ID */
+  _id: string;
+  /** Template name */
+  name?: string;
+  /** Number of QR codes using this template */
+  numberOfSubQrCodes?: number;
+  /** Number of short links using this template */
+  numberOfSubShortLinks?: number;
+  /** QR code download URL */
+  qrCodeDownloadURL?: string;
 }
 
 /**
@@ -24,6 +40,8 @@ export interface IQRCode {
   templateId?: string;
   /** Number of visitors */
   numberOfVisitors?: number;
+  /** Whether landing page is enabled */
+  isEnableLandingPage?: boolean;
   name: string;
   /** Last visitor date */
   lastVisitorDate?: string;
@@ -38,7 +56,7 @@ export interface IQRCode {
   /** QR code status */
   status: QrCodeStatusType;
   /** Preview reasons (moderation scores) */
-  // previewReasons?: IPreviewReason[];
+  previewReasons?: IPreviewReason[];
   /** Created at timestamp */
   createdAt?: string;
   /** Updated at timestamp */
@@ -47,6 +65,21 @@ export interface IQRCode {
   qrCodeLandingPageURL?: string;
   /** Shorter link URL */
   qrCodeDownloadURL?: string;
+}
+
+/**
+ * QR Code full details response (from GET by ID)
+ */
+export interface IQRCodeFullDetailsResponse extends IQRCode {
+  /** User ID who created the QR code */
+  userId?: string;
+  /** Template object (populated) */
+  template?: IQRCodeTemplate;
+  /** Template type */
+  templateType?: string;
+
+  /** QR code styling options */
+  options?: IQRCodeOptions;
 }
 
 /**
@@ -60,9 +93,9 @@ export interface ICreateQRCodeResponse extends IQRCode {}
 export interface IUpdateQRCodeResponse extends IQRCode {}
 
 /**
- * Response for getting a single QR code
+ * Response for getting a single QR code with full details
  */
-export interface IGetQRCodeResponse extends IQRCode {}
+export interface IGetQRCodeResponse extends IQRCodeFullDetailsResponse {}
 
 /**
  * Response for deleting a QR code

@@ -1,6 +1,40 @@
 import { IPaginationResponse } from "@posty5/core";
 import { IFormStatusType } from "../types/type";
 
+// ============================================================================
+// HELPER INTERFACES
+// ============================================================================
+
+/**
+ * HTML hosting object (populated)
+ */
+export interface IHtmlHosting {
+  _id: string;
+  name: string;
+  customLandingId?: string;
+}
+
+/**
+ * Form object (populated)
+ */
+export interface IForm {
+  _id: string;
+  name: string;
+  fields?: any[];
+}
+
+/**
+ * Status history grouped by day
+ */
+export interface IStatusHistoryGroupedDay {
+  date: string;
+  statusHistory: any[];
+}
+
+// ============================================================================
+// RESPONSE INTERFACES
+// ============================================================================
+
 /**
  * Status history entry
  */
@@ -45,6 +79,10 @@ export interface IHtmlHostingFormSubmissionResponse {
   data: Record<string, any>;
   /** Form fields list */
   fields?: string[];
+  /** External reference ID */
+  refId?: string;
+  /** Custom tag */
+  tag?: string;
   /** Current status */
   status: IFormStatusType;
   /** Status history */
@@ -55,6 +93,16 @@ export interface IHtmlHostingFormSubmissionResponse {
   createdAt: string;
   /** Updated date */
   updatedAt?: string;
+}
+
+/**
+ * HTML hosting form submission full details response (from GET by ID)
+ */
+export interface IHtmlHostingFormSubmissionFullDetailsResponse extends IHtmlHostingFormSubmissionResponse {
+  /** HTML hosting object (populated) */
+  htmlHosting?: IHtmlHosting;
+  /** Form configuration object (populated) */
+  form?: IForm;
 }
 
 /**
@@ -83,9 +131,9 @@ export interface INextPreviousSubmissionsResponse {
 export type ISearchFormSubmissionsResponse = IPaginationResponse<IHtmlHostingFormSubmissionResponse>;
 
 /**
- * Get form submission response
+ * Get form submission response (returns full details with populated fields)
  */
-export type IGetFormSubmissionResponse = IHtmlHostingFormSubmissionResponse;
+export type IGetFormSubmissionResponse = IHtmlHostingFormSubmissionFullDetailsResponse;
 
 /**
  * Change status response

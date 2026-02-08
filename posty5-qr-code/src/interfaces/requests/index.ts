@@ -12,6 +12,46 @@ export interface IQRCodePageInfo {
 }
 
 /**
+ * QR Code styling options
+ */
+export interface IQRCodeOptions {
+  text?: string;
+  width?: number;
+  height?: number;
+  correctLevel?: number;
+  dotScale?: number;
+  dotScaleTiming_H?: number;
+  dotScaleTiming_V?: number;
+  dotScaleAO?: number;
+  dotScaleAI?: number;
+  quietZone?: number;
+  quietZoneColor?: string;
+  colorDark?: string;
+  colorLight?: string;
+  PO_TL?: string;
+  PO_TR?: string;
+  PO_BL?: string;
+  PI_TL?: string;
+  PI_TR?: string;
+  PI_BL?: string;
+  AI?: string;
+  AO?: string;
+  timing_V?: string;
+  timing_H?: string;
+  title?: string;
+  titleFont?: string;
+  titleColor?: string;
+  titleBackgroundColor?: string;
+  titleHeight?: number;
+  titleTop?: number;
+  logo?: string;
+  logoWidth?: number;
+  logoHeight?: number;
+  logoBackgroundColor?: string;
+  logoBackgroundTransparent?: boolean;
+}
+
+/**
  * Email QR code target
  */
 export interface IQRCodeEmailTarget {

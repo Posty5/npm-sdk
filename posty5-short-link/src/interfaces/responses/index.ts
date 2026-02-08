@@ -1,17 +1,34 @@
 import { IPaginationResponse } from "@posty5/core";
 import { ShortLinkStatusType } from "../../types/type";
 
-export interface IShortLinkUser {
-  _id: string;
-  name: string;
-  userName: string;
-  fullName: string;
+/**
+ * Preview reason (moderation score)
+ */
+export interface IPreviewReason {
+  /** Category name */
+  category: string;
+  /** Score value */
+  score: number;
 }
 
-export interface IShortLinkTemplate {
+/**
+ * QR Code template information
+ */
+export interface IQRCodeTemplate {
   _id: string;
-  name: string;
-  options: any;
+  name?: string;
+  numberOfSubQrCodes?: number;
+  numberOfSubShortLinks?: number;
+  qrCodeDownloadURL?: string;
+}
+
+/**
+ * Short link metadata information
+ */
+export interface IShortLinkMetaData {
+  image?: string;
+  title?: string;
+  description?: string;
 }
 
 export interface IPageInfoResponse {
@@ -19,6 +36,9 @@ export interface IPageInfoResponse {
   description?: string;
 }
 
+/**
+ * Short link response interface
+ */
 export interface IShortLinkResponse {
   _id: string;
   shorterLink: string;
@@ -29,32 +49,30 @@ export interface IShortLinkResponse {
   refId?: string;
   tag?: string;
   numberOfVisitors: number;
+  numberOfReports?: number;
   lastVisitorDate?: string;
   createdAt?: string;
   updatedAt?: string;
-  templateId?: string | IShortLinkTemplate;
-  //    isEnableLandingPage?: boolean;
+  templateId?: string;
+  qrCodeTemplateName?: string;
+  isEnableLandingPage?: boolean;
   isEnableMonetization?: boolean;
   pageInfo?: IPageInfoResponse;
-  //  subCategory?: number;
-  //category?: number;
   qrCodeLandingPageURL: string;
   qrCodeDownloadURL: string;
-  //isForDeepLink?: boolean;
-  //isSupportAndroidDeepUrl?: boolean;
-  //isSupportIOSDeepUrl?: boolean;
-  //createdFrom: string;
-  /** Preview reasons (moderation scores) */
-  // previewReasons?: IPreviewReason[];
 }
+
 /**
- * Preview reason (moderation score)
+ * Short link full details response (from GET by ID)
  */
-export interface IPreviewReason {
-  /** Category name */
-  category: string;
-  /** Score value */
-  score: number;
+export interface IShortLinkFullDetailsResponse extends IShortLinkResponse {
+  androidUrl?: string;
+  iosUrl?: string;
+  numberOfCreated?: number;
+  templateType?: string;
+  template?: IQRCodeTemplate;
+  userId?: string;
+  linkMetaData?: IShortLinkMetaData;
 }
 
 export interface IShortLinkLookupItem {
@@ -66,6 +84,7 @@ export type ISearchShortLinkResponse = IPaginationResponse<IShortLinkResponse>;
 export type ILookupShortLinkResponse = IShortLinkLookupItem[];
 export type ICreateShortLinkResponse = IShortLinkResponse;
 export type IUpdateShortLinkResponse = IShortLinkResponse;
+export type IGetShortLinkResponse = IShortLinkFullDetailsResponse;
 export interface IDeleteShortLinkResponse {
-  message?: string;
+  message: string;
 }
