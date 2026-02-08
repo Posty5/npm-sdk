@@ -35,6 +35,7 @@ export class HtmlHostingClient {
 
   /**
    * Create an HTML page by uploading a file to R2 storage
+   * Auto-publishes after file upload is complete
    * @param data - Create request data with file information
    * @param file - HTML file to upload (File or Blob)
    * @returns Created page with ID, shorter link, and file URL
@@ -52,21 +53,19 @@ export class HtmlHostingClient {
    */
   async createWithFile(data: ICreateHtmlPageRequestWithFile, file: File | Blob): Promise<IHtmlPageCreateWithFileResponse> {
     // Step 1: Create the HTML page record and get upload configuration
-    const response = await this.http.post<ICreateHtmlPageResponse>(this.basePath, {
+    const response = await this.http.post<ICreateHtmlPageResponse>(`${this.basePath}/file`, {
       ...data,
-      sourceType: "file",
-      createdFrom: "npmPackage"
+      createdFrom: "npmPackage",
     });
     const result = response.result!.details;
-    const uploadConfig = response.result!.uplaodFileConfig;
+    const uploadConfig = response.result!.uploadFileConfig;
 
     // Step 2: Upload HTML file to R2 using uploadToR2 utility
     await uploadToR2(uploadConfig.uploadUrl, file, {
-      contentType: file instanceof File ? file.type : 'text/html'
+      contentType: file instanceof File ? file.type : "text/html",
     });
 
-    // Step 3: Publish the HTML page
-    await this.publish(result._id);
+    // Page is auto-published by backend after file upload
 
     return {
       _id: result._id,
@@ -77,15 +76,14 @@ export class HtmlHostingClient {
 
   /**
    * Create an HTML page from a GitHub repository
-   * The API will automatically fetch and deploy the file from GitHub
+   * The API will automatically fetch, deploy, and publish the file from GitHub
    * @param data - Create request data with GitHub file URL
    * @returns Created page with ID, shorter link, and GitHub info
    */
   async createWithGithubFile(data: ICreateHtmlPageRequestWithGithub): Promise<IHtmlPageCreateWithGithubResponse> {
-    const response = await this.http.post<ICreateHtmlPageResponse>(this.basePath, {
+    const response = await this.http.post<ICreateHtmlPageResponse>(`${this.basePath}/github`, {
       ...data,
-      sourceType: "github",
-      createdFrom: "npmPackage"
+      createdFrom: "npmPackage",
     });
     const result = response.result!.details;
 
@@ -108,6 +106,7 @@ export class HtmlHostingClient {
 
   /**
    * Update an HTML page with a new file upload to R2 storage
+   * Auto-publishes after file upload is complete
    * @param id - HTML page ID to update
    * @param data - Update request data with file information
    * @param file - New HTML file to upload (File or Blob)
@@ -115,23 +114,21 @@ export class HtmlHostingClient {
    */
   async updateWithNewFile(id: string, data: IUpdateHtmlPageRequestWithFile, file: File | Blob): Promise<IHtmlPageCreateWithFileResponse> {
     // Step 1: Update the HTML page record and get upload configuration
-    const response = await this.http.put<IUpdateHtmlPageResponse>(`${this.basePath}/${id}`, {
+    const response = await this.http.put<IUpdateHtmlPageResponse>(`${this.basePath}/${id}/file`, {
       ...data,
-      sourceType: "file",
       isNewFile: true,
     });
     const result = response.result!.details;
-    const uploadConfig = response.result!.uplaodFileConfig;
+    const uploadConfig = response.result!.uploadFileConfig;
 
     // Step 2: Upload HTML file to R2 using uploadToR2 utility
     if (uploadConfig) {
       await uploadToR2(uploadConfig.uploadUrl, file, {
-        contentType: file instanceof File ? file.type : 'text/html'
+        contentType: file instanceof File ? file.type : "text/html",
       });
     }
 
-    // Step 3: Publish the HTML page
-    await this.publish(result._id);
+    // Page is auto-published by backend
 
     return {
       _id: result._id,
@@ -142,15 +139,14 @@ export class HtmlHostingClient {
 
   /**
    * Update an HTML page with a new GitHub repository file
-   * The API will automatically fetch and deploy the file from GitHub
+   * The API will automatically fetch, deploy, and publish the file from GitHub
    * @param id - HTML page ID to update
    * @param data - Update request data with GitHub file URL
    * @returns Updated page with ID, shorter link, and GitHub info
    */
   async updateWithGithubFile(id: string, data: IUpdateHtmlPageRequestWithGithub): Promise<IHtmlPageCreateWithGithubResponse> {
-    const response = await this.http.put<IUpdateHtmlPageResponse>(`${this.basePath}/${id}`, {
+    const response = await this.http.put<IUpdateHtmlPageResponse>(`${this.basePath}/${id}/github`, {
       ...data,
-      sourceType: "github",
     });
     const result = response.result!.details;
 
@@ -203,14 +199,6 @@ export class HtmlHostingClient {
   async lookupForms(id: string): Promise<ILookupFormsResponse> {
     const response = await this.http.get<ILookupFormsResponse>(`${this.basePath}/lookup-froms/${id}`);
     return response.result!;
-  }
-
-  /**
-   * Publish an HTML page to make it live and accessible
-   * @param id - HTML page ID
-   */
-  private async publish(id: string): Promise<void> {
-    await this.http.put<IPublishHtmlPageResponse>(`${this.basePath}/publish/${id}`, {});
   }
 
   /**

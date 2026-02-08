@@ -183,7 +183,7 @@ export interface IUploadFileConfig {
  */
 export interface ICreateHtmlPageResponse {
   /** Upload configuration for AWS S3 */
-  uplaodFileConfig: IUploadFileConfig;
+  uploadFileConfig: IUploadFileConfig;
   /** HTML page details */
   details: IHtmlPageResponse;
 }
@@ -193,7 +193,7 @@ export interface ICreateHtmlPageResponse {
  */
 export interface IUpdateHtmlPageResponse {
   /** Upload configuration for AWS S3 (only when isNewFile=true) */
-  uplaodFileConfig: IUploadFileConfig | null;
+  uploadFileConfig: IUploadFileConfig | null;
   /** HTML page details */
   details: IHtmlPageResponse;
 }
