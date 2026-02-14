@@ -65,10 +65,55 @@ export interface ICreateSocialPublisherTaskRequest {
     refId?: string;
 }
 
+export interface ICreateSocialPublisherAccountTaskRequest {
+    /** Account ID */
+    accountId: string;
+    source: SocialPublisherTaskSourceType;
+    isAllowYouTube: boolean;
+    isAllowTiktok: boolean;
+    isAllowFacebookPage: boolean;
+    isAllowInstagram: boolean;
+    youTube?: IYouTubeConfig;
+    tiktok?: ITikTokConfig;
+    facebook?: IFacebookPageConfig;
+    instagram?: IInstagramConfig;
+    videoURL?: string;
+    thumbURL?: string;
+    postURL?: string;
+    schedule?: IScheduleConfig;
+    /**
+     * Tag (optional)
+     * Use this field to filter tasks by tag.
+     * You can pass any custom value from your system.
+     */
+    tag?: string;
+    /**
+     * Reference ID (optional)
+     * Use this field to filter tasks by reference ID.
+     * You can pass any custom identifier from your system.
+     */
+    refId?: string;
+}
+
 
 export interface ITaskSetting {
     /** Workspace ID */
     workspaceId: string;
+    isAllowYouTube: boolean;
+    isAllowTiktok: boolean;
+    isAllowFacebookPage: boolean;
+    isAllowInstagram: boolean;
+    youTube?: IYouTubeConfig;
+    tiktok?: ITikTokConfig;
+    facebook?: IFacebookPageConfig;
+    instagram?: IInstagramConfig;
+    schedule?: IScheduleConfig;
+    source: SocialPublisherTaskSourceType;
+}
+
+export interface IAccountTaskSetting {
+    /** Account ID */
+    accountId: string;
     isAllowYouTube: boolean;
     isAllowTiktok: boolean;
     isAllowFacebookPage: boolean;
@@ -96,6 +141,82 @@ export interface IPublishOptions {
      * Workspace ID (required)
      */
     workspaceId: string;
+
+    /**
+     * Video source (required)
+     * Can be:
+     * - File object (will be uploaded)
+     * - Direct video URL (http://... or https://...)
+     * - Facebook video URL (auto-detected for repost)
+     * - TikTok video URL (auto-detected for repost)
+     * - YouTube Shorts URL (auto-detected for repost)
+     */
+    video: File | string;
+
+    /**
+     * Optional thumbnail
+     * Can be:
+     * - File object (will be uploaded)
+     * - URL string (will be used directly)
+     */
+    thumbnail?: File | string;
+
+    /**
+     * Platforms to publish to (required)
+     * At least one platform must be specified
+     */
+    platforms: Array<'youtube' | 'tiktok' | 'facebook' | 'instagram'>;
+
+    /**
+     * YouTube-specific configuration
+     * Required if 'youtube' is in platforms array
+     */
+    youtube?: IYouTubeConfig;
+
+    /**
+     * TikTok-specific configuration
+     * Required if 'tiktok' is in platforms array
+     */
+    tiktok?: ITikTokConfig;
+
+    /**
+     * Facebook Page-specific configuration
+     * Required if 'facebook' is in platforms array
+     */
+    facebook?: IFacebookPageConfig;
+
+    /**
+     * Instagram-specific configuration
+     * Required if 'instagram' is in platforms array
+     */
+    instagram?: IInstagramConfig;
+
+    /**
+     * Optional scheduling
+     * - 'now': Publish immediately (default)
+     * - Date: Schedule for specific date/time
+     */
+    schedule?: 'now' | Date;
+
+    /**
+     * Optional tag for categorization
+     */
+    tag?: string;
+
+    /**
+     * Optional reference ID for external systems
+     */
+    refId?: string;
+}
+
+/**
+ * Options for publishing to an account
+ */
+export interface IPublishToAccountOptions {
+    /**
+     * Account ID (required)
+     */
+    accountId: string;
 
     /**
      * Video source (required)

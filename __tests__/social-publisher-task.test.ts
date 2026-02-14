@@ -23,6 +23,7 @@ describe('Social Publisher Task SDK', () => {
     let client!: SocialPublisherTaskClient;
     let createdId: string;
     let workspaceId: string;
+    let accountId: string;
     let thumbnailURL = "https://images.unsplash.com/3/GoWildImages_MtEverest_NEP0555.jpg";
     let videoURL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
     let facebookReelURL = "https://www.facebook.com/reel/1794235308045414";
@@ -39,9 +40,10 @@ describe('Social Publisher Task SDK', () => {
         client = new SocialPublisherTaskClient(httpClient);
 
         workspaceId = '69693ef08810cf26d95ad905';
+        accountId = '69693ef08810cf26d95ad906';
     });
 
-    describe('CREATE - publishShortVideo with Video File', () => {
+    describe('CREATE - publishShortVideoToWorkspace with Video File', () => {
         it('should publish video file with thumbnail URL', async () => {
             if (!workspaceId) {
                 console.warn('Skipping: No workspace ID available');
@@ -50,7 +52,7 @@ describe('Social Publisher Task SDK', () => {
 
             const videoFile = getVideo();
 
-            const result = await client.publishShortVideo({
+            const result = await client.publishShortVideoToWorkspace({
                 workspaceId: workspaceId,
                 video: videoFile,
                 thumbnail: thumbnailURL,
@@ -97,14 +99,14 @@ describe('Social Publisher Task SDK', () => {
         // });
     });
 
-    describe('CREATE - publishShortVideo with Video URL', () => {
+    describe('CREATE - publishShortVideoToWorkspace with Video URL', () => {
         it('should publish video URL with thumbnail file', async () => {
             if (!workspaceId) {
                 console.warn('Skipping: No workspace ID available');
                 return;
             }
             const thumbFile = getThumb();
-            const result = await client.publishShortVideo({
+            const result = await client.publishShortVideoToWorkspace({
                 workspaceId: workspaceId,
                 video: videoURL,
                 thumbnail: thumbFile,
@@ -127,7 +129,7 @@ describe('Social Publisher Task SDK', () => {
                 return;
             }
 
-            const result = await client.publishShortVideo({
+            const result = await client.publishShortVideoToWorkspace({
                 workspaceId: workspaceId,
                 video: videoURL,
                 thumbnail: thumbnailURL,
@@ -152,14 +154,14 @@ describe('Social Publisher Task SDK', () => {
         });
     });
 
-    describe('CREATE - publishShortVideo with Repost URLs', () => {
+    describe('CREATE - publishShortVideoToWorkspace with Repost URLs', () => {
         it('should repost from Facebook Reel URL', async () => {
             if (!workspaceId) {
                 console.warn('Skipping: No workspace ID available');
                 return;
             }
 
-            const result = await client.publishShortVideo({
+            const result = await client.publishShortVideoToWorkspace({
                 workspaceId: workspaceId,
                 video: facebookReelURL,
                 platforms: ['youtube'],
@@ -181,7 +183,7 @@ describe('Social Publisher Task SDK', () => {
                 return;
             }
 
-            const result = await client.publishShortVideo({
+            const result = await client.publishShortVideoToWorkspace({
                 workspaceId: workspaceId,
                 video: youtubeShortsURL,
                 platforms: ['tiktok'],
@@ -205,7 +207,7 @@ describe('Social Publisher Task SDK', () => {
                 return;
             }
 
-            const result = await client.publishShortVideo({
+            const result = await client.publishShortVideoToWorkspace({
                 workspaceId: workspaceId,
                 video: tikTokVideoURL,
                 platforms: ['youtube'],
@@ -213,6 +215,80 @@ describe('Social Publisher Task SDK', () => {
                     title: 'Reposted from TikTok - ' + Date.now(),
                     description: 'Testing TikTok repost',
                     tags: ['repost', 'tiktok']
+                }
+            });
+
+            expect(result).toBeDefined();
+            expect(typeof result).toBe('string');
+            createdResources.tasks.push(result);
+        });
+    });
+
+    describe('CREATE - publishShortVideoToAccount', () => {
+        it('should publish video file to account', async () => {
+            if (!accountId) {
+                console.warn('Skipping: No account ID available');
+                return;
+            }
+
+            const videoFile = getVideo();
+            const thumbFile = getThumb();
+
+            const result = await client.publishShortVideoToAccount({
+                accountId: accountId,
+                video: videoFile,
+                thumbnail: thumbFile,
+                platforms: ['tiktok'],
+                tiktok: {
+                    caption: 'Account Video File - ' + Date.now(),
+                    privacy_level: 'SELF_ONLY',
+                    disable_duet: false,
+                    disable_stitch: false,
+                    disable_comment: false
+                }
+            });
+
+            expect(result).toBeDefined();
+            expect(typeof result).toBe('string');
+            createdResources.tasks.push(result);
+        });
+
+        it('should publish video URL to account', async () => {
+            if (!accountId) {
+                console.warn('Skipping: No account ID available');
+                return;
+            }
+
+            const result = await client.publishShortVideoToAccount({
+                accountId: accountId,
+                video: videoURL,
+                thumbnail: thumbnailURL,
+                platforms: ['youtube'],
+                youtube: {
+                    title: 'Account Video URL - ' + Date.now(),
+                    description: 'Testing account publishing via URL',
+                    tags: ['test', 'account']
+                }
+            });
+
+            expect(result).toBeDefined();
+            expect(typeof result).toBe('string');
+            createdResources.tasks.push(result);
+        });
+
+        it('should repost to account', async () => {
+            if (!accountId) {
+                console.warn('Skipping: No account ID available');
+                return;
+            }
+
+            const result = await client.publishShortVideoToAccount({
+                accountId: accountId,
+                video: youtubeShortsURL,
+                platforms: ['tiktok'],
+                tiktok: {
+                    caption: 'Account Repost Test',
+                    privacy_level: 'SELF_ONLY'
                 }
             });
 

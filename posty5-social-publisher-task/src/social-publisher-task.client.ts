@@ -10,6 +10,9 @@ import {
   ITaskSetting,
   IPublishOptions,
   IListParams,
+  ICreateSocialPublisherAccountTaskRequest,
+  IAccountTaskSetting,
+  IPublishToAccountOptions,
 } from "./interfaces";
 
 /**
@@ -82,8 +85,8 @@ export class SocialPublisherTaskClient {
    * @param data - Task creation data
    * @param id - Optional ID for updating/retrying? (Based on route :id?)
    */
-  private async createByFile(data: ICreateSocialPublisherTaskRequest, id?: string): Promise<string> {
-    const url = id ? `${this.basePath}/short-video/by-file/${id}` : `${this.basePath}/short-video/by-file`;
+  private async createToWorkspaceByFile(data: ICreateSocialPublisherTaskRequest, id?: string): Promise<string> {
+    const url = id ? `${this.basePath}/short-video/workspace/by-file/${id}` : `${this.basePath}/short-video/workspace/by-file`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
       createdFrom: "npmPackage",
@@ -96,8 +99,36 @@ export class SocialPublisherTaskClient {
    * @param data - Task creation data
    * @param id - Optional ID for updating/retrying? (Based on route :id?)
    */
-  private async createByURL(data: ICreateSocialPublisherTaskRequest, id?: string): Promise<string> {
-    const url = id ? `${this.basePath}/short-video/by-url/${id}` : `${this.basePath}/short-video/by-url`;
+  private async createToWorkspaceByURL(data: ICreateSocialPublisherTaskRequest, id?: string): Promise<string> {
+    const url = id ? `${this.basePath}/short-video/workspace/by-url/${id}` : `${this.basePath}/short-video/workspace/by-url`;
+    const response = await this.http.post<{ _id: string }>(url, {
+      ...data,
+      createdFrom: "npmPackage",
+    });
+    return response.result?._id!;
+  }
+
+  /**
+   * Create a new task (publish video to account)
+   * @param data - Task creation data
+   * @param id - Optional ID for updating/retrying?
+   */
+  private async createToAccountByFile(data: ICreateSocialPublisherAccountTaskRequest, id?: string): Promise<string> {
+    const url = id ? `${this.basePath}/short-video/account/by-file/${id}` : `${this.basePath}/short-video/account/by-file`;
+    const response = await this.http.post<{ _id: string }>(url, {
+      ...data,
+      createdFrom: "npmPackage",
+    });
+    return response.result?._id!;
+  }
+
+  /**
+   * Create a new task (publish video to account)
+   * @param data - Task creation data
+   * @param id - Optional ID for updating/retrying?
+   */
+  private async createToAccountByURL(data: ICreateSocialPublisherAccountTaskRequest, id?: string): Promise<string> {
+    const url = id ? `${this.basePath}/short-video/account/by-url/${id}` : `${this.basePath}/short-video/account/by-url`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
       createdFrom: "npmPackage",
@@ -158,7 +189,7 @@ export class SocialPublisherTaskClient {
    * @param thumb - Optional thumbnail image file or URL string
    * @returns Created task response
    */
-  private async publishShortVideoByFile(settings: ITaskSetting, video: File, thumb?: File | string): Promise<string> {
+  private async publishShortVideoToWorkspaceByFile(settings: ITaskSetting, video: File, thumb?: File | string): Promise<string> {
     // Validate video size
     if (video.size > this.maxVideoUploadSizeBytes) {
       throw new Error(`Video file size (${video.size} bytes) exceeds maximum allowed size (${this.maxVideoUploadSizeBytes} bytes)`);
@@ -192,7 +223,7 @@ export class SocialPublisherTaskClient {
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.createByFile(taskSettings, uploadUrlsResponse.taskId);
+    return await this.createToWorkspaceByFile(taskSettings, uploadUrlsResponse.taskId);
   }
 
   /**
@@ -202,7 +233,7 @@ export class SocialPublisherTaskClient {
    * @param thumb - Optional thumbnail image file or URL string
    * @returns Created task response
    */
-  private async publishShortVideoByURL(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
+  private async publishShortVideoToWorkspaceByURL(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
     // Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb);
 
@@ -213,7 +244,7 @@ export class SocialPublisherTaskClient {
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.createByURL(taskSettings, uploadThumb?.taskId);
+    return await this.createToWorkspaceByURL(taskSettings, uploadThumb?.taskId);
   }
 
   /**
@@ -223,7 +254,7 @@ export class SocialPublisherTaskClient {
    * @param thumb - Optional thumbnail image file or URL string
    * @returns Created task response
    */
-  private async publishRepostVideo(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
+  private async publishRepostVideoToWorkspace(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
     // Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb);
 
@@ -234,7 +265,81 @@ export class SocialPublisherTaskClient {
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.createByURL(taskSettings, uploadThumb?.taskId);
+    return await this.createToWorkspaceByURL(taskSettings, uploadThumb?.taskId);
+  }
+
+  /**
+   * Publish a short video to account by uploading a video file
+   */
+  private async publishShortVideoToAccountByFile(settings: IAccountTaskSetting, video: File, thumb?: File | string): Promise<string> {
+    // Validate video size
+    if (video.size > this.maxVideoUploadSizeBytes) {
+      throw new Error(`Video file size (${video.size} bytes) exceeds maximum allowed size (${this.maxVideoUploadSizeBytes} bytes)`);
+    }
+
+    // Validate video file type
+    const allowedVideoTypes = [".mp4", ".mov", ".avi", ".mkv", ".webm"];
+    const videoExtension = "." + video.name.split(".").pop()?.toLowerCase();
+    if (!allowedVideoTypes.includes(videoExtension)) {
+      throw new Error(`Invalid video file type. Allowed types: ${allowedVideoTypes.join(", ")}`);
+    }
+
+    // Step 1: Generate upload URLs for video
+    const uploadUrlsResponse = await this.generateUploadUrls({
+      videoFileType: video.type,
+      thumbFileType: thumb instanceof File ? thumb.type : undefined,
+    });
+
+    // Step 2: Upload video using uploadToR2 utility
+    await uploadToR2(uploadUrlsResponse.video.uploadFileURL!, video, {
+      contentType: video.type,
+    });
+
+    // Step 3: Handle thumbnail upload (File or URL)
+    const uploadThumb = await this.handleThumbnailUpload(thumb, uploadUrlsResponse);
+
+    // Step 4: Create task with uploaded file URLs
+    const taskSettings: ICreateSocialPublisherAccountTaskRequest = {
+      ...settings,
+      videoURL: uploadUrlsResponse.video.fileURL,
+      thumbURL: uploadThumb?.thumbFileURL,
+    };
+
+    return await this.createToAccountByFile(taskSettings, uploadUrlsResponse.taskId);
+  }
+
+  /**
+   * Publish a short video to account by URL
+   */
+  private async publishShortVideoToAccountByURL(settings: IAccountTaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
+    // Handle thumbnail upload (File or URL)
+    const uploadThumb = await this.handleThumbnailUpload(thumb);
+
+    // Create task with video URL
+    const taskSettings: ICreateSocialPublisherAccountTaskRequest = {
+      ...settings,
+      videoURL,
+      thumbURL: uploadThumb?.thumbFileURL,
+    };
+
+    return await this.createToAccountByURL(taskSettings, uploadThumb?.taskId);
+  }
+
+  /**
+   * Publish a repost video to account
+   */
+  private async publishRepostVideoToAccount(settings: IAccountTaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
+    // Handle thumbnail upload (File or URL)
+    const uploadThumb = await this.handleThumbnailUpload(thumb);
+
+    // Create task with TikTok video URL
+    const taskSettings: ICreateSocialPublisherAccountTaskRequest = {
+      ...settings,
+      postURL: videoURL,
+      thumbURL: uploadThumb?.thumbFileURL,
+    };
+
+    return await this.createToAccountByURL(taskSettings, uploadThumb?.taskId);
   }
 
   /**
@@ -278,7 +383,7 @@ export class SocialPublisherTaskClient {
    * });
    * ```
    */
-  async publishShortVideo(options: IPublishOptions): Promise<string> {
+  async publishShortVideoToWorkspace(options: IPublishOptions): Promise<string> {
     // Validate required fields
     if (!options.workspaceId) {
       throw new Error("workspaceId is required");
@@ -317,9 +422,9 @@ export class SocialPublisherTaskClient {
       instagram: options.instagram,
       schedule: options.schedule
         ? {
-            type: options.schedule === "now" ? "now" : "schedule",
-            scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
-          }
+          type: options.schedule === "now" ? "now" : "schedule",
+          scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
+        }
         : undefined,
       source: "video-file",
     };
@@ -330,18 +435,97 @@ export class SocialPublisherTaskClient {
     // Route to appropriate method based on detected source
     switch (source) {
       case "file": {
-        return this.publishShortVideoByFile(settings, options.video as File, options.thumbnail);
+        return this.publishShortVideoToWorkspaceByFile(settings, options.video as File, options.thumbnail);
       }
 
       case "url": {
-        return this.publishShortVideoByURL(settings, options.video as string, options.thumbnail);
+        return this.publishShortVideoToWorkspaceByURL(settings, options.video as string, options.thumbnail);
       }
       case "repost": {
-        return this.publishRepostVideo(settings, options.video as string, options.thumbnail);
+        return this.publishRepostVideoToWorkspace(settings, options.video as string, options.thumbnail);
       }
       default:
         throw new Error(`Unknown video source type: ${source}`);
     }
+  }
+
+  /**
+   * Publish a video to multiple social media platforms with auto-detection (Account)
+   *
+   * @param options - Simplified publishing options for account
+   * @returns Created task response
+   */
+  async publishShortVideoToAccount(options: IPublishToAccountOptions): Promise<string> {
+    // Validate required fields
+    if (!options.accountId) {
+      throw new Error("accountId is required");
+    }
+    if (!options.video) {
+      throw new Error("video is required");
+    }
+    if (!options.platforms || options.platforms.length === 0) {
+      throw new Error("At least one platform must be specified");
+    }
+
+    // Validate platform configurations
+    if (options.platforms.includes("youtube") && !options.youtube) {
+      throw new Error("YouTube configuration is required when publishing to YouTube");
+    }
+    if (options.platforms.includes("tiktok") && !options.tiktok) {
+      throw new Error("TikTok configuration is required when publishing to TikTok");
+    }
+    if (options.platforms.includes("facebook") && !options.facebook) {
+      throw new Error("Facebook configuration is required when publishing to Facebook");
+    }
+    if (options.platforms.includes("instagram") && !options.instagram) {
+      throw new Error("Instagram configuration is required when publishing to Instagram");
+    }
+
+    // Build IAccountTaskSetting from simplified options
+    const settings: IAccountTaskSetting = {
+      accountId: options.accountId,
+      isAllowYouTube: options.platforms.includes("youtube"),
+      isAllowTiktok: options.platforms.includes("tiktok"),
+      isAllowFacebookPage: options.platforms.includes("facebook"),
+      isAllowInstagram: options.platforms.includes("instagram"),
+      youTube: options.youtube,
+      tiktok: options.tiktok,
+      facebook: options.facebook,
+      instagram: options.instagram,
+      schedule: options.schedule
+        ? {
+          type: options.schedule === "now" ? "now" : "schedule",
+          scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
+        }
+        : undefined,
+      source: "video-file",
+    };
+
+    // Auto-detect video source type
+    const source = this.detectVideoSource(options.video);
+
+    // Route to appropriate method based on detected source
+    switch (source) {
+      case "file": {
+        return this.publishShortVideoToAccountByFile(settings, options.video as File, options.thumbnail);
+      }
+
+      case "url": {
+        return this.publishShortVideoToAccountByURL(settings, options.video as string, options.thumbnail);
+      }
+      case "repost": {
+        return this.publishRepostVideoToAccount(settings, options.video as string, options.thumbnail);
+      }
+      default:
+        throw new Error(`Unknown video source type: ${source}`);
+    }
+  }
+
+  /**
+   * @deprecated Use publishShortVideoToWorkspace instead
+   */
+  async publishShortVideo(options: IPublishOptions): Promise<string> {
+    return this.publishShortVideoToWorkspace(options);
   }
 
   /**
