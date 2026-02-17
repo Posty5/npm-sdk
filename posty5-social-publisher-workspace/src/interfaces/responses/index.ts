@@ -68,9 +68,9 @@ export interface IDeleteWorkspaceResponse {
 }
 
 /**
- * Workspace details formatted for new task creation with populated accounts
+ * Workspace details formatted for new post creation with populated accounts
  */
-export interface IWorkspaceForNewTaskResponse {
+export interface IWorkspaceForNewPostResponse {
   _id: string;
   name: string;
   description: string;

@@ -68,8 +68,8 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish posty5-social-publisher-task
-        working-directory: ./posty5-social-publisher-task
+      - name: Publish posty5-social-publisher-post
+        working-directory: ./posty5-social-publisher-post
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

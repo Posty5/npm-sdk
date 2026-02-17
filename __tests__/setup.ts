@@ -52,13 +52,13 @@ export const createdResources: {
   qrCodes: string[];
   htmlHostings: string[];
   workspaces: string[];
-  tasks: string[];
+  posts: string[];
 } = {
   shortLinks: [],
   qrCodes: [],
   htmlHostings: [],
   workspaces: [],
-  tasks: [],
+  posts: [],
 };
 
 // Cleanup function (optional - uncomment if you want auto-cleanup)

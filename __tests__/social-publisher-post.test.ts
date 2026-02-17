@@ -1,5 +1,5 @@
 import { HttpClient } from "@posty5/core";
-import { SocialPublisherTaskClient } from "@posty5/social-publisher-task";
+import { SocialPublisherPostClient } from "@posty5/social-publisher-post";
 import { TEST_CONFIG, createdResources } from "./setup";
 import * as fs from "fs";
 import * as path from "path";
@@ -18,9 +18,9 @@ function getThumb() {
   const file = new File([blob], "thumb.jpg", { type: "image/jpeg" });
   return file;
 }
-describe("Social Publisher Task SDK", () => {
+describe("Social Publisher Post SDK", () => {
   let httpClient: HttpClient;
-  let client!: SocialPublisherTaskClient;
+  let client!: SocialPublisherPostClient;
   let createdId: string;
   let workspaceId: string;
   let youtubeAccountId: string;
@@ -37,7 +37,7 @@ describe("Social Publisher Task SDK", () => {
       baseUrl: TEST_CONFIG.baseUrl,
       debug: true,
     });
-    client = new SocialPublisherTaskClient(httpClient);
+    client = new SocialPublisherPostClient(httpClient);
 
     workspaceId = "69922068aa6ee6fa8eb8f9c2";
     youtubeAccountId = "69921cc7aa6ee6fa8eb8f8a9";
@@ -68,7 +68,7 @@ describe("Social Publisher Task SDK", () => {
       expect(result).toBeDefined();
       expect(typeof result).toBe("string");
       createdId = result;
-      createdResources.tasks.push(createdId);
+      createdResources.posts.push(createdId);
     });
 
     // it('should publish video file with thumbnail file', async () => {
@@ -96,7 +96,7 @@ describe("Social Publisher Task SDK", () => {
 
     //     expect(result).toBeDefined();
     //     expect(typeof result).toBe('string');
-    //     createdResources.tasks.push(result);
+    //     createdResources.posts.push(result);
     // });
   });
 
@@ -121,7 +121,7 @@ describe("Social Publisher Task SDK", () => {
 
       expect(result).toBeDefined();
       expect(typeof result).toBe("string");
-      createdResources.tasks.push(result);
+      createdResources.posts.push(result);
     });
 
     it("should publish video URL with thumbnail URL", async () => {
@@ -151,7 +151,7 @@ describe("Social Publisher Task SDK", () => {
 
       expect(result).toBeDefined();
       expect(typeof result).toBe("string");
-      createdResources.tasks.push(result);
+      createdResources.posts.push(result);
     });
   });
 
@@ -175,7 +175,7 @@ describe("Social Publisher Task SDK", () => {
 
       expect(result).toBeDefined();
       expect(typeof result).toBe("string");
-      createdResources.tasks.push(result);
+      createdResources.posts.push(result);
     });
 
     it("should repost from YouTube Shorts URL", async () => {
@@ -199,7 +199,7 @@ describe("Social Publisher Task SDK", () => {
 
       expect(result).toBeDefined();
       expect(typeof result).toBe("string");
-      createdResources.tasks.push(result);
+      createdResources.posts.push(result);
     });
 
     it("should repost from TikTok Video URL", async () => {
@@ -221,7 +221,7 @@ describe("Social Publisher Task SDK", () => {
 
       expect(result).toBeDefined();
       expect(typeof result).toBe("string");
-      createdResources.tasks.push(result);
+      createdResources.posts.push(result);
     });
   });
 
@@ -251,7 +251,7 @@ describe("Social Publisher Task SDK", () => {
 
       expect(result).toBeDefined();
       expect(typeof result).toBe("string");
-      createdResources.tasks.push(result);
+      createdResources.posts.push(result);
     });
 
     it("should publish video URL to account", async () => {
@@ -274,7 +274,7 @@ describe("Social Publisher Task SDK", () => {
 
       expect(result).toBeDefined();
       expect(typeof result).toBe("string");
-      createdResources.tasks.push(result);
+      createdResources.posts.push(result);
     });
 
     it("should repost to account", async () => {
@@ -298,7 +298,7 @@ describe("Social Publisher Task SDK", () => {
 
       expect(result).toBeDefined();
       expect(typeof result).toBe("string");
-      createdResources.tasks.push(result);
+      createdResources.posts.push(result);
     });
   });
 
@@ -310,9 +310,9 @@ describe("Social Publisher Task SDK", () => {
       // Default settings should contain configuration data
     });
 
-    it("should get task status", async () => {
+    it("should get post status", async () => {
       if (!createdId) {
-        console.warn("Skipping: No task created");
+        console.warn("Skipping: No post created");
         return;
       }
 
@@ -321,9 +321,9 @@ describe("Social Publisher Task SDK", () => {
       expect(result).toBeDefined();
     });
 
-    it("should get next and previous task IDs", async () => {
+    it("should get next and previous post IDs", async () => {
       if (!createdId) {
-        console.warn("Skipping: No task created");
+        console.warn("Skipping: No post created");
         return;
       }
 
@@ -335,7 +335,7 @@ describe("Social Publisher Task SDK", () => {
   });
 
   describe("GET LIST", () => {
-    it("should get list of tasks", async () => {
+    it("should get list of posts", async () => {
       const result = await client.list(
         {},
         {

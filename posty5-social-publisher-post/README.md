@@ -1,6 +1,6 @@
-# @posty5/social-publisher-task
+# @posty5/social-publisher-post
 
-Official Posty5 SDK for managing social media publishing tasks. Publish videos to YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels with a unified, developer-friendly API.
+Official Posty5 SDK for managing social media publishing posts. Publish videos to YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels with a unified, developer-friendly API.
 
 ---
 
@@ -22,11 +22,11 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 
 ## 📦 About This Package
 
-`@posty5/social-publisher-task` is the **task management client** for the Posty5 Social Media Publisher. This package enables you to programmatically publish short-form videos to multiple social media platforms simultaneously from a single API call.
+`@posty5/social-publisher-post` is the **post management client** for the Posty5 Social Media Publisher. This package enables you to programmatically publish short-form videos to multiple social media platforms simultaneously from a single API call.
 
-### What are Social Publisher Tasks?
+### What are Social Publisher Posts?
 
-Tasks represent video publishing jobs that distribute your content across YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels. Each task handles the entire publishing workflow: video upload, platform-specific configuration, scheduling, and status tracking.
+Posts represent video publishing jobs that distribute your content across YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels. Each post handles the entire publishing workflow: video upload, platform-specific configuration, scheduling, and status tracking.
 
 ### Key Capabilities
 
@@ -36,9 +36,9 @@ Tasks represent video publishing jobs that distribute your content across YouTub
 - **Platform-Specific Configuration** - Customize titles, descriptions, captions, tags, and privacy settings per platform
 - **Schedule Publishing** - Publish immediately or schedule for optimal engagement times
 - **Repost Detection** - Automatically detect and repost from Facebook, TikTok, and YouTube Shorts URLs
-- **Task Status Tracking** - Monitor publishing progress and platform-specific status
-- **Tag & Reference System** - Organize tasks using custom tags and reference IDs
-- **Pagination & Filtering** - Search tasks by workspace, status, tag, or reference ID
+- **Post Status Tracking** - Monitor publishing progress and platform-specific status
+- **Tag & Reference System** - Organize posts using custom tags and reference IDs
+- **Pagination & Filtering** - Search posts by workspace, status, tag, or reference ID
 
 ### Why Use This Package?
 
@@ -46,7 +46,7 @@ Tasks represent video publishing jobs that distribute your content across YouTub
 - **Automated Workflow**: Integrate multi-platform publishing into your content pipeline
 - **Content Repurposing**: Automatically repost viral content from other platforms
 - **Consistent Branding**: Apply platform-optimized metadata while maintaining brand voice
-- **Progress Tracking**: Monitor task status and handle errors programmatically
+- **Progress Tracking**: Monitor post status and handle errors programmatically
 
 ### Supported Platforms
 
@@ -64,7 +64,7 @@ Tasks represent video publishing jobs that distribute your content across YouTub
 Install via npm:
 
 ```bash
-npm install @posty5/social-publisher-task @posty5/core
+npm install @posty5/social-publisher-post @posty5/core
 ```
 
 ---
@@ -73,7 +73,7 @@ npm install @posty5/social-publisher-task @posty5/core
 
 ```typescript
 import { HttpClient } from "@posty5/core";
-import { SocialPublisherTaskClient } from "@posty5/social-publisher-task";
+import { SocialPublisherPostClient } from "@posty5/social-publisher-post";
 
 // Initialize the HTTP client with your API key
 const httpClient = new HttpClient({
@@ -81,11 +81,11 @@ const httpClient = new HttpClient({
   debug: true, // Optional: Enable debug logging
 });
 
-// Create task client
-const client = new SocialPublisherTaskClient(httpClient);
+// Create post client
+const client = new SocialPublisherPostClient(httpClient);
 
 // Publish video to YouTube Shorts
-const taskId = await client.publishShortVideo({
+const postId = await client.publishShortVideo({
   workspaceId: "workspace-123", // Your workspace ID
   video: videoFile, // File object or URL string
   thumbnail: thumbFile, // Optional: File or URL
@@ -97,10 +97,10 @@ const taskId = await client.publishShortVideo({
   },
 });
 
-console.log("Task created:", taskId);
+console.log("Post created:", postId);
 
-// Check task status
-const status = await client.getStatus(taskId);
+// Check post status
+const status = await client.getStatus(postId);
 console.log("Publishing status:", status.currentStatus);
 console.log("YouTube:", status.youtube?.postInfo.currentStatus);
 ```
@@ -111,7 +111,7 @@ console.log("YouTube:", status.youtube?.postInfo.currentStatus);
 
 ### publishShortVideo()
 
-Publish a short video to one or more social media platforms. This is the main method for creating publishing tasks. It automatically detects video source type (File upload, URL, or platform-specific repost URL) and handles all upload logic.
+Publish a short video to one or more social media platforms. This is the main method for creating publishing posts. It automatically detects video source type (File upload, URL, or platform-specific repost URL) and handles all upload logic.
 
 **Parameters:**
 
@@ -128,7 +128,7 @@ Publish a short video to one or more social media platforms. This is the main me
   - `tag` (string, optional): Custom tag for filtering
   - `refId` (string, optional): Your internal reference ID
 
-**Returns:** `Promise<string>` - Created task ID
+**Returns:** `Promise<string>` - Created post ID
 
 **Example - Upload Video File:**
 
@@ -144,7 +144,7 @@ const video = new File([videoFile], "video.mp4", { type: "video/mp4" });
 const thumbnail = new File([thumbFile], "thumb.jpg", { type: "image/jpeg" });
 
 // Publish to YouTube only
-const taskId = await client.publishShortVideo({
+const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: video,
   thumbnail: thumbnail,
@@ -159,14 +159,14 @@ const taskId = await client.publishShortVideo({
   refId: "PROD-LAUNCH-001", // Your internal reference
 });
 
-console.log("Published to YouTube:", taskId);
+console.log("Published to YouTube:", postId);
 ```
 
 **Example - Video URL with Thumbnail URL:**
 
 ```typescript
 // Publish using URLs (no file upload needed)
-const taskId = await client.publishShortVideo({
+const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: "https://cdn.example.com/videos/promo.mp4", // Direct video URL
   thumbnail: "https://cdn.example.com/images/thumb.jpg", // Direct thumbnail URL
@@ -185,14 +185,14 @@ const taskId = await client.publishShortVideo({
   },
 });
 
-console.log("Published to YouTube and TikTok:", taskId);
+console.log("Published to YouTube and TikTok:", postId);
 ```
 
 **Example - Multi-Platform Publishing:**
 
 ```typescript
 // Publish to all 4 platforms simultaneously
-const taskId = await client.publishShortVideo({
+const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: videoFile,
   thumbnail: thumbFile,
@@ -227,14 +227,14 @@ const taskId = await client.publishShortVideo({
   },
 });
 
-console.log("Published to all platforms:", taskId);
+console.log("Published to all platforms:", postId);
 ```
 
 **Example - Repost from TikTok:**
 
 ```typescript
 // Automatically detect and repost from TikTok
-const taskId = await client.publishShortVideo({
+const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: "https://www.tiktok.com/@username/video/1234567890", // TikTok URL
   platforms: ["youtube"], // Repost to YouTube
@@ -245,14 +245,14 @@ const taskId = await client.publishShortVideo({
   },
 });
 
-console.log("Reposted from TikTok to YouTube:", taskId);
+console.log("Reposted from TikTok to YouTube:", postId);
 ```
 
 **Example - Repost from YouTube Shorts:**
 
 ```typescript
 // Repost YouTube Shorts to TikTok
-const taskId = await client.publishShortVideo({
+const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: "https://www.youtube.com/shorts/abc123", // YouTube Shorts URL
   platforms: ["tiktok"],
@@ -265,14 +265,14 @@ const taskId = await client.publishShortVideo({
   },
 });
 
-console.log("Reposted from YouTube to TikTok:", taskId);
+console.log("Reposted from YouTube to TikTok:", postId);
 ```
 
 **Example - Repost from Facebook:**
 
 ```typescript
 // Repost Facebook video to other platforms
-const taskId = await client.publishShortVideo({
+const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: "https://www.facebook.com/reel/1234567890", // Facebook Reel URL
   platforms: ["youtube", "tiktok"],
@@ -290,7 +290,7 @@ const taskId = await client.publishShortVideo({
   },
 });
 
-console.log("Reposted from Facebook:", taskId);
+console.log("Reposted from Facebook:", postId);
 ```
 
 **Example - Scheduled Publishing:**
@@ -299,7 +299,7 @@ console.log("Reposted from Facebook:", taskId);
 // Schedule video for future publication
 const publishDate = new Date("2024-12-25T12:00:00Z"); // Christmas at noon
 
-const taskId = await client.publishShortVideo({
+const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: videoFile,
   platforms: ["youtube", "tiktok"],
@@ -318,38 +318,38 @@ const taskId = await client.publishShortVideo({
   },
 });
 
-console.log("Scheduled for", publishDate, "- Task ID:", taskId);
+console.log("Scheduled for", publishDate, "- Post ID:", postId);
 ```
 
 ---
 
 ### list()
 
-Search and retrieve publishing tasks with pagination and filtering options.
+Search and retrieve publishing posts with pagination and filtering options.
 
 **Parameters:**
 
 - `params` (IListParams, optional): Search and filter options
   - `workspaceId` (string, optional): Filter by workspace ID
-  - `currentStatus` (string, optional): Filter by task status ('pending', 'processing', 'done', 'error', etc.)
+  - `currentStatus` (string, optional): Filter by post status ('pending', 'processing', 'done', 'error', etc.)
   - `tag` (string, optional): Filter by custom tag
   - `refId` (string, optional): Filter by reference ID
 - `pagination` (IPaginationParams, optional): Pagination settings
   - `page` (number): Page number (default: 1)
   - `pageSize` (number): Items per page (default: 10)
 
-**Returns:** `Promise<ISearchSocialPublisherTaskResponse>` - Paginated task list
+**Returns:** `Promise<ISearchSocialPublisherPostResponse>` - Paginated post list
 
 **Response Structure:**
 
 ```typescript
 {
   items: Array<{
-    _id: string; // Task ID
-    numbering: string; // Task number (e.g., "T-12345")
-    caption: string; // Task caption/title
+    _id: string; // Post ID
+    numbering: string; // Post number (e.g., "T-12345")
+    caption: string; // Post caption/title
     createdAt: Date; // Creation timestamp
-    currentStatus: string; // Overall task status
+    currentStatus: string; // Overall post status
     isAllowYoutube: boolean; // YouTube enabled
     isAllowFacebookPage: boolean; // Facebook enabled
     isAllowInstagram: boolean; // Instagram enabled
@@ -365,7 +365,7 @@ Search and retrieve publishing tasks with pagination and filtering options.
   pagination: {
     page: number; // Current page
     pageSize: number; // Items per page
-    totalCount: number; // Total tasks
+    totalCount: number; // Total posts
     totalPages: number; // Total pages
   }
 }
@@ -374,8 +374,8 @@ Search and retrieve publishing tasks with pagination and filtering options.
 **Example:**
 
 ```typescript
-// Get all tasks with pagination
-const tasks = await client.list(
+// Get all posts with pagination
+const posts = await client.list(
   {},
   {
     page: 1,
@@ -383,20 +383,20 @@ const tasks = await client.list(
   },
 );
 
-console.log(`Total tasks: ${tasks.pagination.totalCount}`);
-console.log(`Showing page ${tasks.pagination.page} of ${tasks.pagination.totalPages}`);
+console.log(`Total posts: ${posts.pagination.totalCount}`);
+console.log(`Showing page ${posts.pagination.page} of ${posts.pagination.totalPages}`);
 
-// Display tasks
-tasks.items.forEach((task) => {
-  console.log(`${task.numbering}: ${task.caption}`);
-  console.log(`  Status: ${task.currentStatus}`);
+// Display posts
+posts.items.forEach((post) => {
+  console.log(`${post.numbering}: ${post.caption}`);
+  console.log(`  Status: ${post.currentStatus}`);
   console.log(
-    `  Platforms: ${[task.isAllowYoutube && "YouTube", task.isAllowTiktok && "TikTok", task.isAllowFacebookPage && "Facebook", task.isAllowInstagram && "Instagram"].filter(Boolean).join(", ")}`,
+    `  Platforms: ${[post.isAllowYoutube && "YouTube", post.isAllowTiktok && "TikTok", post.isAllowFacebookPage && "Facebook", post.isAllowInstagram && "Instagram"].filter(Boolean).join(", ")}`,
   );
 });
 
 // Filter by workspace
-const workspaceTasks = await client.list(
+const workspacePosts = await client.list(
   {
     workspaceId: "workspace-123",
   },
@@ -406,10 +406,10 @@ const workspaceTasks = await client.list(
   },
 );
 
-console.log(`Workspace has ${workspaceTasks.items.length} tasks`);
+console.log(`Workspace has ${workspacePosts.items.length} posts`);
 
 // Filter by status
-const pendingTasks = await client.list(
+const pendingPosts = await client.list(
   {
     currentStatus: "pending",
   },
@@ -419,10 +419,10 @@ const pendingTasks = await client.list(
   },
 );
 
-console.log(`Pending tasks: ${pendingTasks.pagination.totalCount}`);
+console.log(`Pending posts: ${pendingPosts.pagination.totalCount}`);
 
 // Filter by tag
-const campaignTasks = await client.list(
+const campaignPosts = await client.list(
   {
     tag: "summer-campaign",
   },
@@ -432,10 +432,10 @@ const campaignTasks = await client.list(
   },
 );
 
-console.log(`Campaign tasks: ${campaignTasks.items.length}`);
+console.log(`Campaign posts: ${campaignPosts.items.length}`);
 
 // Filter by reference ID
-const specificTask = await client.list(
+const specificPost = await client.list(
   {
     refId: "PROD-001",
   },
@@ -445,8 +445,8 @@ const specificTask = await client.list(
   },
 );
 
-if (specificTask.items.length > 0) {
-  console.log("Found task:", specificTask.items[0].caption);
+if (specificPost.items.length > 0) {
+  console.log("Found post:", specificPost.items[0].caption);
 }
 ```
 
@@ -454,21 +454,21 @@ if (specificTask.items.length > 0) {
 
 ### getStatus()
 
-Retrieve detailed status information for a specific publishing task, including platform-specific progress and post URLs.
+Retrieve detailed status information for a specific publishing post, including platform-specific progress and post URLs.
 
 **Parameters:**
 
-- `id` (string): Task ID
+- `id` (string): Post ID
 
-**Returns:** `Promise<ISocialPublisherTaskStatusResponse>` - Detailed task status
+**Returns:** `Promise<ISocialPublisherPostStatusResponse>` - Detailed post status
 
 **Response Structure:**
 
 ```typescript
 {
-  _id: string;                       // Task ID
-  numbering: string;                 // Task number
-  caption: string;                   // Task caption
+  _id: string;                       // Post ID
+  numbering: string;                 // Post number
+  caption: string;                   // Post caption
   currentStatus: string;             // Overall status
   createdAt: Date;                   // Creation time
   startedAt: Date;                   // Start time
@@ -511,10 +511,10 @@ Retrieve detailed status information for a specific publishing task, including p
 **Example:**
 
 ```typescript
-// Get task status
-const status = await client.getStatus("task-id-here");
+// Get post status
+const status = await client.getStatus("post-id-here");
 
-console.log("Task:", status.numbering);
+console.log("Post:", status.numbering);
 console.log("Overall Status:", status.currentStatus);
 console.log("Created:", status.createdAt);
 
@@ -556,7 +556,7 @@ if (status.instagram) {
 
 // Handle errors
 if (status.currentStatus === "error") {
-  console.error("Task failed!");
+  console.error("Post failed!");
 
   // Check which platforms failed
   const failures = [];
@@ -568,12 +568,12 @@ if (status.currentStatus === "error") {
   console.error("Failed platforms:", failures.join(", "));
 }
 
-// Monitor task progress
-async function waitForCompletion(taskId: string, maxWaitMs = 300000) {
+// Monitor post progress
+async function waitForCompletion(postId: string, maxWaitMs = 300000) {
   const startTime = Date.now();
 
   while (Date.now() - startTime < maxWaitMs) {
-    const status = await client.getStatus(taskId);
+    const status = await client.getStatus(postId);
 
     console.log(`Status: ${status.currentStatus}`);
 
@@ -590,10 +590,10 @@ async function waitForCompletion(taskId: string, maxWaitMs = 300000) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 
-  throw new Error("Timeout waiting for task completion");
+  throw new Error("Timeout waiting for post completion");
 }
 
-const finalStatus = await waitForCompletion("task-id");
+const finalStatus = await waitForCompletion("post-id");
 console.log("All platforms published successfully");
 ```
 
@@ -624,20 +624,20 @@ console.log("Max thumbnail size:", client.maxImageUploadSizeBytes, "bytes");
 
 ### getNextAndPrevious()
 
-Get the IDs of the next and previous tasks for navigation purposes.
+Get the IDs of the next and previous posts for navigation purposes.
 
 **Parameters:**
 
-- `id` (string): Current task ID
+- `id` (string): Current post ID
 
-**Returns:** `Promise<ISocialPublisherTaskNextPreviousResponse>` - Next and previous task IDs
+**Returns:** `Promise<ISocialPublisherPostNextPreviousResponse>` - Next and previous post IDs
 
 **Response Structure:**
 
 ```typescript
 {
-  nextId?: string;     // Next task ID (if exists)
-  previousId?: string; // Previous task ID (if exists)
+  nextId?: string;     // Next post ID (if exists)
+  previousId?: string; // Previous post ID (if exists)
 }
 ```
 
@@ -645,32 +645,32 @@ Get the IDs of the next and previous tasks for navigation purposes.
 
 ```typescript
 // Get navigation IDs
-const navigation = await client.getNextAndPrevious("current-task-id");
+const navigation = await client.getNextAndPrevious("current-post-id");
 
 if (navigation.nextId) {
-  console.log("Next task:", navigation.nextId);
+  console.log("Next post:", navigation.nextId);
 
-  // Navigate to next task
-  const nextTask = await client.getStatus(navigation.nextId);
-  console.log("Next task caption:", nextTask.caption);
+  // Navigate to next post
+  const nextPost = await client.getStatus(navigation.nextId);
+  console.log("Next post caption:", nextPost.caption);
 }
 
 if (navigation.previousId) {
-  console.log("Previous task:", navigation.previousId);
+  console.log("Previous post:", navigation.previousId);
 
-  // Navigate to previous task
-  const prevTask = await client.getStatus(navigation.previousId);
-  console.log("Previous task caption:", prevTask.caption);
+  // Navigate to previous post
+  const prevPost = await client.getStatus(navigation.previousId);
+  console.log("Previous post caption:", prevPost.caption);
 }
 
-// Build task navigation
-async function navigateForward(startTaskId: string, count: number) {
-  const tasks = [];
-  let currentId = startTaskId;
+// Build post navigation
+async function navigateForward(startPostId: string, count: number) {
+  const posts = [];
+  let currentId = startPostId;
 
   for (let i = 0; i < count; i++) {
     const status = await client.getStatus(currentId);
-    tasks.push(status);
+    posts.push(status);
 
     const nav = await client.getNextAndPrevious(currentId);
     if (!nav.nextId) break;
@@ -678,11 +678,11 @@ async function navigateForward(startTaskId: string, count: number) {
     currentId = nav.nextId;
   }
 
-  return tasks;
+  return posts;
 }
 
-const next5Tasks = await navigateForward("task-id", 5);
-console.log(`Retrieved ${next5Tasks.length} tasks`);
+const next5Posts = await navigateForward("post-id", 5);
+console.log(`Retrieved ${next5Posts.length} posts`);
 ```
 
 ---
@@ -691,7 +691,7 @@ console.log(`Retrieved ${next5Tasks.length} tasks`);
 
 ```typescript
 import { HttpClient } from "@posty5/core";
-import { SocialPublisherTaskClient } from "@posty5/social-publisher-task";
+import { SocialPublisherPostClient } from "@posty5/social-publisher-post";
 import * as fs from "fs";
 
 // Initialize client
@@ -700,7 +700,7 @@ const httpClient = new HttpClient({
   debug: false,
 });
 
-const client = new SocialPublisherTaskClient(httpClient);
+const client = new SocialPublisherPostClient(httpClient);
 
 async function publishVideoWorkflow() {
   try {
@@ -714,7 +714,7 @@ async function publishVideoWorkflow() {
 
     // 2. Publish to multiple platforms
     console.log("Publishing video...");
-    const taskId = await client.publishShortVideo({
+    const postId = await client.publishShortVideo({
       workspaceId: "workspace-123",
       video: video,
       thumbnail: thumbnail,
@@ -735,7 +735,7 @@ async function publishVideoWorkflow() {
       refId: "DEMO-2024-001",
     });
 
-    console.log("✓ Task created:", taskId);
+    console.log("✓ Post created:", postId);
 
     // 3. Monitor publishing progress
     console.log("\nMonitoring progress...");
@@ -743,7 +743,7 @@ async function publishVideoWorkflow() {
     const maxAttempts = 60; // 5 minutes (5 second intervals)
 
     while (attempts < maxAttempts) {
-      const status = await client.getStatus(taskId);
+      const status = await client.getStatus(postId);
 
       console.log(`  Status: ${status.currentStatus}`);
 
@@ -773,7 +773,7 @@ async function publishVideoWorkflow() {
       // Check for errors
       if (status.currentStatus === "error") {
         console.error("\n✗ Publishing failed");
-        throw new Error("Task failed");
+        throw new Error("Post failed");
       }
 
       // Wait before checking again
@@ -781,7 +781,7 @@ async function publishVideoWorkflow() {
       attempts++;
     }
 
-    throw new Error("Timeout: Task did not complete within 5 minutes");
+    throw new Error("Timeout: Post did not complete within 5 minutes");
   } catch (error) {
     console.error("Error:", error.message);
     throw error;
@@ -803,7 +803,7 @@ Full TypeScript support with exported interfaces:
 ```typescript
 import {
   // Client
-  SocialPublisherTaskClient,
+  SocialPublisherPostClient,
 
   // Publishing options
   IPublishOptions,
@@ -821,21 +821,21 @@ import {
   IListParams,
 
   // Response interfaces
-  ISocialPublisherTaskStatusResponse,
-  ISearchSocialPublisherTaskResponse,
-  ISocialPublisherTaskNextPreviousResponse,
+  ISocialPublisherPostStatusResponse,
+  ISearchSocialPublisherPostResponse,
+  ISocialPublisherPostNextPreviousResponse,
   IDefaultSettingsResponse,
 
   // Response types
-  ISocialPublisherTaskResponse,
+  ISocialPublisherPostResponse,
   ISocialPublisherWorkspace,
   ISocialPublisherAccount,
 
   // Status types
-  SocialPublisherTaskStatusType, // 'pending' | 'processing' | 'done' | 'error' | ...
-  SocialPublisherTaskSourceType, // 'video-file' | 'video-url' | 'facebook-video' | ...
+  SocialPublisherPostStatusType, // 'pending' | 'processing' | 'done' | 'error' | ...
+  SocialPublisherPostSourceType, // 'video-file' | 'video-url' | 'facebook-video' | ...
   SocialPublisherAccountStatusType, // 'active' | 'inactive' | 'authenticationExpired'
-} from "@posty5/social-publisher-task";
+} from "@posty5/social-publisher-post";
 ```
 
 ### Platform Configuration Types
@@ -900,7 +900,7 @@ This SDK ecosystem contains the following tool packages:
 | @posty5/html-hosting-variables | HTML hosting variables client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-html-hosting-variables) | [📦 NPM](https://www.npmjs.com/package/@posty5/html-hosting-variables) |
 | @posty5/html-hosting-form-submission | Form submission client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-html-hosting-form-submission) | [📦 NPM](https://www.npmjs.com/package/@posty5/html-hosting-form-submission) |
 | @posty5/social-publisher-workspace | Social publisher workspace client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-social-publisher-workspace) | [📦 NPM](https://www.npmjs.com/package/@posty5/social-publisher-workspace) |
-| @posty5/social-publisher-task | Social publisher task client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-social-publisher-task) | [📦 NPM](https://www.npmjs.com/package/@posty5/social-publisher-task) |
+| @posty5/social-publisher-post | Social publisher post client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-social-publisher-post) | [📦 NPM](https://www.npmjs.com/package/@posty5/social-publisher-post) |
 
 ---
 

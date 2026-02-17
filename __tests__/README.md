@@ -33,7 +33,7 @@ npm test
 npm test -- html-hosting.test.ts
 npm test -- short-link.test.ts
 npm test -- qr-code.test.ts
-npm test -- social-publisher-task.test.ts
+npm test -- social-publisher-post.test.ts
 npm test -- social-publisher-workspace.test.ts
 
 # Run in watch mode
@@ -49,7 +49,7 @@ npm test -- --coverage
 - `html-hosting.test.ts` - HTML Hosting SDK tests (100% coverage ✅)
 - `short-link.test.ts` - Short Link SDK tests (100% coverage ✅)
 - `qr-code.test.ts` - QR Code SDK tests (61% coverage ⚠️)
-- `social-publisher-task.test.ts` - Social Publisher Task SDK tests (47% coverage ⚠️)
+- `social-publisher-post.test.ts` - Social Publisher Post SDK tests (47% coverage ⚠️)
 - `social-publisher-workspace.test.ts` - Social Publisher Workspace SDK tests (100% coverage ✅)
 
 ## 🔧 Configuration
@@ -59,7 +59,7 @@ npm test -- --coverage
 The tests use the following environment variables:
 
 - `POSTY5_API_KEY` **(required)** - Your Posty5 API key
-- `POSTY5_BASE_URL` *(optional)* - API base URL (defaults to `https://api.posty5.com`)
+- `POSTY5_BASE_URL` _(optional)_ - API base URL (defaults to `https://api.posty5.com`)
 
 ### Test Timeout
 
@@ -116,33 +116,31 @@ When adding tests for new SDK packages:
 Example test structure:
 
 ```typescript
-describe('SDK Name', () => {
-    let httpClient: HttpClient;
-    let client: ClientClass;
-    let createdId: string;
+describe("SDK Name", () => {
+  let httpClient: HttpClient;
+  let client: ClientClass;
+  let createdId: string;
 
-    beforeAll(() => {
-        httpClient = new HttpClient({
-            apiKey: TEST_CONFIG.apiKey,
-            baseUrl: TEST_CONFIG.baseUrl,
-        });
-        client = new ClientClass(httpClient);
+  beforeAll(() => {
+    httpClient = new HttpClient({
+      apiKey: TEST_CONFIG.apiKey,
+      baseUrl: TEST_CONFIG.baseUrl,
+    });
+    client = new ClientClass(httpClient);
+  });
+
+  describe("METHOD_NAME", () => {
+    it("should [success case]", async () => {
+      const result = await client.method(params);
+      expect(result).toBeDefined();
+      createdId = result._id;
+      createdResources.resourceType.push(createdId);
     });
 
-    describe('METHOD_NAME', () => {
-        it('should [success case]', async () => {
-            const result = await client.method(params);
-            expect(result).toBeDefined();
-            createdId = result._id;
-            createdResources.resourceType.push(createdId);
-        });
-
-        it('should fail with invalid input', async () => {
-            await expect(
-                client.method('invalid')
-            ).rejects.toThrow();
-        });
+    it("should fail with invalid input", async () => {
+      await expect(client.method("invalid")).rejects.toThrow();
     });
+  });
 });
 ```
 

@@ -1,5 +1,5 @@
 import { IPaginationResponse } from "@posty5/core";
-import { SocialPublisherTaskStatusType, SocialPublisherTaskSourceType, SocialPublisherAccountStatusType } from "../../types/type";
+import { SocialPublisherPostStatusType, SocialPublisherPostSourceType, SocialPublisherAccountStatusType } from "../../types/type";
 
 export interface IUploadConfig {
   url: string;
@@ -7,7 +7,7 @@ export interface IUploadConfig {
 }
 
 export interface IGenerateUploadUrlsResponse {
-  taskId: string;
+  postId: string;
 
   thumb: {
     /**
@@ -40,36 +40,36 @@ export interface IGenerateUploadUrlsResponse {
   };
 }
 
-export interface ISocialPublisherTaskStatusLog {
-  status: SocialPublisherTaskStatusType;
+export interface ISocialPublisherPostStatusLog {
+  status: SocialPublisherPostStatusType;
   error: string;
   changedAt: Date;
 }
 
-export interface ISocialPublisherTaskPostInfo {
+export interface ISocialPublisherPostInfo {
   platformAccountId: string;
   currentError: string;
   isAllow: boolean;
-  currentStatus: SocialPublisherTaskStatusType;
+  currentStatus: SocialPublisherPostStatusType;
   currentStatusChangedAt: Date;
   publishId: string;
   videoId: string;
   videoURL: string;
-  statusHistory: { status: SocialPublisherTaskStatusType; changedAt: Date }[];
+  statusHistory: { status: SocialPublisherPostStatusType; changedAt: Date }[];
   socialPublisherAccountId: string | any;
 }
 
-export interface ISocialPublisherTaskPlatform {
-  postInfo: ISocialPublisherTaskPostInfo;
+export interface ISocialPublisherPostPlatform {
+  postInfo: ISocialPublisherPostInfo;
   // Platform specific fields can be added here if needed for public response
 }
 
-export interface ISocialPublisherTaskResponse {
+export interface ISocialPublisherPostResponse {
   _id: string;
   numbering: string;
   caption: string;
   createdAt: Date;
-  currentStatus: SocialPublisherTaskStatusType;
+  currentStatus: SocialPublisherPostStatusType;
   isAllow: {
     tiktok: boolean;
     facebookPage: boolean;
@@ -100,12 +100,12 @@ export interface ISocialPublisherTaskResponse {
   tag: string;
 }
 
-export interface ISocialPublisherTaskStatusResponse {
+export interface ISocialPublisherPostStatusResponse {
   _id: string;
   numbering: string;
 
   type: "shortVideo";
-  source: SocialPublisherTaskSourceType;
+  source: SocialPublisherPostSourceType;
   sourceURLs: {
     /**
      * Thumbnail URL, can be null if didn't upload any thumbnail or passed URL
@@ -121,15 +121,15 @@ export interface ISocialPublisherTaskStatusResponse {
     postURL?: string;
   };
 
-  currentStatus: SocialPublisherTaskStatusType;
+  currentStatus: SocialPublisherPostStatusType;
   currentError: string;
   currentStatusChangedAt: string;
 
-  statusHistoryGrouped: IBaseStatusHistoryGroupedDay<SocialPublisherTaskStatusType>[];
-  tiktok?: ISocialPublisherTaskTikTokPostDetails;
-  facebook?: ISocialPublisherTaskFacebookPagePostDetails;
-  instagram?: ISocialPublisherTaskInstagramPostDetails;
-  youtube?: ISocialPublisherTaskYouTubePostDetails;
+  statusHistoryGrouped: IBaseStatusHistoryGroupedDay<SocialPublisherPostStatusType>[];
+  tiktok?: ISocialPublisherPostTikTokPostDetails;
+  facebook?: ISocialPublisherPostFacebookPagePostDetails;
+  instagram?: ISocialPublisherPostInstagramPostDetails;
+  youtube?: ISocialPublisherPostYouTubePostDetails;
 
   workspace: ISocialPublisherWorkspace;
   createdAt: Date;
@@ -163,36 +163,36 @@ export interface ISocialPublisherAccount {
   platformAccountId: string;
 }
 
-export interface ISocialPublisherTaskAccount {
+export interface ISocialPublisherPostAccount {
   tags: string[];
   postInfo: {
     isAllow: boolean;
-    currentStatus: SocialPublisherTaskStatusType;
-    statusHistoryGrouped: IBaseStatusHistoryGroupedDay<SocialPublisherTaskStatusType>[];
+    currentStatus: SocialPublisherPostStatusType;
+    statusHistoryGrouped: IBaseStatusHistoryGroupedDay<SocialPublisherPostStatusType>[];
     videoURL: string;
     socialPublisherAccount: ISocialPublisherAccount;
   };
 }
 
-export interface ISocialPublisherTaskTikTokPostDetails extends ISocialPublisherTaskAccount {
+export interface ISocialPublisherPostTikTokPostDetails extends ISocialPublisherPostAccount {
   caption: string;
   disable_duet: boolean;
   disable_stitch: boolean;
   disable_comment: boolean;
   privacy_level: string;
 }
-export interface ISocialPublisherTaskFacebookPagePostDetails extends ISocialPublisherTaskAccount {
+export interface ISocialPublisherPostFacebookPagePostDetails extends ISocialPublisherPostAccount {
   description: string;
   title: string;
 }
 
-export interface ISocialPublisherTaskInstagramPostDetails extends ISocialPublisherTaskAccount {
+export interface ISocialPublisherPostInstagramPostDetails extends ISocialPublisherPostAccount {
   description: string;
   share_to_feed: boolean;
   is_published_to_both_feed_and_story: boolean;
 }
 
-export interface ISocialPublisherTaskYouTubePostDetails extends ISocialPublisherTaskAccount {
+export interface ISocialPublisherPostYouTubePostDetails extends ISocialPublisherPostAccount {
   title: string;
   description: string;
   tags: string[];
@@ -204,7 +204,7 @@ export interface ISocialPublisherTaskYouTubePostDetails extends ISocialPublisher
   localizations: any;
 }
 
-export interface ISocialPublisherTaskNextPreviousResponse {
+export interface ISocialPublisherPostNextPreviousResponse {
   nextId?: string;
   previousId?: string;
 }
@@ -214,7 +214,7 @@ export interface IDefaultSettingsResponse {
   [key: string]: any;
 }
 
-export type ISearchSocialPublisherTaskResponse = IPaginationResponse<ISocialPublisherTaskResponse>;
+export type ISearchSocialPublisherPostResponse = IPaginationResponse<ISocialPublisherPostResponse>;
 
 export interface IBaseStatusHistoryGroupedDay<StatusType> {
   day: Date;

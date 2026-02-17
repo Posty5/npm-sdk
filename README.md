@@ -33,7 +33,7 @@ This monorepo contains the following packages:
 | [@posty5/html-hosting-variables](./posty5-html-hosting-variables)             | HTML hosting variables client     | 1.0.2   | `npm install @posty5/html-hosting-variables`       |
 | [@posty5/html-hosting-form-submission](./posty5-html-hosting-form-submission) | Form submission client            | 1.0.2   | `npm install @posty5/html-hosting-form-submission` |
 | [@posty5/social-publisher-workspace](./posty5-social-publisher-workspace)     | Social publisher workspace client | 1.0.2   | `npm install @posty5/social-publisher-workspace`   |
-| [@posty5/social-publisher-task](./posty5-social-publisher-task)               | Social publisher task client      | 1.0.2   | `npm install @posty5/social-publisher-task`        |
+| [@posty5/social-publisher-post](./posty5-social-publisher-post)               | Social publisher post client      | 1.0.2   | `npm install @posty5/social-publisher-post`        |
 
 ---
 
@@ -50,7 +50,7 @@ npm install @posty5/short-link
 npm install @posty5/qr-code
 npm install @posty5/html-hosting
 npm install @posty5/social-publisher-workspace
-npm install @posty5/social-publisher-task
+npm install @posty5/social-publisher-post
 ```
 
 ### Basic Setup
@@ -309,11 +309,11 @@ Organize your social media accounts into workspaces (organizations) for differen
 
 ---
 
-### [@posty5/social-publisher-task](./posty5-social-publisher-task) - Social Media Publishing
+### [@posty5/social-publisher-post](./posty5-social-publisher-post) - Social Media Publishing
 
 **Publish short-form videos to YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels with a unified API.**
 
-Create publishing tasks that automatically distribute your video content across multiple social media platforms with platform-specific configuration, scheduling, and status tracking.
+Create publishing posts that automatically distribute your video content across multiple social media platforms with platform-specific configuration, scheduling, and status tracking.
 
 **Key Features:**
 
@@ -323,7 +323,7 @@ Create publishing tasks that automatically distribute your video content across 
 - Smart thumbnail handling (upload files or provide URLs)
 - Platform-specific configuration (titles, descriptions, captions, tags, privacy)
 - Schedule publishing or publish immediately
-- Task status tracking with platform-specific progress
+- Post status tracking with platform-specific progress
 - Content repurposing (repost from other platforms)
 - Tag and reference ID support
 - Advanced filtering and pagination
@@ -346,7 +346,7 @@ Create publishing tasks that automatically distribute your video content across 
 
 **Methods:** `publishShortVideo()`, `list()`, `getStatus()`, `getDefaultSettings()`, `getNextAndPrevious()`
 
-**Documentation:** [View Full Documentation](./posty5-social-publisher-task/README.md)
+**Documentation:** [View Full Documentation](./posty5-social-publisher-post/README.md)
 
 ---
 
@@ -422,7 +422,7 @@ Combine tags and refIds for powerful organization and cross-system tracking:
 
 ```typescript
 // Create resource with both tag and refId
-await tasks.publishShortVideo({
+await posts.publishShortVideo({
   workspaceId: "workspace-123",
   video: videoFile,
   platforms: ["youtube", "tiktok"],
@@ -433,7 +433,7 @@ await tasks.publishShortVideo({
 });
 
 // Filter by both
-const productVideos = await tasks.list(
+const productVideos = await posts.list(
   {
     tag: "product-launch-2024",
     refId: "product-001-video-1",

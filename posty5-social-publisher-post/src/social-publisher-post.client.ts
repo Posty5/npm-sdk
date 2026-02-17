@@ -1,26 +1,26 @@
 import { HttpClient, IPaginationParams, uploadToR2 } from "@posty5/core";
 import {
-  ICreateSocialPublisherTaskRequest,
+  ICreateSocialPublisherPostRequest,
   IGenerateUploadUrlsRequest,
   IGenerateUploadUrlsResponse,
-  ISearchSocialPublisherTaskResponse,
-  ISocialPublisherTaskNextPreviousResponse,
-  ISocialPublisherTaskStatusResponse,
+  ISearchSocialPublisherPostResponse,
+  ISocialPublisherPostNextPreviousResponse,
+  ISocialPublisherPostStatusResponse,
   IDefaultSettingsResponse,
-  ITaskSetting,
+  IPostSetting,
   IPublishOptions,
   IListParams,
-  ICreateSocialPublisherAccountTaskRequest,
-  IAccountTaskSetting,
+  ICreateSocialPublisherAccountPostRequest,
+  IAccountPostSetting,
   IPublishToAccountOptions,
 } from "./interfaces";
 
 /**
- * Social Publisher Task Client
+ * Social Publisher Post Client
  */
-export class SocialPublisherTaskClient {
+export class SocialPublisherPostClient {
   private http: HttpClient;
-  private basePath = "/api/social-publisher-task";
+  private basePath = "/api/social-publisher-post";
   public readonly maxVideoUploadSizeBytes: number;
   public readonly maxImageUploadSizeBytes: number;
 
@@ -31,12 +31,12 @@ export class SocialPublisherTaskClient {
   }
 
   /**
-   * Search tasks
+   * Search posts
    * @param params - Search parameters (optional)
    * @param pagination - Pagination parameters
    */
-  async list(params?: IListParams, pagination?: IPaginationParams): Promise<ISearchSocialPublisherTaskResponse> {
-    const response = await this.http.get<ISearchSocialPublisherTaskResponse>(this.basePath, {
+  async list(params?: IListParams, pagination?: IPaginationParams): Promise<ISearchSocialPublisherPostResponse> {
+    const response = await this.http.get<ISearchSocialPublisherPostResponse>(this.basePath, {
       params: {
         ...params,
         ...pagination,
@@ -54,11 +54,11 @@ export class SocialPublisherTaskClient {
   }
 
   /**
-   * Get task status
-   * @param id - Task ID
+   * Get post status
+   * @param id - Post ID
    */
-  async getStatus(id: string): Promise<ISocialPublisherTaskStatusResponse> {
-    const response = await this.http.get<ISocialPublisherTaskStatusResponse>(`${this.basePath}/${id}/status`);
+  async getStatus(id: string): Promise<ISocialPublisherPostStatusResponse> {
+    const response = await this.http.get<ISocialPublisherPostStatusResponse>(`${this.basePath}/${id}/status`);
     return response.result!;
   }
 
@@ -72,20 +72,20 @@ export class SocialPublisherTaskClient {
   }
 
   /**
-   * Get next and previous task IDs
-   * @param id - Current Task ID
+   * Get next and previous post IDs
+   * @param id - Current Post ID
    */
-  async getNextAndPrevious(id: string): Promise<ISocialPublisherTaskNextPreviousResponse> {
-    const response = await this.http.get<ISocialPublisherTaskNextPreviousResponse>(`${this.basePath}/${id}/next-previous`);
+  async getNextAndPrevious(id: string): Promise<ISocialPublisherPostNextPreviousResponse> {
+    const response = await this.http.get<ISocialPublisherPostNextPreviousResponse>(`${this.basePath}/${id}/next-previous`);
     return response.result!;
   }
 
   /**
-   * Create a new task (publish video)
-   * @param data - Task creation data
+   * Create a new post (publish video)
+   * @param data - Post creation data
    * @param id - Optional ID for updating/retrying? (Based on route :id?)
    */
-  private async createToWorkspaceByFile(data: ICreateSocialPublisherTaskRequest, id?: string): Promise<string> {
+  private async createToWorkspaceByFile(data: ICreateSocialPublisherPostRequest, id?: string): Promise<string> {
     const url = id ? `${this.basePath}/short-video/workspace/by-file/${id}` : `${this.basePath}/short-video/workspace/by-file`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
@@ -95,11 +95,11 @@ export class SocialPublisherTaskClient {
   }
 
   /**
-   * Create a new task (publish video)
-   * @param data - Task creation data
+   * Create a new post (publish video)
+   * @param data - Post creation data
    * @param id - Optional ID for updating/retrying? (Based on route :id?)
    */
-  private async createToWorkspaceByURL(data: ICreateSocialPublisherTaskRequest, id?: string): Promise<string> {
+  private async createToWorkspaceByURL(data: ICreateSocialPublisherPostRequest, id?: string): Promise<string> {
     const url = id ? `${this.basePath}/short-video/workspace/by-url/${id}` : `${this.basePath}/short-video/workspace/by-url`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
@@ -109,11 +109,11 @@ export class SocialPublisherTaskClient {
   }
 
   /**
-   * Create a new task (publish video to account)
-   * @param data - Task creation data
+   * Create a new post (publish video to account)
+   * @param data - Post creation data
    * @param id - Optional ID for updating/retrying?
    */
-  private async createToAccountByFile(data: ICreateSocialPublisherAccountTaskRequest, id?: string): Promise<string> {
+  private async createToAccountByFile(data: ICreateSocialPublisherAccountPostRequest, id?: string): Promise<string> {
     const url = id ? `${this.basePath}/short-video/account/by-file/${id}` : `${this.basePath}/short-video/account/by-file`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
@@ -123,11 +123,11 @@ export class SocialPublisherTaskClient {
   }
 
   /**
-   * Create a new task (publish video to account)
-   * @param data - Task creation data
+   * Create a new post (publish video to account)
+   * @param data - Post creation data
    * @param id - Optional ID for updating/retrying?
    */
-  private async createToAccountByURL(data: ICreateSocialPublisherAccountTaskRequest, id?: string): Promise<string> {
+  private async createToAccountByURL(data: ICreateSocialPublisherAccountPostRequest, id?: string): Promise<string> {
     const url = id ? `${this.basePath}/short-video/account/by-url/${id}` : `${this.basePath}/short-video/account/by-url`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
@@ -152,7 +152,7 @@ export class SocialPublisherTaskClient {
       if (!urlPattern.test(thumb)) {
         throw new Error("Invalid thumbnail URL format");
       }
-      return { thumbFileURL: thumb, taskId: undefined };
+      return { thumbFileURL: thumb, postId: undefined };
     }
 
     // If thumb is a File, upload it
@@ -175,7 +175,7 @@ export class SocialPublisherTaskClient {
           contentType: thumb.type,
         });
 
-        return { thumbFileURL: uploadUrlsResponse.thumb.fileURL, taskId: uploadUrlsResponse.taskId };
+        return { thumbFileURL: uploadUrlsResponse.thumb.fileURL, postId: uploadUrlsResponse.postId };
       }
     }
 
@@ -184,12 +184,12 @@ export class SocialPublisherTaskClient {
 
   /**
    * Publish a short video by uploading a video file and optional thumbnail
-   * @param settings - Task creation settings
+   * @param settings - Post creation settings
    * @param video - Video file to upload (.mp4, .mov, .avi, .mkv, .webm)
    * @param thumb - Optional thumbnail image file or URL string
-   * @returns Created task response
+   * @returns Created post response
    */
-  private async publishShortVideoToWorkspaceByFile(settings: ITaskSetting, video: File, thumb?: File | string): Promise<string> {
+  private async publishShortVideoToWorkspaceByFile(settings: IPostSetting, video: File, thumb?: File | string): Promise<string> {
     // Validate video size
     if (video.size > this.maxVideoUploadSizeBytes) {
       throw new Error(`Video file size (${video.size} bytes) exceeds maximum allowed size (${this.maxVideoUploadSizeBytes} bytes)`);
@@ -216,62 +216,62 @@ export class SocialPublisherTaskClient {
     // Step 3: Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb, uploadUrlsResponse);
 
-    // Step 4: Create task with uploaded file URLs
-    const taskSettings: ICreateSocialPublisherTaskRequest = {
+    // Step 4: Create post with uploaded file URLs
+    const postSettings: ICreateSocialPublisherPostRequest = {
       ...settings,
       videoURL: uploadUrlsResponse.video.fileURL,
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.createToWorkspaceByFile(taskSettings, uploadUrlsResponse.taskId);
+    return await this.createToWorkspaceByFile(postSettings, uploadUrlsResponse.postId);
   }
 
   /**
    * Publish a short video by providing a video URL and optional thumbnail
-   * @param settings - Task creation settings
+   * @param settings - Post creation settings
    * @param videoURL - Video URL (.mp4, .mov, .avi, .mkv, .webm)
    * @param thumb - Optional thumbnail image file or URL string
-   * @returns Created task response
+   * @returns Created post response
    */
-  private async publishShortVideoToWorkspaceByURL(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
+  private async publishShortVideoToWorkspaceByURL(settings: IPostSetting, videoURL: string, thumb?: File | string): Promise<string> {
     // Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb);
 
-    // Create task with video URL
-    const taskSettings: ICreateSocialPublisherTaskRequest = {
+    // Create post with video URL
+    const postSettings: ICreateSocialPublisherPostRequest = {
       ...settings,
       videoURL,
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.createToWorkspaceByURL(taskSettings, uploadThumb?.taskId);
+    return await this.createToWorkspaceByURL(postSettings, uploadThumb?.postId);
   }
 
   /**
    * Publish a repost video from TikTok
-   * @param settings - Task creation settings
+   * @param settings - Post creation settings
    * @param videoURL - TikTok video URL (tiktok.com, vm.tiktok.com)
    * @param thumb - Optional thumbnail image file or URL string
-   * @returns Created task response
+   * @returns Created post response
    */
-  private async publishRepostVideoToWorkspace(settings: ITaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
+  private async publishRepostVideoToWorkspace(settings: IPostSetting, videoURL: string, thumb?: File | string): Promise<string> {
     // Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb);
 
-    // Create task with TikTok video URL
-    const taskSettings: ICreateSocialPublisherTaskRequest = {
+    // Create post with TikTok video URL
+    const postSettings: ICreateSocialPublisherPostRequest = {
       ...settings,
       postURL: videoURL,
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.createToWorkspaceByURL(taskSettings, uploadThumb?.taskId);
+    return await this.createToWorkspaceByURL(postSettings, uploadThumb?.postId);
   }
 
   /**
    * Publish a short video to account by uploading a video file
    */
-  private async publishShortVideoToAccountByFile(settings: IAccountTaskSetting, video: File, thumb?: File | string): Promise<string> {
+  private async publishShortVideoToAccountByFile(settings: IAccountPostSetting, video: File, thumb?: File | string): Promise<string> {
     // Validate video size
     if (video.size > this.maxVideoUploadSizeBytes) {
       throw new Error(`Video file size (${video.size} bytes) exceeds maximum allowed size (${this.maxVideoUploadSizeBytes} bytes)`);
@@ -298,48 +298,48 @@ export class SocialPublisherTaskClient {
     // Step 3: Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb, uploadUrlsResponse);
 
-    // Step 4: Create task with uploaded file URLs
-    const taskSettings: ICreateSocialPublisherAccountTaskRequest = {
+    // Step 4: Create post with uploaded file URLs
+    const postSettings: ICreateSocialPublisherAccountPostRequest = {
       ...settings,
       videoURL: uploadUrlsResponse.video.fileURL,
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.createToAccountByFile(taskSettings, uploadUrlsResponse.taskId);
+    return await this.createToAccountByFile(postSettings, uploadUrlsResponse.postId);
   }
 
   /**
    * Publish a short video to account by URL
    */
-  private async publishShortVideoToAccountByURL(settings: IAccountTaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
+  private async publishShortVideoToAccountByURL(settings: IAccountPostSetting, videoURL: string, thumb?: File | string): Promise<string> {
     // Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb);
 
-    // Create task with video URL
-    const taskSettings: ICreateSocialPublisherAccountTaskRequest = {
+    // Create post with video URL
+    const postSettings: ICreateSocialPublisherAccountPostRequest = {
       ...settings,
       videoURL,
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.createToAccountByURL(taskSettings, uploadThumb?.taskId);
+    return await this.createToAccountByURL(postSettings, uploadThumb?.postId);
   }
 
   /**
    * Publish a repost video to account
    */
-  private async publishRepostVideoToAccount(settings: IAccountTaskSetting, videoURL: string, thumb?: File | string): Promise<string> {
+  private async publishRepostVideoToAccount(settings: IAccountPostSetting, videoURL: string, thumb?: File | string): Promise<string> {
     // Handle thumbnail upload (File or URL)
     const uploadThumb = await this.handleThumbnailUpload(thumb);
 
-    // Create task with TikTok video URL
-    const taskSettings: ICreateSocialPublisherAccountTaskRequest = {
+    // Create post with TikTok video URL
+    const postSettings: ICreateSocialPublisherAccountPostRequest = {
       ...settings,
       postURL: videoURL,
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
-    return await this.createToAccountByURL(taskSettings, uploadThumb?.taskId);
+    return await this.createToAccountByURL(postSettings, uploadThumb?.postId);
   }
 
   /**
@@ -347,7 +347,7 @@ export class SocialPublisherTaskClient {
    * This is the recommended method for most use cases.
    *
    * @param options - Simplified publishing options
-   * @returns Created task response
+   * @returns Created post response
    *
    * @example
    * ```typescript
@@ -409,8 +409,8 @@ export class SocialPublisherTaskClient {
       throw new Error("Instagram configuration is required when publishing to Instagram");
     }
 
-    // Build ITaskSetting from simplified options
-    const settings: ITaskSetting = {
+    // Build IPostSetting from simplified options
+    const settings: IPostSetting = {
       workspaceId: options.workspaceId,
       isAllowYouTube: options.platforms.includes("youtube"),
       isAllowTiktok: options.platforms.includes("tiktok"),
@@ -422,9 +422,9 @@ export class SocialPublisherTaskClient {
       instagram: options.instagram,
       schedule: options.schedule
         ? {
-          type: options.schedule === "now" ? "now" : "schedule",
-          scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
-        }
+            type: options.schedule === "now" ? "now" : "schedule",
+            scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
+          }
         : undefined,
       source: "video-file",
     };
@@ -453,7 +453,7 @@ export class SocialPublisherTaskClient {
    * Publish a video to multiple social media platforms with auto-detection (Account)
    *
    * @param options - Simplified publishing options for account
-   * @returns Created task response
+   * @returns Created post response
    */
   async publishShortVideoToAccount(options: IPublishToAccountOptions): Promise<string> {
     // Validate required fields
@@ -481,11 +481,11 @@ export class SocialPublisherTaskClient {
       throw new Error("Instagram configuration is required when publishing to Instagram");
     }
 
-        // Auto-detect video source type
+    // Auto-detect video source type
     const source = this.detectVideoSource(options.video);
-    
-    // Build IAccountTaskSetting from simplified options
-    const settings: IAccountTaskSetting = {
+
+    // Build IAccountPostSetting from simplified options
+    const settings: IAccountPostSetting = {
       accountId: options.accountId,
       isAllowYouTube: options.platforms.includes("youtube"),
       isAllowTiktok: options.platforms.includes("tiktok"),
@@ -497,14 +497,12 @@ export class SocialPublisherTaskClient {
       instagram: options.instagram,
       schedule: options.schedule
         ? {
-          type: options.schedule === "now" ? "now" : "schedule",
-          scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
-        }
+            type: options.schedule === "now" ? "now" : "schedule",
+            scheduledAt: options.schedule instanceof Date ? options.schedule : undefined,
+          }
         : undefined,
       source: "video-file",
     };
-
-
 
     // Route to appropriate method based on detected source
     switch (source) {

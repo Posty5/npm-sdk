@@ -1,4 +1,4 @@
-export type SocialPublisherTaskStatusType =
+export type SocialPublisherPostStatusType =
   | "pending"
   | "processing"
   | "processingInPlatform"
@@ -11,13 +11,13 @@ export type SocialPublisherTaskStatusType =
   | "invalidPostVideoURL"
   | "retrying";
 
-export type SocialPublisherTaskType = "shortVideo";
+export type SocialPublisherPostType = "shortVideo";
 
-export type SocialPublisherTaskAccountType = "youtube" | "facebook" | "instagram" | "tiktok";
+export type SocialPublisherPostAccountType = "youtube" | "facebook" | "instagram" | "tiktok";
 
-export type SocialPublisherTaskScheduleType = "now" | "schedule";
+export type SocialPublisherPostScheduleType = "now" | "schedule";
 
-export type SocialPublisherTaskSourceType = "video-file" | "video-url" | "facebook-video" | "youtube-video" | "tiktok-video";
+export type SocialPublisherPostSourceType = "video-file" | "video-url" | "facebook-video" | "youtube-video" | "tiktok-video";
 // | "instagram-video";
 
 export type SocialPublisherAccountPlatformType = "youtube" | "facebook" | "tiktok";

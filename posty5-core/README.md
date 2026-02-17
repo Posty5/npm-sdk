@@ -62,7 +62,7 @@ npm install @posty5/core
 - `@posty5/qr-code` - For QR code generation
 - `@posty5/html-hosting` - For HTML page hosting
 - `@posty5/social-publisher-workspace` - For social media workspace management
-- `@posty5/social-publisher-task` - For social media publishing
+- `@posty5/social-publisher-post` - For social media publishing
 
 For most use cases, you should install the specific tool package you need, which will automatically include `@posty5/core` as a dependency.
 
@@ -213,7 +213,7 @@ This SDK ecosystem contains the following tool packages:
 | @posty5/html-hosting-variables | HTML hosting variables client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-html-hosting-variables) | [📦 NPM](https://www.npmjs.com/package/@posty5/html-hosting-variables) |
 | @posty5/html-hosting-form-submission | Form submission client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-html-hosting-form-submission) | [📦 NPM](https://www.npmjs.com/package/@posty5/html-hosting-form-submission) |
 | @posty5/social-publisher-workspace | Social publisher workspace client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-social-publisher-workspace) | [📦 NPM](https://www.npmjs.com/package/@posty5/social-publisher-workspace) |
-| @posty5/social-publisher-task | Social publisher task client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-social-publisher-task) | [📦 NPM](https://www.npmjs.com/package/@posty5/social-publisher-task) |
+| @posty5/social-publisher-post | Social publisher post client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-social-publisher-post) | [📦 NPM](https://www.npmjs.com/package/@posty5/social-publisher-post) |
 
 ---
 

@@ -68,8 +68,8 @@ describe("Social Publisher Workspace SDK", () => {
   });
 
   describe("GET FOR NEW TASK", () => {
-    it("should get workspace details for new task", async () => {
-      const result = await client.getForNewTask(createdId);
+    it("should get workspace details for new post", async () => {
+      const result = await client.getForNewPost(createdId);
 
       expect(result._id).toBe(createdId);
       expect(result.name).toBeDefined();
@@ -86,7 +86,7 @@ describe("Social Publisher Workspace SDK", () => {
         },
       );
 
-      const result = await client.getForNewTask(searchResult.items[0]._id);
+      const result = await client.getForNewPost(searchResult.items[0]._id);
 
       // Account object should exist
       expect(result.account).toBeDefined();
@@ -99,7 +99,7 @@ describe("Social Publisher Workspace SDK", () => {
     });
 
     it("should fail with invalid ID", async () => {
-      await expect(client.getForNewTask("invalid-id-123")).rejects.toThrow();
+      await expect(client.getForNewPost("invalid-id-123")).rejects.toThrow();
     });
   });
 
