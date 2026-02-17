@@ -43,7 +43,7 @@ export interface ICreateSocialPublisherTaskRequest {
     isAllowTiktok: boolean;
     isAllowFacebookPage: boolean;
     isAllowInstagram: boolean;
-    youTube?: IYouTubeConfig;
+    youtube?: IYouTubeConfig;
     tiktok?: ITikTokConfig;
     facebook?: IFacebookPageConfig;
     instagram?: IInstagramConfig;
@@ -73,7 +73,7 @@ export interface ICreateSocialPublisherAccountTaskRequest {
     isAllowTiktok: boolean;
     isAllowFacebookPage: boolean;
     isAllowInstagram: boolean;
-    youTube?: IYouTubeConfig;
+    youtube?: IYouTubeConfig;
     tiktok?: ITikTokConfig;
     facebook?: IFacebookPageConfig;
     instagram?: IInstagramConfig;
@@ -103,7 +103,7 @@ export interface ITaskSetting {
     isAllowTiktok: boolean;
     isAllowFacebookPage: boolean;
     isAllowInstagram: boolean;
-    youTube?: IYouTubeConfig;
+    youtube?: IYouTubeConfig;
     tiktok?: ITikTokConfig;
     facebook?: IFacebookPageConfig;
     instagram?: IInstagramConfig;
@@ -118,7 +118,7 @@ export interface IAccountTaskSetting {
     isAllowTiktok: boolean;
     isAllowFacebookPage: boolean;
     isAllowInstagram: boolean;
-    youTube?: IYouTubeConfig;
+    youtube?: IYouTubeConfig;
     tiktok?: ITikTokConfig;
     facebook?: IFacebookPageConfig;
     instagram?: IInstagramConfig;

@@ -1,11 +1,11 @@
 import { HttpClient } from "@posty5/core";
-import { HtmlHostingFormSubmissionClient } from "@posty5/html-hosting-form-submission";
+import { HtmlHostingFormSubmissionClient, IFormStatusType } from "@posty5/html-hosting-form-submission";
 import { TEST_CONFIG, createdResources } from "./setup";
 
 describe("HTML Hosting Form Submission SDK", () => {
   let httpClient: HttpClient;
   let client: HtmlHostingFormSubmissionClient;
-  let testHtmlHostingId = "6830ce590e3fb6d1afeca82c";
+  let testHtmlHostingId = "69933e2daa6ee6fa8eb949c5";
   let createdSubmissionId: string | undefined;
 
   beforeAll(async () => {
@@ -78,7 +78,7 @@ describe("HTML Hosting Form Submission SDK", () => {
     });
 
     it("should filter by status", async () => {
-      const status = "New";
+      const status: IFormStatusType = "new";
 
       const result = await client.list(
         {

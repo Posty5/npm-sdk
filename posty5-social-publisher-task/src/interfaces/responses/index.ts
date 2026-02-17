@@ -87,6 +87,15 @@ export interface ISocialPublisherTaskResponse {
     scheduledAt: Date;
     executedAt: Date;
   };
+
+  updatedAt: Date;
+  isToWorkspace: boolean;
+  account: {
+    name: string;
+    platform: string;
+    thumbnail: string;
+  };
+
   refId: string;
   tag: string;
 }

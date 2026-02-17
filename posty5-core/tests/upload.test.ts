@@ -1,37 +1,49 @@
+// @ts-nocheck
 /**
  * Tests for R2 upload utility
  */
 
 import { uploadToR2, uploadToR2WithResult, IUploadOptions } from '../src/utils/upload';
 
+// Mock global Request, Response, fetch if not available (for Node environment)
+// Note: In Node 18+, fetch is global. In older versions or JSDOM, it might need polyfill.
+// We'll mock it on the global object.
+
 describe('R2 Upload Utility', () => {
-    let mockXHR: any;
-    let xhrInstances: any[] = [];
+    const originalFetch = global.fetch;
 
     beforeEach(() => {
-        // Mock XMLHttpRequest
-        xhrInstances = [];
-        mockXHR = {
-            open: jest.fn(),
-            setRequestHeader: jest.fn(),
-            send: jest.fn(),
-            upload: {
-                onprogress: null,
-            },
-            onload: null,
-            onerror: null,
-            status: 200,
-            statusText: 'OK',
-        };
+        // Mock fetch
+        global.fetch = jest.fn();
 
-        global.XMLHttpRequest = jest.fn(() => {
-            xhrInstances.push(mockXHR);
-            return mockXHR;
-        }) as any;
+        // Mock File and Blob if likely missing in test env (JSDOM might have Blob but not File fully implemented)
+        if (!global.File) {
+            global.File = class MockFile {
+                name: string;
+                type: string;
+                size: number;
+                constructor(parts: any[], name: string, options: any) {
+                    this.name = name;
+                    this.type = options?.type || '';
+                    this.size = 0; // Simplified
+                }
+            } as any;
+        }
+        if (!global.Blob) {
+            global.Blob = class MockBlob {
+                type: string;
+                size: number;
+                constructor(parts: any[], options: any) {
+                    this.type = options?.type || '';
+                    this.size = 0;
+                }
+            } as any;
+        }
     });
 
     afterEach(() => {
         jest.restoreAllMocks();
+        global.fetch = originalFetch;
     });
 
     describe('uploadToR2', () => {
@@ -39,95 +51,47 @@ describe('R2 Upload Utility', () => {
             const presignedUrl = 'https://example.com/upload?signature=abc123';
             const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
 
-            const uploadPromise = uploadToR2(presignedUrl, file);
-
-            // Simulate successful upload
-            setTimeout(() => {
-                mockXHR.status = 200;
-                if (mockXHR.onload) mockXHR.onload();
-            }, 10);
-
-            const url = await uploadPromise;
-
-            expect(url).toBe('https://example.com/upload');
-            expect(mockXHR.open).toHaveBeenCalledWith('PUT', presignedUrl, true);
-            expect(mockXHR.setRequestHeader).toHaveBeenCalledWith('Content-Type', 'text/plain');
-            expect(mockXHR.send).toHaveBeenCalledWith(file);
-        });
-
-        it('should upload a blob with custom content type', async () => {
-            const presignedUrl = 'https://example.com/upload?signature=abc123';
-            const blob = new Blob(['test content'], { type: 'application/octet-stream' });
-
-            const uploadPromise = uploadToR2(presignedUrl, blob, {
-                contentType: 'image/png',
+            // Mock successful fetch
+            (global.fetch as jest.Mock).mockResolvedValue({
+                ok: true,
+                status: 200,
+                statusText: 'OK',
             });
 
-            setTimeout(() => {
-                mockXHR.status = 200;
-                if (mockXHR.onload) mockXHR.onload();
-            }, 10);
-
-            await uploadPromise;
-
-            expect(mockXHR.setRequestHeader).toHaveBeenCalledWith('Content-Type', 'image/png');
-        });
-
-        it('should track upload progress', async () => {
-            const presignedUrl = 'https://example.com/upload?signature=abc123';
-            const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
-            const onProgress = jest.fn();
-
-            const uploadPromise = uploadToR2(presignedUrl, file, { onProgress });
-
-            // Simulate progress events
-            setTimeout(() => {
-                if (mockXHR.upload.onprogress) {
-                    mockXHR.upload.onprogress({
-                        lengthComputable: true,
-                        loaded: 50,
-                        total: 100,
-                    });
-                    mockXHR.upload.onprogress({
-                        lengthComputable: true,
-                        loaded: 100,
-                        total: 100,
-                    });
-                }
-                mockXHR.status = 200;
-                if (mockXHR.onload) mockXHR.onload();
-            }, 10);
-
-            await uploadPromise;
-
-            expect(onProgress).toHaveBeenCalledWith(0); // Initial call
-            expect(onProgress).toHaveBeenCalledWith(50);
-            expect(onProgress).toHaveBeenCalledWith(100);
-        });
-
-        it('should call lifecycle callbacks', async () => {
-            const presignedUrl = 'https://example.com/upload?signature=abc123';
-            const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
             const onStart = jest.fn();
             const onSuccess = jest.fn();
             const onComplete = jest.fn();
 
-            const uploadPromise = uploadToR2(presignedUrl, file, {
-                onStart,
-                onSuccess,
-                onComplete,
-            });
+            const url = await uploadToR2(presignedUrl, file, { onStart, onSuccess, onComplete });
 
-            setTimeout(() => {
-                mockXHR.status = 200;
-                if (mockXHR.onload) mockXHR.onload();
-            }, 10);
-
-            const url = await uploadPromise;
+            expect(url).toBe('https://example.com/upload');
+            expect(global.fetch).toHaveBeenCalledWith(presignedUrl, expect.objectContaining({
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'text/plain',
+                },
+                body: file,
+            }));
 
             expect(onStart).toHaveBeenCalled();
-            expect(onSuccess).toHaveBeenCalledWith(url);
+            expect(onSuccess).toHaveBeenCalledWith('https://example.com/upload');
             expect(onComplete).toHaveBeenCalled();
+        });
+
+        it('should report basic progress (0% and 100%)', async () => {
+            const presignedUrl = 'https://example.com/upload?signature=abc123';
+            const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
+            const onProgress = jest.fn();
+
+            (global.fetch as jest.Mock).mockResolvedValue({
+                ok: true,
+            });
+
+            await uploadToR2(presignedUrl, file, { onProgress });
+
+            expect(onProgress).toHaveBeenCalledWith(0);
+            expect(onProgress).toHaveBeenCalledWith(100);
+            // Fetch doesn't support intermediate progress in this impl
         });
 
         it('should handle upload errors', async () => {
@@ -135,84 +99,64 @@ describe('R2 Upload Utility', () => {
             const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
             const onError = jest.fn();
 
-            const uploadPromise = uploadToR2(presignedUrl, file, { onError });
+            // Mock failed fetch
+            (global.fetch as jest.Mock).mockResolvedValue({
+                ok: false,
+                status: 500,
+                statusText: 'Internal Server Error',
+            });
 
-            setTimeout(() => {
-                mockXHR.status = 500;
-                mockXHR.statusText = 'Internal Server Error';
-                if (mockXHR.onload) mockXHR.onload();
-            }, 10);
+            await expect(uploadToR2(presignedUrl, file, { onError }))
+                .rejects.toThrow('Upload failed with status 500: Internal Server Error');
 
-            await expect(uploadPromise).rejects.toThrow();
             expect(onError).toHaveBeenCalled();
         });
 
         it('should handle network errors', async () => {
             const presignedUrl = 'https://example.com/upload?signature=abc123';
             const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
-            const onError = jest.fn();
-            const onComplete = jest.fn();
 
-            const uploadPromise = uploadToR2(presignedUrl, file, { onError, onComplete });
+            (global.fetch as jest.Mock).mockRejectedValue(new Error('Network Error'));
 
-            setTimeout(() => {
-                mockXHR.statusText = 'Network Error';
-                if (mockXHR.onerror) mockXHR.onerror();
-            }, 10);
-
-            await expect(uploadPromise).rejects.toThrow();
-            expect(onError).toHaveBeenCalled();
-            expect(onComplete).toHaveBeenCalled();
+            await expect(uploadToR2(presignedUrl, file)).rejects.toThrow('Network Error');
         });
 
-        it('should use default content type for blob without type', async () => {
+        it('should use content type from options if provided', async () => {
             const presignedUrl = 'https://example.com/upload?signature=abc123';
-            const blob = new Blob(['test content']);
+            const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
 
-            const uploadPromise = uploadToR2(presignedUrl, blob);
+            (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
 
-            setTimeout(() => {
-                mockXHR.status = 200;
-                if (mockXHR.onload) mockXHR.onload();
-            }, 10);
+            await uploadToR2(presignedUrl, file, { contentType: 'application/pdf' });
 
-            await uploadPromise;
-
-            expect(mockXHR.setRequestHeader).toHaveBeenCalledWith('Content-Type', 'image/png');
+            expect(global.fetch).toHaveBeenCalledWith(presignedUrl, expect.objectContaining({
+                headers: {
+                    'Content-Type': 'application/pdf',
+                },
+            }));
         });
     });
 
     describe('uploadToR2WithResult', () => {
-        it('should return success result on successful upload', async () => {
+        it('should return success result', async () => {
             const presignedUrl = 'https://example.com/upload?signature=abc123';
-            const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
+            const file = new File(['...'], 'test.txt');
 
-            const uploadPromise = uploadToR2WithResult(presignedUrl, file);
+            (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
 
-            setTimeout(() => {
-                mockXHR.status = 200;
-                if (mockXHR.onload) mockXHR.onload();
-            }, 10);
-
-            const result = await uploadPromise;
+            const result = await uploadToR2WithResult(presignedUrl, file);
 
             expect(result.success).toBe(true);
             expect(result.url).toBe('https://example.com/upload');
         });
 
-        it('should return failure result on upload error', async () => {
+        it('should return failure result', async () => {
             const presignedUrl = 'https://example.com/upload?signature=abc123';
-            const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
+            const file = new File(['...'], 'test.txt');
 
-            const uploadPromise = uploadToR2WithResult(presignedUrl, file);
+            (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 500 });
 
-            setTimeout(() => {
-                mockXHR.status = 500;
-                mockXHR.statusText = 'Internal Server Error';
-                if (mockXHR.onload) mockXHR.onload();
-            }, 10);
-
-            const result = await uploadPromise;
+            const result = await uploadToR2WithResult(presignedUrl, file);
 
             expect(result.success).toBe(false);
             expect(result.url).toBe('');

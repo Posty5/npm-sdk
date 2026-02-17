@@ -48,6 +48,8 @@ export interface IHtmlPageResponse {
   htmlHostingId: string;
   /** Page name */
   name?: string;
+  /** SEO-friendly page path */
+  pagePath?: string;
   /** Last visitor date */
   lastVisitorDate?: string;
   /** Number of visitors */

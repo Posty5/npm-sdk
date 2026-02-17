@@ -416,7 +416,7 @@ export class SocialPublisherTaskClient {
       isAllowTiktok: options.platforms.includes("tiktok"),
       isAllowFacebookPage: options.platforms.includes("facebook"),
       isAllowInstagram: options.platforms.includes("instagram"),
-      youTube: options.youtube,
+      youtube: options.youtube,
       tiktok: options.tiktok,
       facebook: options.facebook,
       instagram: options.instagram,
@@ -481,6 +481,9 @@ export class SocialPublisherTaskClient {
       throw new Error("Instagram configuration is required when publishing to Instagram");
     }
 
+        // Auto-detect video source type
+    const source = this.detectVideoSource(options.video);
+    
     // Build IAccountTaskSetting from simplified options
     const settings: IAccountTaskSetting = {
       accountId: options.accountId,
@@ -488,7 +491,7 @@ export class SocialPublisherTaskClient {
       isAllowTiktok: options.platforms.includes("tiktok"),
       isAllowFacebookPage: options.platforms.includes("facebook"),
       isAllowInstagram: options.platforms.includes("instagram"),
-      youTube: options.youtube,
+      youtube: options.youtube,
       tiktok: options.tiktok,
       facebook: options.facebook,
       instagram: options.instagram,
@@ -501,8 +504,7 @@ export class SocialPublisherTaskClient {
       source: "video-file",
     };
 
-    // Auto-detect video source type
-    const source = this.detectVideoSource(options.video);
+
 
     // Route to appropriate method based on detected source
     switch (source) {

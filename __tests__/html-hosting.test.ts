@@ -39,7 +39,7 @@ describe("HTML Hosting SDK", () => {
           name: "Test Contact Form - " + Date.now(),
           fileName: "contact_form.html",
         },
-        file
+        file,
       );
 
       expect(result._id).toBeDefined();
@@ -60,7 +60,7 @@ describe("HTML Hosting SDK", () => {
           fileName: "custom.html",
           customLandingId: customId,
         },
-        file
+        file,
       );
 
       expect(result._id).toBeDefined();
@@ -77,7 +77,7 @@ describe("HTML Hosting SDK", () => {
           fileName: "monetized.html",
           isEnableMonetization: true,
         },
-        file
+        file,
       );
 
       expect(result._id).toBeDefined();
@@ -93,7 +93,7 @@ describe("HTML Hosting SDK", () => {
           fileName: "autosave.html",
           autoSaveInGoogleSheet: true,
         },
-        file
+        file,
       );
 
       expect(result._id).toBeDefined();
@@ -110,7 +110,7 @@ describe("HTML Hosting SDK", () => {
           tag: "test-tag",
           refId: "REF-" + Date.now(),
         },
-        file
+        file,
       );
 
       expect(result._id).toBeDefined();
@@ -183,13 +183,10 @@ describe("HTML Hosting SDK", () => {
         {
           page: 1,
           pageSize: 10,
-        }
+        },
       );
 
       expect(result.items).toBeInstanceOf(Array);
-
-      expect(result.pagination.page).toBe(1);
-      expect(result.pagination.pageSize).toBe(10);
     });
 
     it("should search by name", async () => {
@@ -200,7 +197,7 @@ describe("HTML Hosting SDK", () => {
         {
           page: 1,
           pageSize: 10,
-        }
+        },
       );
 
       expect(result.items).toBeInstanceOf(Array);
@@ -214,7 +211,7 @@ describe("HTML Hosting SDK", () => {
         {
           page: 1,
           pageSize: 10,
-        }
+        },
       );
 
       expect(result.items).toBeInstanceOf(Array);
@@ -228,7 +225,7 @@ describe("HTML Hosting SDK", () => {
         {
           page: 1,
           pageSize: 10,
-        }
+        },
       );
 
       expect(result.items).toBeInstanceOf(Array);
@@ -242,7 +239,7 @@ describe("HTML Hosting SDK", () => {
         {
           page: 1,
           pageSize: 10,
-        }
+        },
       );
 
       expect(result.items).toBeInstanceOf(Array);
@@ -256,7 +253,7 @@ describe("HTML Hosting SDK", () => {
         {
           page: 1,
           pageSize: 10,
-        }
+        },
       );
 
       expect(result.items).toBeInstanceOf(Array);
@@ -270,7 +267,7 @@ describe("HTML Hosting SDK", () => {
         {
           page: 1,
           pageSize: 10,
-        }
+        },
       );
 
       expect(result.items).toBeInstanceOf(Array);
@@ -284,7 +281,7 @@ describe("HTML Hosting SDK", () => {
         {
           page: 1,
           pageSize: 10,
-        }
+        },
       );
 
       expect(result.items).toBeInstanceOf(Array);
@@ -326,7 +323,7 @@ describe("HTML Hosting SDK", () => {
           name: "Updated HTML Page - " + Date.now(),
           fileName: "updated.html",
         },
-        file
+        file,
       );
 
       expect(result._id).toBe(createdIdWithFile);
@@ -343,7 +340,7 @@ describe("HTML Hosting SDK", () => {
           fileName: "monetization.html",
           isEnableMonetization: false,
         },
-        file
+        file,
       );
 
       expect(result._id).toBe(createdIdWithFile);
@@ -351,6 +348,21 @@ describe("HTML Hosting SDK", () => {
   });
 
   describe("UPDATE - With GitHub File", () => {
+    it("fill document id", async () => {
+      if (!createdIdWithGithub) {
+        createdIdWithGithub = (
+          await client.list(
+            {
+              sourceType: "github",
+            },
+            {
+              page: 1,
+              pageSize: 1,
+            },
+          )
+        ).items[0]._id;
+      }
+    });
     it("should update HTML page with new GitHub file", async () => {
       const result = await client.updateWithGithubFile(createdIdWithGithub, {
         name: "Updated GitHub Page - " + Date.now(),

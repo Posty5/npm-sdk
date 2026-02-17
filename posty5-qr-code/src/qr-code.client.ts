@@ -103,7 +103,7 @@ export class QRCodeClient {
       createdFrom: "npmPackage",
     };
     // console.log("createFreeText payload:", JSON.stringify(payload, null, 2));
-    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/freetext`, payload);
+    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/freeText`, payload);
     return response.result!;
   }
 
@@ -364,7 +364,7 @@ export class QRCodeClient {
       createdFrom: "npmPackage",
     };
 
-    const response = await this.http.put<ICreateQRCodeResponse>(`${this.basePath}/${id}`, payload);
+    const response = await this.http.put<ICreateQRCodeResponse>(`${this.basePath}/freeText/${id}`, payload);
     return response.result!;
   }
 
@@ -393,7 +393,7 @@ export class QRCodeClient {
       type: "email",
     };
     data.email = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/${id}`, {
+    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/email/${id}`, {
       ...data,
       qrCodeTarget,
       options: {
@@ -430,11 +430,11 @@ export class QRCodeClient {
       type: "wifi",
     };
     data.wifi = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/${id}`, {
+    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/wifi/${id}`, {
       ...data,
       qrCodeTarget,
       options: {
-        text: `WIFI:T:${qrCodeTarget.wifi.authenticationType};S:${qrCodeTarget.wifi.name};P:${qrCodeTarget.wifi.password};`,
+        text: `WIFI:S:${qrCodeTarget.wifi.name};T:${qrCodeTarget.wifi.authenticationType};P:${qrCodeTarget.wifi.password};;`,
       },
       templateType: "user",
       createdFrom: "npmPackage",
@@ -465,7 +465,7 @@ export class QRCodeClient {
       type: "call",
     };
     data.call = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/${id}`, {
+    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/call/${id}`, {
       ...data,
       qrCodeTarget,
       options: {
@@ -501,7 +501,7 @@ export class QRCodeClient {
       type: "sms",
     };
     data.sms = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/${id}`, {
+    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/sms/${id}`, {
       ...data,
       qrCodeTarget,
       options: {
@@ -537,7 +537,7 @@ export class QRCodeClient {
       type: "url",
     };
     data.url = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/${id}`, {
+    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/url/${id}`, {
       ...data,
       qrCodeTarget,
       options: {
@@ -572,7 +572,7 @@ export class QRCodeClient {
       type: "geolocation",
     };
     data.geolocation = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/${id}`, {
+    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/geolocation/${id}`, {
       ...data,
       qrCodeTarget,
       options: {
@@ -637,8 +637,8 @@ export class QRCodeClient {
    * );
    * ```
    */
-  async list(params?: IListParams, pagination?: IPaginationParams): Promise<IPaginationResponse<IQRCode[]>> {
-    const response = await this.http.get<IPaginationResponse<IQRCode[]>>(this.basePath, {
+  async list(params?: IListParams, pagination?: IPaginationParams): Promise<IPaginationResponse<IQRCode>> {
+    const response = await this.http.get<IPaginationResponse<IQRCode>>(this.basePath, {
       params: {
         ...params,
         ...pagination,
