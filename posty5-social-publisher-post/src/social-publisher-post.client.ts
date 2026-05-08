@@ -427,6 +427,8 @@ export class SocialPublisherPostClient {
           }
         : undefined,
       source: "video-file",
+      tag: options.tag,
+      refId: options.refId,
     };
 
     // Auto-detect video source type
@@ -502,6 +504,8 @@ export class SocialPublisherPostClient {
           }
         : undefined,
       source: "video-file",
+      tag: options.tag,
+      refId: options.refId,
     };
 
     // Route to appropriate method based on detected source

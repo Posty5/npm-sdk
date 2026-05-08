@@ -108,6 +108,10 @@ export interface IPostSetting {
   instagram?: IInstagramConfig;
   schedule?: IScheduleConfig;
   source: SocialPublisherPostSourceType;
+  /** Optional caller-supplied tag, persisted on the created post for filtering. */
+  tag?: string;
+  /** Optional caller-supplied reference ID, persisted on the created post for filtering. */
+  refId?: string;
 }
 
 export interface IAccountPostSetting {
@@ -123,6 +127,10 @@ export interface IAccountPostSetting {
   instagram?: IInstagramConfig;
   schedule?: IScheduleConfig;
   source: SocialPublisherPostSourceType;
+  /** Optional caller-supplied tag, persisted on the created post for filtering. */
+  tag?: string;
+  /** Optional caller-supplied reference ID, persisted on the created post for filtering. */
+  refId?: string;
 }
 
 export interface IGenerateUploadUrlsRequest {
