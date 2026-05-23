@@ -35,6 +35,27 @@ export interface IScheduleConfig {
   scheduledAt?: Date;
 }
 
+/**
+ * Optional post-publish comment.
+ * Adds a comment under each platform post once it is published.
+ *
+ * Pricing: +1 credit on top of the video charge (Pro plan).
+ * TikTok comments are not supported by the platform and will always
+ * be reported as `notSupported` in the status response.
+ */
+export interface ICommentRequest {
+  /** Comment text (1..2200 characters). */
+  text: string;
+  /** Post the comment on Facebook (default: true). */
+  postToFacebook?: boolean;
+  /** Post the comment on Instagram (default: true). */
+  postToInstagram?: boolean;
+  /** Post the comment on YouTube (default: true). */
+  postToYoutube?: boolean;
+  /** Post the comment on TikTok (default: false — not supported by TikTok). */
+  postToTiktok?: boolean;
+}
+
 export interface ICreateSocialPublisherPostRequest {
   /** Workspace ID */
   workspaceId: string;
@@ -51,6 +72,12 @@ export interface ICreateSocialPublisherPostRequest {
   thumbURL?: string;
   postURL?: string;
   schedule?: IScheduleConfig;
+  /**
+   * Optional post-publish comment (Pro plan, +1 credit).
+   * Once the video is published, a comment is added under each enabled
+   * platform post. TikTok is not supported.
+   */
+  comment?: ICommentRequest;
   /**
    * Tag (optional)
    * Use this field to filter posts by tag.
@@ -82,6 +109,12 @@ export interface ICreateSocialPublisherAccountPostRequest {
   postURL?: string;
   schedule?: IScheduleConfig;
   /**
+   * Optional post-publish comment (Pro plan, +1 credit).
+   * Once the video is published, a comment is added under each enabled
+   * platform post. TikTok is not supported.
+   */
+  comment?: ICommentRequest;
+  /**
    * Tag (optional)
    * Use this field to filter posts by tag.
    * You can pass any custom value from your system.
@@ -108,6 +141,8 @@ export interface IPostSetting {
   instagram?: IInstagramConfig;
   schedule?: IScheduleConfig;
   source: SocialPublisherPostSourceType;
+  /** Optional post-publish comment (Pro plan, +1 credit). TikTok is not supported. */
+  comment?: ICommentRequest;
   /** Optional caller-supplied tag, persisted on the created post for filtering. */
   tag?: string;
   /** Optional caller-supplied reference ID, persisted on the created post for filtering. */
@@ -127,6 +162,8 @@ export interface IAccountPostSetting {
   instagram?: IInstagramConfig;
   schedule?: IScheduleConfig;
   source: SocialPublisherPostSourceType;
+  /** Optional post-publish comment (Pro plan, +1 credit). TikTok is not supported. */
+  comment?: ICommentRequest;
   /** Optional caller-supplied tag, persisted on the created post for filtering. */
   tag?: string;
   /** Optional caller-supplied reference ID, persisted on the created post for filtering. */
@@ -213,6 +250,12 @@ export interface IPublishOptions {
    * Optional reference ID for external systems
    */
   refId?: string;
+
+  /**
+   * Optional post-publish comment (Pro plan, +1 credit).
+   * TikTok comments are not supported.
+   */
+  comment?: ICommentRequest;
 }
 
 /**
@@ -289,6 +332,12 @@ export interface IPublishToAccountOptions {
    * Optional reference ID for external systems
    */
   refId?: string;
+
+  /**
+   * Optional post-publish comment (Pro plan, +1 credit).
+   * TikTok comments are not supported.
+   */
+  comment?: ICommentRequest;
 }
 
 /**
@@ -346,6 +395,12 @@ export interface IQuickPublishBaseOptions {
    * @example 'external-id-123', 'crm-campaign-456'
    */
   refId?: string;
+
+  /**
+   * Optional post-publish comment (Pro plan, +1 credit).
+   * TikTok comments are not supported.
+   */
+  comment?: ICommentRequest;
 }
 
 /**

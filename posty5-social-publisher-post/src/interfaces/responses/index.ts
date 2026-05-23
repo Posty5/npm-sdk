@@ -1,5 +1,5 @@
 import { IPaginationResponse } from "@posty5/core";
-import { SocialPublisherPostStatusType, SocialPublisherPostSourceType, SocialPublisherAccountStatusType } from "../../types/type";
+import { SocialPublisherPostStatusType, SocialPublisherPostSourceType, SocialPublisherAccountStatusType, CommentStatusType } from "../../types/type";
 
 export interface IUploadConfig {
   url: string;
@@ -57,6 +57,29 @@ export interface ISocialPublisherPostInfo {
   videoURL: string;
   statusHistory: { status: SocialPublisherPostStatusType; changedAt: Date }[];
   socialPublisherAccountId: string | any;
+}
+
+/**
+ * Per-platform comment status block returned on the post status response.
+ * Present only when the post was created with a `comment` payload.
+ *
+ * TikTok always returns `currentStatus = "notSupported"`.
+ */
+export interface ICommentInfoDTO {
+  /** Whether the caller opted in for this platform (mirrors the request flag). */
+  isAllow?: boolean;
+  /** Current per-platform comment status. */
+  currentStatus?: CommentStatusType;
+  /** Last error message (when `currentStatus === "error"`). */
+  currentError?: string;
+  /** ID of the comment on the platform (when posted). */
+  externalCommentId?: string;
+  /** Public URL of the comment on the platform (when posted). */
+  commentURL?: string;
+  /** Timestamp the comment was successfully posted. */
+  postedAt?: Date;
+  /** Grouped history of status transitions for this platform comment. */
+  statusHistoryGrouped?: IBaseStatusHistoryGroupedDay<CommentStatusType>[];
 }
 
 export interface ISocialPublisherPostPlatform {
@@ -180,16 +203,22 @@ export interface ISocialPublisherPostTikTokPostDetails extends ISocialPublisherP
   disable_stitch: boolean;
   disable_comment: boolean;
   privacy_level: string;
+  /** Per-platform comment status — TikTok always reports `notSupported`. */
+  commentInfo?: ICommentInfoDTO;
 }
 export interface ISocialPublisherPostFacebookPagePostDetails extends ISocialPublisherPostAccount {
   description: string;
   title: string;
+  /** Per-platform comment status (only present when a comment was requested). */
+  commentInfo?: ICommentInfoDTO;
 }
 
 export interface ISocialPublisherPostInstagramPostDetails extends ISocialPublisherPostAccount {
   description: string;
   share_to_feed: boolean;
   is_published_to_both_feed_and_story: boolean;
+  /** Per-platform comment status (only present when a comment was requested). */
+  commentInfo?: ICommentInfoDTO;
 }
 
 export interface ISocialPublisherPostYouTubePostDetails extends ISocialPublisherPostAccount {
@@ -202,6 +231,8 @@ export interface ISocialPublisherPostYouTubePostDetails extends ISocialPublisher
   categoryId: string;
   localizationLanguages: string[];
   localizations: any;
+  /** Per-platform comment status (only present when a comment was requested). */
+  commentInfo?: ICommentInfoDTO;
 }
 
 export interface ISocialPublisherPostNextPreviousResponse {

@@ -188,6 +188,35 @@ const postId = await client.publishShortVideo({
 console.log("Published to YouTube and TikTok:", postId);
 ```
 
+**Example - Auto-Comment After Publish (Pro plan, +1 credit):**
+
+```typescript
+// Publish a video and queue a comment for each platform.
+// TikTok comments are not supported — the platform will always
+// report `commentInfo.currentStatus === "notSupported"`.
+const postId = await client.publishShortVideo({
+  workspaceId: "workspace-123",
+  video: videoFile,
+  platforms: ["youtube", "facebook", "instagram"],
+  youtube: { title: "Launch day", description: "We shipped!", tags: ["launch"] },
+  facebook: { description: "We shipped!" },
+  instagram: { description: "We shipped! 🚀" },
+  comment: {
+    text: "Drop your favourite feature below 👇",
+    postToFacebook: true,
+    postToInstagram: true,
+    postToYoutube: true,
+    // postToTiktok defaults to false — TikTok does not support API comments
+  },
+});
+
+// Later, poll status to see how each comment landed:
+const status = await client.getStatus(postId);
+console.log("YouTube comment:", status.youtube?.commentInfo?.currentStatus);
+console.log("Facebook comment URL:", status.facebook?.commentInfo?.commentURL);
+console.log("TikTok comment:", status.tiktok?.commentInfo?.currentStatus); // "notSupported"
+```
+
 **Example - Multi-Platform Publishing:**
 
 ```typescript
@@ -816,6 +845,11 @@ import {
 
   // Schedule configuration
   IScheduleConfig,
+
+  // Optional post-publish comment (Pro plan, +1 credit)
+  ICommentRequest,
+  ICommentInfoDTO,
+  CommentStatusType, // 'pending' | 'processing' | 'done' | 'error' | 'skipped' | 'notSupported'
 
   // Search parameters
   IListParams,
