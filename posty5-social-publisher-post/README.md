@@ -1,26 +1,26 @@
-# @posty5/social-publisher-post
+﻿# @posty5/social-publisher-post
 
 Official Posty5 SDK for managing social media publishing posts. Publish videos to YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels with a unified, developer-friendly API.
 
 ---
 
-## 🌟 What is Posty5?
+## ðŸŒŸ What is Posty5?
 
 **Posty5** is a comprehensive suite of free online tools designed to enhance your digital marketing and social media presence. With over 4+ powerful tools and counting, Posty5 provides everything you need to:
 
-- 🔗 **Shorten URLs** - Create memorable, trackable short links
-- 📱 **Generate QR Codes** - Transform URLs, WiFi credentials, contact cards, and more into scannable codes
-- 🌐 **Host HTML Pages** - Deploy static HTML pages with dynamic variables and form submission handling
-- 📢 **Automate Social Media** - Schedule and manage social media posts across multiple platforms
-- 📊 **Track Performance** - Monitor and analyze your digital marketing efforts
+- ðŸ”— **Shorten URLs** - Create memorable, trackable short links
+- ðŸ“± **Generate QR Codes** - Transform URLs, WiFi credentials, contact cards, and more into scannable codes
+- ðŸŒ **Host HTML Pages** - Deploy static HTML pages with dynamic variables and form submission handling
+- ðŸ“¢ **Automate Social Media** - Schedule and manage social media posts across multiple platforms
+- ðŸ“Š **Track Performance** - Monitor and analyze your digital marketing efforts
 
-Posty5 empowers businesses, marketers, and developers to streamline their online workflows—all from a unified control panel.
+Posty5 empowers businesses, marketers, and developers to streamline their online workflowsâ€”all from a unified control panel.
 
 **Learn more:** [https://posty5.com](https://posty5.com)
 
 ---
 
-## 📦 About This Package
+## ðŸ“¦ About This Package
 
 `@posty5/social-publisher-post` is the **post management client** for the Posty5 Social Media Publisher. This package enables you to programmatically publish short-form videos to multiple social media platforms simultaneously from a single API call.
 
@@ -52,14 +52,14 @@ Posts represent video publishing jobs that distribute your content across YouTub
 
 | Platform  | Content Type | Custom Thumbnails | Max File Size |
 | --------- | ------------ | ----------------- | ------------- |
-| YouTube   | Shorts       | ✅ Yes            | 2 GB          |
-| TikTok    | Videos       | ❌ No             | 2 GB          |
-| Facebook  | Reels        | ❌ No             | 2 GB          |
-| Instagram | Reels        | ❌ No             | 2 GB          |
+| YouTube   | Shorts       | âœ… Yes            | 2 GB          |
+| TikTok    | Videos       | âŒ No             | 2 GB          |
+| Facebook  | Reels        | âŒ No             | 2 GB          |
+| Instagram | Reels        | âŒ No             | 2 GB          |
 
 ---
 
-## 📥 Installation
+## ðŸ“¥ Installation
 
 Install via npm:
 
@@ -69,7 +69,7 @@ npm install @posty5/social-publisher-post @posty5/core
 
 ---
 
-## 🚀 Quick Start
+## ðŸš€ Quick Start
 
 ```typescript
 import { HttpClient } from "@posty5/core";
@@ -89,7 +89,6 @@ const postId = await client.publishShortVideo({
   workspaceId: "workspace-123", // Your workspace ID
   video: videoFile, // File object or URL string
   thumbnail: thumbFile, // Optional: File or URL
-  platforms: ["youtube"], // Target platforms
   youtube: {
     title: "My First YouTube Short",
     description: "Published using Posty5 SDK",
@@ -107,7 +106,7 @@ console.log("YouTube:", status.youtube?.postInfo.currentStatus);
 
 ---
 
-## 📚 API Reference & Examples
+## ðŸ“š API Reference & Examples
 
 ### publishShortVideo()
 
@@ -119,14 +118,19 @@ Publish a short video to one or more social media platforms. This is the main me
   - `workspaceId` (string, required): Workspace ID containing connected social accounts
   - `video` (File | string, required): Video source - File object, direct URL, or platform URL (Facebook/TikTok/YouTube)
   - `thumbnail` (File | string, optional): Thumbnail image - File object or URL string
-  - `platforms` (Array<'youtube' | 'tiktok' | 'facebook' | 'instagram'>, required): Target platforms
-  - `youtube` (IYouTubeConfig, optional): YouTube configuration - required if 'youtube' in platforms
-  - `tiktok` (ITikTokConfig, optional): TikTok configuration - required if 'tiktok' in platforms
-  - `facebook` (IFacebookPageConfig, optional): Facebook configuration - required if 'facebook' in platforms
-  - `instagram` (IInstagramConfig, optional): Instagram configuration - required if 'instagram' in platforms
+  - `youtube` (IYouTubeConfig, optional): YouTube configuration — **required** if the workspace has a YouTube account connected
+  - `tiktok` (ITikTokConfig, optional): TikTok configuration — **required** if the workspace has a TikTok account connected
+  - `facebook` (IFacebookPageConfig, optional): Facebook configuration — **required** if the workspace has a Facebook Page connected
+  - `instagram` (IInstagramConfig, optional): Instagram configuration — **required** if the workspace has an Instagram account connected
   - `schedule` ('now' | Date, optional): Publish immediately (default) or schedule for specific date/time
   - `tag` (string, optional): Custom tag for filtering
   - `refId` (string, optional): Your internal reference ID
+
+> **Where publish targets come from.** The workspace's connected accounts are
+> the single source of truth — connect / disconnect accounts on the workspace
+> page in the Posty5 dashboard to choose which platforms a post lands on. The
+> SDK forwards whichever config blocks you supply; the server matches them
+> against the workspace.
 
 **Returns:** `Promise<string>` - Created post ID
 
@@ -148,7 +152,6 @@ const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: video,
   thumbnail: thumbnail,
-  platforms: ["youtube"],
   youtube: {
     title: "Product Launch Video",
     description: "Introducing our new product line for 2024",
@@ -170,14 +173,13 @@ const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: "https://cdn.example.com/videos/promo.mp4", // Direct video URL
   thumbnail: "https://cdn.example.com/images/thumb.jpg", // Direct thumbnail URL
-  platforms: ["youtube", "tiktok"],
   youtube: {
     title: "Summer Sale Announcement",
     description: "Check out our summer collection",
     tags: ["sale", "summer", "fashion"],
   },
   tiktok: {
-    caption: "Summer sale is here! 🔥 #SummerSale #Fashion",
+    caption: "Summer sale is here! ðŸ”¥ #SummerSale #Fashion",
     privacy_level: "public",
     disable_duet: false,
     disable_stitch: false,
@@ -192,21 +194,20 @@ console.log("Published to YouTube and TikTok:", postId);
 
 ```typescript
 // Publish a video and queue a comment for each platform.
-// TikTok comments are not supported — the platform will always
+// TikTok comments are not supported â€” the platform will always
 // report `commentInfo.currentStatus === "notSupported"`.
 const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: videoFile,
-  platforms: ["youtube", "facebook", "instagram"],
   youtube: { title: "Launch day", description: "We shipped!", tags: ["launch"] },
   facebook: { description: "We shipped!" },
-  instagram: { description: "We shipped! 🚀" },
+  instagram: { description: "We shipped! ðŸš€" },
   comment: {
-    text: "Drop your favourite feature below 👇",
+    text: "Drop your favourite feature below ðŸ‘‡",
     postToFacebook: true,
     postToInstagram: true,
     postToYoutube: true,
-    // postToTiktok defaults to false — TikTok does not support API comments
+    // postToTiktok defaults to false â€” TikTok does not support API comments
   },
 });
 
@@ -225,7 +226,6 @@ const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: videoFile,
   thumbnail: thumbFile,
-  platforms: ["youtube", "tiktok", "facebook", "instagram"],
 
   // YouTube configuration
   youtube: {
@@ -236,7 +236,7 @@ const postId = await client.publishShortVideo({
 
   // TikTok configuration
   tiktok: {
-    caption: "Easy tutorial! Try it yourself 🎯 #Tutorial #LearnTikTok",
+    caption: "Easy tutorial! Try it yourself ðŸŽ¯ #Tutorial #LearnTikTok",
     privacy_level: "public",
     disable_duet: false,
     disable_stitch: false,
@@ -251,7 +251,7 @@ const postId = await client.publishShortVideo({
 
   // Instagram configuration
   instagram: {
-    description: "Quick product tutorial 📱 #ProductTutorial",
+    description: "Quick product tutorial ðŸ“± #ProductTutorial",
     share_to_feed: true,
   },
 });
@@ -266,7 +266,6 @@ console.log("Published to all platforms:", postId);
 const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: "https://www.tiktok.com/@username/video/1234567890", // TikTok URL
-  platforms: ["youtube"], // Repost to YouTube
   youtube: {
     title: "Viral TikTok Repost",
     description: "Sharing this viral moment from TikTok",
@@ -284,7 +283,6 @@ console.log("Reposted from TikTok to YouTube:", postId);
 const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: "https://www.youtube.com/shorts/abc123", // YouTube Shorts URL
-  platforms: ["tiktok"],
   tiktok: {
     caption: "Check out this YouTube Short! #YouTubeShorts",
     privacy_level: "public",
@@ -304,7 +302,6 @@ console.log("Reposted from YouTube to TikTok:", postId);
 const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: "https://www.facebook.com/reel/1234567890", // Facebook Reel URL
-  platforms: ["youtube", "tiktok"],
   youtube: {
     title: "Facebook Viral Moment",
     description: "Reposting this viral moment from Facebook",
@@ -331,15 +328,14 @@ const publishDate = new Date("2024-12-25T12:00:00Z"); // Christmas at noon
 const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: videoFile,
-  platforms: ["youtube", "tiktok"],
   schedule: publishDate, // Schedule for specific date/time
   youtube: {
-    title: "Merry Christmas! 🎄",
+    title: "Merry Christmas! ðŸŽ„",
     description: "Holiday greetings from our team",
     tags: ["christmas", "holiday", "greetings"],
   },
   tiktok: {
-    caption: "Merry Christmas everyone! 🎅🎄 #Christmas",
+    caption: "Merry Christmas everyone! ðŸŽ…ðŸŽ„ #Christmas",
     privacy_level: "public",
     disable_duet: false,
     disable_stitch: false,
@@ -607,7 +603,7 @@ async function waitForCompletion(postId: string, maxWaitMs = 300000) {
     console.log(`Status: ${status.currentStatus}`);
 
     if (status.currentStatus === "done") {
-      console.log("✓ Publishing complete!");
+      console.log("âœ“ Publishing complete!");
       return status;
     }
 
@@ -716,7 +712,7 @@ console.log(`Retrieved ${next5Posts.length} posts`);
 
 ---
 
-## 🔄 Complete Workflow Example
+## ðŸ”„ Complete Workflow Example
 
 ```typescript
 import { HttpClient } from "@posty5/core";
@@ -747,14 +743,13 @@ async function publishVideoWorkflow() {
       workspaceId: "workspace-123",
       video: video,
       thumbnail: thumbnail,
-      platforms: ["youtube", "tiktok"],
       youtube: {
         title: "Product Demo 2024",
         description: "Check out our latest product features",
         tags: ["product", "demo", "2024"],
       },
       tiktok: {
-        caption: "New product alert! 🚀 #Product #Tech",
+        caption: "New product alert! ðŸš€ #Product #Tech",
         privacy_level: "public",
         disable_duet: false,
         disable_stitch: false,
@@ -764,7 +759,7 @@ async function publishVideoWorkflow() {
       refId: "DEMO-2024-001",
     });
 
-    console.log("✓ Post created:", postId);
+    console.log("âœ“ Post created:", postId);
 
     // 3. Monitor publishing progress
     console.log("\nMonitoring progress...");
@@ -786,7 +781,7 @@ async function publishVideoWorkflow() {
 
       // Check if completed
       if (status.currentStatus === "done") {
-        console.log("\n✓ Publishing complete!");
+        console.log("\nâœ“ Publishing complete!");
 
         // Get video URLs
         if (status.youtube?.postInfo.videoURL) {
@@ -801,7 +796,7 @@ async function publishVideoWorkflow() {
 
       // Check for errors
       if (status.currentStatus === "error") {
-        console.error("\n✗ Publishing failed");
+        console.error("\nâœ— Publishing failed");
         throw new Error("Post failed");
       }
 
@@ -825,7 +820,7 @@ publishVideoWorkflow()
 
 ---
 
-## 📘 TypeScript Support
+## ðŸ“˜ TypeScript Support
 
 Full TypeScript support with exported interfaces:
 
@@ -922,23 +917,23 @@ interface IInstagramConfig {
 
 ---
 
-## 📦 Related Packages
+## ðŸ“¦ Related Packages
 
 This SDK ecosystem contains the following tool packages:
 
 | Package | Description | Version | GitHub | NPM |
 | --- | --- | --- | --- | --- |
-| @posty5/short-link | URL shortener client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-short-link) | [📦 NPM](https://www.npmjs.com/package/@posty5/short-link) |
-| @posty5/qr-code | QR code generator client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-qr-code) | [📦 NPM](https://www.npmjs.com/package/@posty5/qr-code) |
-| @posty5/html-hosting | HTML hosting client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-html-hosting) | [📦 NPM](https://www.npmjs.com/package/@posty5/html-hosting) |
-| @posty5/html-hosting-variables | HTML hosting variables client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-html-hosting-variables) | [📦 NPM](https://www.npmjs.com/package/@posty5/html-hosting-variables) |
-| @posty5/html-hosting-form-submission | Form submission client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-html-hosting-form-submission) | [📦 NPM](https://www.npmjs.com/package/@posty5/html-hosting-form-submission) |
-| @posty5/social-publisher-workspace | Social publisher workspace client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-social-publisher-workspace) | [📦 NPM](https://www.npmjs.com/package/@posty5/social-publisher-workspace) |
-| @posty5/social-publisher-post | Social publisher post client | 1.0.2 | [📖 Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-social-publisher-post) | [📦 NPM](https://www.npmjs.com/package/@posty5/social-publisher-post) |
+| @posty5/short-link | URL shortener client | 1.0.2 | [ðŸ“– Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-short-link) | [ðŸ“¦ NPM](https://www.npmjs.com/package/@posty5/short-link) |
+| @posty5/qr-code | QR code generator client | 1.0.2 | [ðŸ“– Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-qr-code) | [ðŸ“¦ NPM](https://www.npmjs.com/package/@posty5/qr-code) |
+| @posty5/html-hosting | HTML hosting client | 1.0.2 | [ðŸ“– Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-html-hosting) | [ðŸ“¦ NPM](https://www.npmjs.com/package/@posty5/html-hosting) |
+| @posty5/html-hosting-variables | HTML hosting variables client | 1.0.2 | [ðŸ“– Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-html-hosting-variables) | [ðŸ“¦ NPM](https://www.npmjs.com/package/@posty5/html-hosting-variables) |
+| @posty5/html-hosting-form-submission | Form submission client | 1.0.2 | [ðŸ“– Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-html-hosting-form-submission) | [ðŸ“¦ NPM](https://www.npmjs.com/package/@posty5/html-hosting-form-submission) |
+| @posty5/social-publisher-workspace | Social publisher workspace client | 1.0.2 | [ðŸ“– Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-social-publisher-workspace) | [ðŸ“¦ NPM](https://www.npmjs.com/package/@posty5/social-publisher-workspace) |
+| @posty5/social-publisher-post | Social publisher post client | 1.0.2 | [ðŸ“– Docs](https://github.com/Posty5/npm-sdk/tree/main/posty5-social-publisher-post) | [ðŸ“¦ NPM](https://www.npmjs.com/package/@posty5/social-publisher-post) |
 
 ---
 
-## 💻 Node.js Compatibility
+## ðŸ’» Node.js Compatibility
 
 - **Node.js**: >= 16.0.0
 - **Module Systems**: ESM and CommonJS
@@ -946,7 +941,7 @@ This SDK ecosystem contains the following tool packages:
 
 ---
 
-## 🆘 Support
+## ðŸ†˜ Support
 
 We're here to help you succeed with Posty5!
 
@@ -973,13 +968,13 @@ We're here to help you succeed with Posty5!
 
 ---
 
-## 📄 License
+## ðŸ“„ License
 
 MIT License - see [LICENSE](./LICENSE) file for details.
 
 ---
 
-## 🔗 Useful Links
+## ðŸ”— Useful Links
 
 - **Website**: [https://posty5.com](https://posty5.com)
 - **Dashboard**: [studio.posty5.com/account/settings?tab=APIKeys](studio.posty5.com/account/settings?tab=APIKeys)
@@ -988,4 +983,4 @@ MIT License - see [LICENSE](./LICENSE) file for details.
 
 ---
 
-Made with ❤️ by the Posty5 team
+Made with â¤ï¸ by the Posty5 team

@@ -349,14 +349,17 @@ export class SocialPublisherPostClient {
    * @param options - Simplified publishing options
    * @returns Created post response
    *
+   * The workspace's connected accounts (set up via the Posty5 dashboard)
+   * determine which platforms this post lands on — supply a config block
+   * for each connected platform.
+   *
    * @example
    * ```typescript
-   * // Publish video file to YouTube
-   * await client.publish({
+   * // Workspace has a YouTube account connected → just supply youtube config
+   * await client.publishShortVideoToWorkspace({
    *     workspaceId: 'workspace-123',
    *     video: videoFile,
    *     thumbnail: thumbFile,
-   *     platforms: ['youtube'],
    *     youtube: {
    *         title: 'My Video',
    *         description: 'Description',
@@ -364,21 +367,19 @@ export class SocialPublisherPostClient {
    *     }
    * });
    *
-   * // Publish to multiple platforms
-   * await client.publish({
+   * // Workspace has YouTube + TikTok connected → supply both configs
+   * await client.publishShortVideoToWorkspace({
    *     workspaceId: 'workspace-123',
    *     video: 'https://example.com/video.mp4',
    *     thumbnail: 'https://example.com/thumb.jpg',
-   *     platforms: ['youtube', 'tiktok'],
    *     youtube: { title: 'Video', description: 'Desc', tags: [] },
    *     tiktok: { caption: 'Caption', privacy_level: 'public', disable_duet: false, disable_stitch: false, disable_comment: false }
    * });
    *
    * // Repost from Facebook (auto-detected)
-   * await client.publish({
+   * await client.publishShortVideoToWorkspace({
    *     workspaceId: 'workspace-123',
    *     video: 'https://facebook.com/video/12345',
-   *     platforms: ['youtube'],
    *     youtube: { title: 'Reposted', description: 'From FB', tags: [] }
    * });
    * ```
@@ -391,31 +392,16 @@ export class SocialPublisherPostClient {
     if (!options.video) {
       throw new Error("video is required");
     }
-    if (!options.platforms || options.platforms.length === 0) {
-      throw new Error("At least one platform must be specified");
+    if (!options.youtube && !options.tiktok && !options.facebook && !options.instagram) {
+      throw new Error("Provide at least one platform configuration (youtube / tiktok / facebook / instagram)");
     }
 
-    // Validate platform configurations
-    if (options.platforms.includes("youtube") && !options.youtube) {
-      throw new Error("YouTube configuration is required when publishing to YouTube");
-    }
-    if (options.platforms.includes("tiktok") && !options.tiktok) {
-      throw new Error("TikTok configuration is required when publishing to TikTok");
-    }
-    if (options.platforms.includes("facebook") && !options.facebook) {
-      throw new Error("Facebook configuration is required when publishing to Facebook");
-    }
-    if (options.platforms.includes("instagram") && !options.instagram) {
-      throw new Error("Instagram configuration is required when publishing to Instagram");
-    }
-
-    // Build IPostSetting from simplified options
+    // Build IPostSetting from simplified options.
+    // The server derives which platforms to publish to from the workspace's
+    // connected accounts; the SDK just forwards whichever config blocks the
+    // caller supplied.
     const settings: IPostSetting = {
       workspaceId: options.workspaceId,
-      isAllowYouTube: options.platforms.includes("youtube"),
-      isAllowTiktok: options.platforms.includes("tiktok"),
-      isAllowFacebookPage: options.platforms.includes("facebook"),
-      isAllowInstagram: options.platforms.includes("instagram"),
       youtube: options.youtube,
       tiktok: options.tiktok,
       facebook: options.facebook,
@@ -429,6 +415,7 @@ export class SocialPublisherPostClient {
       source: "video-file",
       tag: options.tag,
       refId: options.refId,
+      comment: options.comment,
     };
 
     // Auto-detect video source type
@@ -465,34 +452,18 @@ export class SocialPublisherPostClient {
     if (!options.video) {
       throw new Error("video is required");
     }
-    if (!options.platforms || options.platforms.length === 0) {
-      throw new Error("At least one platform must be specified");
-    }
-
-    // Validate platform configurations
-    if (options.platforms.includes("youtube") && !options.youtube) {
-      throw new Error("YouTube configuration is required when publishing to YouTube");
-    }
-    if (options.platforms.includes("tiktok") && !options.tiktok) {
-      throw new Error("TikTok configuration is required when publishing to TikTok");
-    }
-    if (options.platforms.includes("facebook") && !options.facebook) {
-      throw new Error("Facebook configuration is required when publishing to Facebook");
-    }
-    if (options.platforms.includes("instagram") && !options.instagram) {
-      throw new Error("Instagram configuration is required when publishing to Instagram");
+    if (!options.youtube && !options.tiktok && !options.facebook && !options.instagram) {
+      throw new Error("Provide the platform configuration matching the account (youtube / tiktok / facebook / instagram)");
     }
 
     // Auto-detect video source type
     const source = this.detectVideoSource(options.video);
 
-    // Build IAccountPostSetting from simplified options
+    // Build IAccountPostSetting from simplified options.
+    // The server derives the publish target from the account's platform field;
+    // the SDK forwards whichever config block matches.
     const settings: IAccountPostSetting = {
       accountId: options.accountId,
-      isAllowYouTube: options.platforms.includes("youtube"),
-      isAllowTiktok: options.platforms.includes("tiktok"),
-      isAllowFacebookPage: options.platforms.includes("facebook"),
-      isAllowInstagram: options.platforms.includes("instagram"),
       youtube: options.youtube,
       tiktok: options.tiktok,
       facebook: options.facebook,
@@ -506,6 +477,7 @@ export class SocialPublisherPostClient {
       source: "video-file",
       tag: options.tag,
       refId: options.refId,
+      comment: options.comment,
     };
 
     // Route to appropriate method based on detected source

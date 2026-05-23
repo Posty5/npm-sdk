@@ -60,10 +60,6 @@ export interface ICreateSocialPublisherPostRequest {
   /** Workspace ID */
   workspaceId: string;
   source: SocialPublisherPostSourceType;
-  isAllowYouTube: boolean;
-  isAllowTiktok: boolean;
-  isAllowFacebookPage: boolean;
-  isAllowInstagram: boolean;
   youtube?: IYouTubeConfig;
   tiktok?: ITikTokConfig;
   facebook?: IFacebookPageConfig;
@@ -96,10 +92,6 @@ export interface ICreateSocialPublisherAccountPostRequest {
   /** Account ID */
   accountId: string;
   source: SocialPublisherPostSourceType;
-  isAllowYouTube: boolean;
-  isAllowTiktok: boolean;
-  isAllowFacebookPage: boolean;
-  isAllowInstagram: boolean;
   youtube?: IYouTubeConfig;
   tiktok?: ITikTokConfig;
   facebook?: IFacebookPageConfig;
@@ -131,10 +123,6 @@ export interface ICreateSocialPublisherAccountPostRequest {
 export interface IPostSetting {
   /** Workspace ID */
   workspaceId: string;
-  isAllowYouTube: boolean;
-  isAllowTiktok: boolean;
-  isAllowFacebookPage: boolean;
-  isAllowInstagram: boolean;
   youtube?: IYouTubeConfig;
   tiktok?: ITikTokConfig;
   facebook?: IFacebookPageConfig;
@@ -152,10 +140,6 @@ export interface IPostSetting {
 export interface IAccountPostSetting {
   /** Account ID */
   accountId: string;
-  isAllowYouTube: boolean;
-  isAllowTiktok: boolean;
-  isAllowFacebookPage: boolean;
-  isAllowInstagram: boolean;
   youtube?: IYouTubeConfig;
   tiktok?: ITikTokConfig;
   facebook?: IFacebookPageConfig;
@@ -205,32 +189,26 @@ export interface IPublishOptions {
   thumbnail?: File | string;
 
   /**
-   * Platforms to publish to (required)
-   * At least one platform must be specified
-   */
-  platforms: Array<"youtube" | "tiktok" | "facebook" | "instagram">;
-
-  /**
-   * YouTube-specific configuration
-   * Required if 'youtube' is in platforms array
+   * YouTube-specific configuration.
+   * Required if the workspace has a YouTube account connected.
    */
   youtube?: IYouTubeConfig;
 
   /**
-   * TikTok-specific configuration
-   * Required if 'tiktok' is in platforms array
+   * TikTok-specific configuration.
+   * Required if the workspace has a TikTok account connected.
    */
   tiktok?: ITikTokConfig;
 
   /**
-   * Facebook Page-specific configuration
-   * Required if 'facebook' is in platforms array
+   * Facebook Page-specific configuration.
+   * Required if the workspace has a Facebook Page connected.
    */
   facebook?: IFacebookPageConfig;
 
   /**
-   * Instagram-specific configuration
-   * Required if 'instagram' is in platforms array
+   * Instagram-specific configuration.
+   * Required if the workspace has an Instagram account connected.
    */
   instagram?: IInstagramConfig;
 
@@ -287,32 +265,26 @@ export interface IPublishToAccountOptions {
   thumbnail?: File | string;
 
   /**
-   * Platforms to publish to (required)
-   * At least one platform must be specified
-   */
-  platforms: Array<"youtube" | "tiktok" | "facebook" | "instagram">;
-
-  /**
-   * YouTube-specific configuration
-   * Required if 'youtube' is in platforms array
+   * YouTube-specific configuration.
+   * Required if the workspace has a YouTube account connected.
    */
   youtube?: IYouTubeConfig;
 
   /**
-   * TikTok-specific configuration
-   * Required if 'tiktok' is in platforms array
+   * TikTok-specific configuration.
+   * Required if the workspace has a TikTok account connected.
    */
   tiktok?: ITikTokConfig;
 
   /**
-   * Facebook Page-specific configuration
-   * Required if 'facebook' is in platforms array
+   * Facebook Page-specific configuration.
+   * Required if the workspace has a Facebook Page connected.
    */
   facebook?: IFacebookPageConfig;
 
   /**
-   * Instagram-specific configuration
-   * Required if 'instagram' is in platforms array
+   * Instagram-specific configuration.
+   * Required if the workspace has an Instagram account connected.
    */
   instagram?: IInstagramConfig;
 

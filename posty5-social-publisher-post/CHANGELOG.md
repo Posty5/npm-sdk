@@ -1,5 +1,47 @@
 # Changelog
 
+## 4.0.0
+
+### Breaking Changes
+
+- **Removed** the four per-platform allow flags
+  (`isAllowYouTube`, `isAllowTiktok`, `isAllowFacebookPage`, `isAllowInstagram`)
+  from every request / setting interface:
+  `ICreateSocialPublisherPostRequest`,
+  `ICreateSocialPublisherAccountPostRequest`,
+  `IPostSetting`, `IAccountPostSetting`.
+- **Removed** `platforms: Array<...>` from `IPublishOptions` and
+  `IPublishToAccountOptions`. The server now derives publish targets from
+  the workspace's connected accounts (or the account's `platform` field).
+  Supply a config block (`youtube` / `tiktok` / `facebook` / `instagram`)
+  for each connected platform — that's the only signal the SDK needs.
+- The `publish*` helpers no longer validate
+  "at least one platform specified"; they instead require at least one
+  platform config block.
+
+### Migration
+
+```diff
+- await client.publishShortVideoToWorkspace({
+-   workspaceId: 'ws',
+-   video: file,
+-   platforms: ['youtube', 'tiktok'],
+-   youtube: {...},
+-   tiktok: {...},
+- });
++ await client.publishShortVideoToWorkspace({
++   workspaceId: 'ws',
++   video: file,
++   youtube: {...},
++   tiktok: {...},
++ });
+```
+
+If your workspace has Facebook + Instagram connected and you previously
+sent `isAllowFacebookPage: false` to opt one of them out, you can no
+longer do that per-post — disconnect the account at the workspace level
+instead.
+
 ## 3.1.0
 
 ### Added
