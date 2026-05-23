@@ -36,6 +36,71 @@ export interface IScheduleConfig {
 }
 
 /**
+ * Image-post source — uploaded to our bucket or fetched from a public URL.
+ */
+export type ImageSourceType = "image-file" | "image-url";
+
+/**
+ * Image-post media block. One of `bucketKey` (uploaded) or `externalUrl`
+ * (image-url) must be provided, matching the `source` discriminator.
+ */
+export interface IImageMediaRequest {
+  source: ImageSourceType;
+  /** Bucket file URL returned by `generate-upload-urls` (when source = image-file). */
+  bucketKey?: string;
+  /** Direct public image URL (when source = image-url). */
+  externalUrl?: string;
+  /** Optional metadata — server uses for soft validation. */
+  width?: number;
+  height?: number;
+  /** e.g. "image/jpeg", "image/png", "image/webp". */
+  mimeType?: string;
+}
+
+/**
+ * Image-post create request (workspace target).
+ * Image posts cost **5 credits** + 1 for an optional auto-comment.
+ * YouTube community posts are always reported as `notSupported`.
+ */
+export interface ICreateImagePostToWorkspaceRequest {
+  /** Workspace ID. */
+  workspaceId: string;
+  image: IImageMediaRequest;
+  /** Shared caption used as the default per-platform description if no
+   *  platform-specific block is supplied. 1..8000 chars. */
+  caption: string;
+  /** Marks the caption as AI-enhanced; surfaces on the status page. */
+  aiEnhanced?: boolean;
+  youtube?: IYouTubeConfig;
+  tiktok?: ITikTokConfig;
+  facebook?: IFacebookPageConfig;
+  instagram?: IInstagramConfig;
+  schedule?: IScheduleConfig;
+  comment?: ICommentRequest;
+  tag?: string;
+  refId?: string;
+}
+
+/**
+ * Image-post create request (single-account target).
+ */
+export interface ICreateImagePostToAccountRequest {
+  /** Account ID. */
+  accountId: string;
+  image: IImageMediaRequest;
+  caption: string;
+  aiEnhanced?: boolean;
+  youtube?: IYouTubeConfig;
+  tiktok?: ITikTokConfig;
+  facebook?: IFacebookPageConfig;
+  instagram?: IInstagramConfig;
+  schedule?: IScheduleConfig;
+  comment?: ICommentRequest;
+  tag?: string;
+  refId?: string;
+}
+
+/**
  * Optional post-publish comment.
  * Adds a comment under each platform post once it is published.
  *

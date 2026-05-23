@@ -1,5 +1,22 @@
 # Changelog
 
+## 4.1.0
+
+### Added
+
+- New **image post** type alongside short-video:
+  - `ICreateImagePostToWorkspaceRequest` and `ICreateImagePostToAccountRequest`
+    request shapes.
+  - `client.createImagePostToWorkspace()` and `client.createImagePostToAccount()`
+    methods (hitting `POST /api/social-publisher-post/image/{workspace,account}`).
+  - `IImageMediaRequest` block + `ImageSourceType` union (`"image-file"`
+    / `"image-url"`).
+  - `IImageDTO` response shape and `image?` field on
+    `ISocialPublisherPostStatusResponse`; `type` widened to `"shortVideo" | "image"`.
+- Pricing: image post costs **5 credits**; auto-comment adds **+1** as
+  before. YouTube community image posts are always reported as
+  `notSupported` (the YouTube Data API doesn't expose them).
+
 ## 4.0.0
 
 ### Breaking Changes

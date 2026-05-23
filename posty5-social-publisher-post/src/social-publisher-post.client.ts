@@ -13,6 +13,8 @@ import {
   ICreateSocialPublisherAccountPostRequest,
   IAccountPostSetting,
   IPublishToAccountOptions,
+  ICreateImagePostToWorkspaceRequest,
+  ICreateImagePostToAccountRequest,
 } from "./interfaces";
 
 /**
@@ -129,6 +131,45 @@ export class SocialPublisherPostClient {
    */
   private async createToAccountByURL(data: ICreateSocialPublisherAccountPostRequest, id?: string): Promise<string> {
     const url = id ? `${this.basePath}/short-video/account/by-url/${id}` : `${this.basePath}/short-video/account/by-url`;
+    const response = await this.http.post<{ _id: string }>(url, {
+      ...data,
+      createdFrom: "npmPackage",
+    });
+    return response.result?._id!;
+  }
+
+  /**
+   * Create an image post targeting a workspace. The image is published to
+   * every account connected to the workspace (Facebook / Instagram / TikTok
+   * photo). YouTube community posts are always reported as `notSupported`
+   * on the status response — the YouTube Data API doesn't expose them to
+   * third-party apps. Cost: 5 credits + 1 if `comment` is provided.
+   *
+   * @example
+   * ```ts
+   * const postId = await client.createImagePostToWorkspace({
+   *   workspaceId: "ws_123",
+   *   image: { source: "image-url", externalUrl: "https://cdn.example.com/launch.jpg" },
+   *   caption: "We shipped!",
+   * });
+   * ```
+   */
+  async createImagePostToWorkspace(data: ICreateImagePostToWorkspaceRequest, id?: string): Promise<string> {
+    const url = id ? `${this.basePath}/image/workspace/${id}` : `${this.basePath}/image/workspace`;
+    const response = await this.http.post<{ _id: string }>(url, {
+      ...data,
+      createdFrom: "npmPackage",
+    });
+    return response.result?._id!;
+  }
+
+  /**
+   * Create an image post targeting a single account. The server derives the
+   * target platform from `account.platform`; image config blocks for other
+   * platforms in the request are ignored.
+   */
+  async createImagePostToAccount(data: ICreateImagePostToAccountRequest, id?: string): Promise<string> {
+    const url = id ? `${this.basePath}/image/account/${id}` : `${this.basePath}/image/account`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
       createdFrom: "npmPackage",

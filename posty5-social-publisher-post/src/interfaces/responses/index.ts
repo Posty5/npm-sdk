@@ -60,6 +60,23 @@ export interface ISocialPublisherPostInfo {
 }
 
 /**
+ * Image-post metadata on the post status response.
+ * Only present when `type === "image"`.
+ */
+export interface IImageDTO {
+  source: "image-file" | "image-url";
+  bucketKey?: string;
+  externalUrl?: string;
+  width?: number;
+  height?: number;
+  mimeType?: string;
+  /** True when the caption was AI-enhanced before publish. */
+  aiEnhanced?: boolean;
+  /** Set after the bucket cleanup job runs (uploaded files only). */
+  deletedFromBucketAt?: Date;
+}
+
+/**
  * Per-platform comment status block returned on the post status response.
  * Present only when the post was created with a `comment` payload.
  *
@@ -127,7 +144,7 @@ export interface ISocialPublisherPostStatusResponse {
   _id: string;
   numbering: string;
 
-  type: "shortVideo";
+  type: "shortVideo" | "image";
   source: SocialPublisherPostSourceType;
   sourceURLs: {
     /**
@@ -139,10 +156,17 @@ export interface ISocialPublisherPostStatusResponse {
      */
     videoURL?: string;
     /**
+     * Image URL (image-post type). Returned for posts of `type: "image"`.
+     */
+    imageURL?: string;
+    /**
      * Post URL, can be null if didn't upload any post or passed URL for platforms like facebook, tiktok, youtube
      */
     postURL?: string;
   };
+
+  /** Image-post metadata — only present when `type === "image"`. */
+  image?: IImageDTO;
 
   currentStatus: SocialPublisherPostStatusType;
   currentError: string;
