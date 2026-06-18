@@ -313,18 +313,18 @@ Organize your social media accounts into workspaces (organizations) for differen
 
 **Publish short-form videos to YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels with a unified API.**
 
-Create publishing posts that automatically distribute your video content across multiple social media platforms with platform-specific configuration, scheduling, and status tracking.
+Create publishing posts for creator-owned videos across connected social media accounts with platform-specific configuration, scheduling, and status tracking. TikTok publishing requires the Posty5 creator review and confirmation flow.
 
 **Key Features:**
 
 - **Multi-Platform Publishing:** YouTube Shorts, TikTok, Facebook Reels, Instagram Reels
-- **Flexible Video Sources:** Upload files, provide URLs, or repost from other platforms
-- Auto-detection of video source type (File, URL, Facebook, TikTok, YouTube)
+- **Authorized Video Sources:** Upload files or provide direct video file URLs for content you created or have rights to publish
+- Video source handling for file uploads and direct video file URLs
 - Smart thumbnail handling (upload files or provide URLs)
 - Platform-specific configuration (titles, descriptions, captions, tags, privacy)
 - Schedule publishing or publish immediately
 - Post status tracking with platform-specific progress
-- Content repurposing (repost from other platforms)
+- Rights-aware video publishing
 - Tag and reference ID support
 - Advanced filtering and pagination
 
@@ -338,11 +338,11 @@ Create publishing posts that automatically distribute your video content across 
 **Use Cases:**
 
 - Multi-platform content distribution
-- Automated social media posting
-- Content repurposing and reposting
+- Creator-controlled social publishing
+- Original or authorized content publishing
 - Campaign video distribution
 - Scheduled video publishing
-- Viral content sharing across platforms
+- Scheduled video publishing for connected accounts
 
 **Methods:** `publishShortVideo()`, `list()`, `getStatus()`, `getDefaultSettings()`, `getNextAndPrevious()`
 

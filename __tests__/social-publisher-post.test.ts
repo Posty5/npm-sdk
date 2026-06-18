@@ -27,9 +27,6 @@ describe("Social Publisher Post SDK", () => {
   let tiktokAccountId: string;
   let thumbnailURL = "https://images.unsplash.com/3/GoWildImages_MtEverest_NEP0555.jpg";
   let videoURL = "https://www.w3schools.com/tags/mov_bbb.mp4";
-  let facebookReelURL = "https://www.facebook.com/reel/1794235308045414";
-  let youtubeShortsURL = "https://www.youtube.com/shorts/jkiHUTnDJnk";
-  let tikTokVideoURL = "https://www.tiktok.com/@tamra.ai/video/7592228093834841362";
   let thumbnail = "https://images.unsplash.com/photo-1506744038136-46273834b3fb";
   beforeAll(async () => {
     httpClient = new HttpClient({
@@ -57,7 +54,6 @@ describe("Social Publisher Post SDK", () => {
         workspaceId: workspaceId,
         video: videoFile,
         thumbnail: thumbnailURL,
-        platforms: ["youtube"],
         youtube: {
           title: "Video File + Thumb URL - " + Date.now(),
           description: "Testing video file with thumbnail URL",
@@ -111,7 +107,6 @@ describe("Social Publisher Post SDK", () => {
         workspaceId: workspaceId,
         video: videoURL,
         thumbnail: thumbFile,
-        platforms: ["youtube"],
         youtube: {
           title: "Video URL + Thumb File - " + Date.now(),
           description: "Testing video URL with thumbnail file",
@@ -134,7 +129,6 @@ describe("Social Publisher Post SDK", () => {
         workspaceId: workspaceId,
         video: videoURL,
         thumbnail: thumbnailURL,
-        platforms: ["youtube", "tiktok"],
         youtube: {
           title: "Video URL + Thumb URL - " + Date.now(),
           description: "Testing video URL with thumbnail URL",
@@ -146,76 +140,6 @@ describe("Social Publisher Post SDK", () => {
           disable_duet: false,
           disable_stitch: false,
           disable_comment: false,
-        },
-      });
-
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
-      createdResources.posts.push(result);
-    });
-  });
-
-  describe("CREATE - publishShortVideoToWorkspace with Repost URLs", () => {
-    it("should repost from Facebook Reel URL", async () => {
-      if (!workspaceId) {
-        console.warn("Skipping: No workspace ID available");
-        return;
-      }
-
-      const result = await client.publishShortVideoToWorkspace({
-        workspaceId: workspaceId,
-        video: facebookReelURL,
-        platforms: ["youtube"],
-        youtube: {
-          title: "Reposted from Facebook - " + Date.now(),
-          description: "Testing Facebook repost",
-          tags: ["repost", "facebook"],
-        },
-      });
-
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
-      createdResources.posts.push(result);
-    });
-
-    it("should repost from YouTube Shorts URL", async () => {
-      if (!workspaceId) {
-        console.warn("Skipping: No workspace ID available");
-        return;
-      }
-
-      const result = await client.publishShortVideoToWorkspace({
-        workspaceId: workspaceId,
-        video: youtubeShortsURL,
-        platforms: ["tiktok"],
-        tiktok: {
-          caption: "Reposted from YouTube Shorts",
-          privacy_level: "SELF_ONLY",
-          disable_duet: false,
-          disable_stitch: false,
-          disable_comment: false,
-        },
-      });
-
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
-      createdResources.posts.push(result);
-    });
-
-    it("should repost from TikTok Video URL", async () => {
-      if (!workspaceId) {
-        console.warn("Skipping: No workspace ID available");
-        return;
-      }
-
-      const result = await client.publishShortVideoToWorkspace({
-        workspaceId: workspaceId,
-        video: tikTokVideoURL,
-        platforms: ["youtube"],
-        youtube: {
-          title: "Reposted from TikTok - " + Date.now(),
-          description: "Testing TikTok repost",
-          tags: ["repost", "tiktok"],
         },
       });
 
@@ -239,7 +163,6 @@ describe("Social Publisher Post SDK", () => {
         accountId: tiktokAccountId,
         video: videoFile,
         thumbnail: thumbFile,
-        platforms: ["tiktok"],
         tiktok: {
           caption: "Account Video File - " + Date.now(),
           privacy_level: "SELF_ONLY",
@@ -264,7 +187,6 @@ describe("Social Publisher Post SDK", () => {
         accountId: youtubeAccountId,
         video: videoURL,
         thumbnail: thumbnailURL,
-        platforms: ["youtube"],
         youtube: {
           title: "Account Video URL - " + Date.now(),
           description: "Testing account publishing via URL",
@@ -277,29 +199,6 @@ describe("Social Publisher Post SDK", () => {
       createdResources.posts.push(result);
     });
 
-    it("should repost to account", async () => {
-      if (!tiktokAccountId) {
-        console.warn("Skipping: No account ID available");
-        return;
-      }
-
-      const result = await client.publishShortVideoToAccount({
-        accountId: tiktokAccountId,
-        video: youtubeShortsURL,
-        platforms: ["tiktok"],
-        tiktok: {
-          caption: "Account Repost Test",
-          privacy_level: "SELF_ONLY",
-          disable_comment: false,
-          disable_duet: false,
-          disable_stitch: false,
-        },
-      });
-
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
-      createdResources.posts.push(result);
-    });
   });
 
   describe("UTILITY METHODS", () => {

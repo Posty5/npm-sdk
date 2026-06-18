@@ -131,7 +131,6 @@ export interface ICreateSocialPublisherPostRequest {
   instagram?: IInstagramConfig;
   videoURL?: string;
   thumbURL?: string;
-  postURL?: string;
   schedule?: IScheduleConfig;
   /**
    * Optional post-publish comment (Pro plan, +1 credit).
@@ -163,7 +162,6 @@ export interface ICreateSocialPublisherAccountPostRequest {
   instagram?: IInstagramConfig;
   videoURL?: string;
   thumbURL?: string;
-  postURL?: string;
   schedule?: IScheduleConfig;
   /**
    * Optional post-publish comment (Pro plan, +1 credit).
@@ -238,10 +236,9 @@ export interface IPublishOptions {
    * Video source (required)
    * Can be:
    * - File object (will be uploaded)
-   * - Direct video URL (http://... or https://...)
-   * - Facebook video URL (auto-detected for repost)
-   * - TikTok video URL (auto-detected for repost)
-   * - YouTube Shorts URL (auto-detected for repost)
+   * - Direct video file URL (http://... or https://...)
+   *
+   * Third-party platform URLs are not supported by the public SDK.
    */
   video: File | string;
 
@@ -314,10 +311,9 @@ export interface IPublishToAccountOptions {
    * Video source (required)
    * Can be:
    * - File object (will be uploaded)
-   * - Direct video URL (http://... or https://...)
-   * - Facebook video URL (auto-detected for repost)
-   * - TikTok video URL (auto-detected for repost)
-   * - YouTube Shorts URL (auto-detected for repost)
+   * - Direct video file URL (http://... or https://...)
+   *
+   * Third-party platform URLs are not supported by the public SDK.
    */
   video: File | string;
 
@@ -392,7 +388,7 @@ export interface IQuickPublishBaseOptions {
    * Video source (required)
    * Can be:
    * - File object: Will be uploaded to cloud storage
-   * - URL string: Direct video URL or platform URL (Facebook, TikTok, YouTube)
+   * - URL string: Direct video file URL for original or authorized content
    *
    * Supported formats: .mp4, .mov, .avi, .mkv, .webm
    */

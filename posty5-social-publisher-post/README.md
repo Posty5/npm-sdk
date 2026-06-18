@@ -1,6 +1,6 @@
 ﻿# @posty5/social-publisher-post
 
-Official Posty5 SDK for managing social media publishing posts. Publish videos to YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels with a unified, developer-friendly API.
+Official Posty5 SDK for managing social media publishing posts. Prepare creator-owned videos for YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels with a unified, developer-friendly API.
 
 ---
 
@@ -11,7 +11,7 @@ Official Posty5 SDK for managing social media publishing posts. Publish videos t
 - ðŸ”— **Shorten URLs** - Create memorable, trackable short links
 - ðŸ“± **Generate QR Codes** - Transform URLs, WiFi credentials, contact cards, and more into scannable codes
 - ðŸŒ **Host HTML Pages** - Deploy static HTML pages with dynamic variables and form submission handling
-- ðŸ“¢ **Automate Social Media** - Schedule and manage social media posts across multiple platforms
+- ðŸ“¢ **Social Publishing** - Prepare and manage creator-controlled social media posts across connected platforms
 - ðŸ“Š **Track Performance** - Monitor and analyze your digital marketing efforts
 
 Posty5 empowers businesses, marketers, and developers to streamline their online workflowsâ€”all from a unified control panel.
@@ -22,29 +22,29 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 
 ## ðŸ“¦ About This Package
 
-`@posty5/social-publisher-post` is the **post management client** for the Posty5 Social Media Publisher. This package enables you to programmatically publish short-form videos to multiple social media platforms simultaneously from a single API call.
+`@posty5/social-publisher-post` is the **post management client** for the Posty5 Social Media Publisher. Use it with videos you created or have the rights to publish. TikTok Direct Post requires the creator-controlled Posty5 review flow before submission.
 
 ### What are Social Publisher Posts?
 
-Posts represent video publishing jobs that distribute your content across YouTube Shorts, TikTok, Facebook Reels, and Instagram Reels. Each post handles the entire publishing workflow: video upload, platform-specific configuration, scheduling, and status tracking.
+Posts represent video publishing jobs for connected YouTube, TikTok, Facebook, and Instagram accounts. Each post handles video upload, platform-specific configuration, scheduling, and status tracking.
 
 ### Key Capabilities
 
-- **Multi-Platform Publishing** - Publish to YouTube, TikTok, Facebook, and Instagram in one API call
-- **Flexible Video Sources** - Upload files, provide URLs, or repost from other platforms (auto-detected)
+- **Multi-Platform Preparation** - Prepare posts for connected YouTube, TikTok, Facebook, and Instagram accounts
+- **Authorized Video Sources** - Upload files or provide direct video file URLs for content you created or have rights to publish
 - **Smart Thumbnail Handling** - Upload files or provide URLs for thumbnail images
 - **Platform-Specific Configuration** - Customize titles, descriptions, captions, tags, and privacy settings per platform
 - **Schedule Publishing** - Publish immediately or schedule for optimal engagement times
-- **Repost Detection** - Automatically detect and repost from Facebook, TikTok, and YouTube Shorts URLs
+- **TikTok Direct Post Review** - TikTok publishing requires manual privacy selection, disclosure options when needed, and explicit creator confirmation in Posty5
 - **Post Status Tracking** - Monitor publishing progress and platform-specific status
 - **Tag & Reference System** - Organize posts using custom tags and reference IDs
 - **Pagination & Filtering** - Search posts by workspace, status, tag, or reference ID
 
 ### Why Use This Package?
 
-- **Time Saving**: Publish to 4 platforms with a single API call instead of managing each separately
-- **Automated Workflow**: Integrate multi-platform publishing into your content pipeline
-- **Content Repurposing**: Automatically repost viral content from other platforms
+- **Time Saving**: Prepare platform-specific settings from one integration while keeping TikTok publishing creator-controlled
+- **Reviewed Workflow**: Integrate publishing status and configuration while preserving the Posty5 TikTok review and confirmation flow
+- **Rights-Aware Publishing**: Use original videos or content you have permission to publish
 - **Consistent Branding**: Apply platform-optimized metadata while maintaining brand voice
 - **Progress Tracking**: Monitor post status and handle errors programmatically
 
@@ -110,13 +110,13 @@ console.log("YouTube:", status.youtube?.postInfo.currentStatus);
 
 ### publishShortVideo()
 
-Publish a short video to one or more social media platforms. This is the main method for creating publishing posts. It automatically detects video source type (File upload, URL, or platform-specific repost URL) and handles all upload logic.
+Publish a short video to one or more connected social media accounts. Use file uploads or direct video file URLs for content you created or have the rights to publish. TikTok Direct Post must go through the Posty5 creator review and confirmation flow.
 
 **Parameters:**
 
 - `options` (IPublishOptions): Publishing configuration
   - `workspaceId` (string, required): Workspace ID containing connected social accounts
-  - `video` (File | string, required): Video source - File object, direct URL, or platform URL (Facebook/TikTok/YouTube)
+  - `video` (File | string, required): Video source - File object or direct video file URL only.
   - `thumbnail` (File | string, optional): Thumbnail image - File object or URL string
   - `youtube` (IYouTubeConfig, optional): YouTube configuration — **required** if the workspace has a YouTube account connected
   - `tiktok` (ITikTokConfig, optional): TikTok configuration — **required** if the workspace has a TikTok account connected
@@ -259,65 +259,7 @@ const postId = await client.publishShortVideo({
 console.log("Published to all platforms:", postId);
 ```
 
-**Example - Repost from TikTok:**
-
-```typescript
-// Automatically detect and repost from TikTok
-const postId = await client.publishShortVideo({
-  workspaceId: "workspace-123",
-  video: "https://www.tiktok.com/@username/video/1234567890", // TikTok URL
-  youtube: {
-    title: "Viral TikTok Repost",
-    description: "Sharing this viral moment from TikTok",
-    tags: ["tiktok", "viral", "repost"],
-  },
-});
-
-console.log("Reposted from TikTok to YouTube:", postId);
-```
-
-**Example - Repost from YouTube Shorts:**
-
-```typescript
-// Repost YouTube Shorts to TikTok
-const postId = await client.publishShortVideo({
-  workspaceId: "workspace-123",
-  video: "https://www.youtube.com/shorts/abc123", // YouTube Shorts URL
-  tiktok: {
-    caption: "Check out this YouTube Short! #YouTubeShorts",
-    privacy_level: "public",
-    disable_duet: false,
-    disable_stitch: false,
-    disable_comment: false,
-  },
-});
-
-console.log("Reposted from YouTube to TikTok:", postId);
-```
-
-**Example - Repost from Facebook:**
-
-```typescript
-// Repost Facebook video to other platforms
-const postId = await client.publishShortVideo({
-  workspaceId: "workspace-123",
-  video: "https://www.facebook.com/reel/1234567890", // Facebook Reel URL
-  youtube: {
-    title: "Facebook Viral Moment",
-    description: "Reposting this viral moment from Facebook",
-    tags: ["facebook", "viral", "repost"],
-  },
-  tiktok: {
-    caption: "Viral moment from Facebook! #Viral",
-    privacy_level: "public",
-    disable_duet: false,
-    disable_stitch: false,
-    disable_comment: false,
-  },
-});
-
-console.log("Reposted from Facebook:", postId);
-```
+> **TikTok Direct Post note:** This SDK supports file uploads and direct video file URLs only. TikTok publishing in Posty5 is creator-controlled: the connected account owner reviews the video, confirms the TikTok nickname, edits caption text, manually selects privacy and interaction settings, completes disclosure options when required, and explicitly confirms publishing before submission.
 
 **Example - Scheduled Publishing:**
 
@@ -862,7 +804,7 @@ import {
 
   // Status types
   SocialPublisherPostStatusType, // 'pending' | 'processing' | 'done' | 'error' | ...
-  SocialPublisherPostSourceType, // 'video-file' | 'video-url' | 'facebook-video' | ...
+  SocialPublisherPostSourceType, // 'video-file' | 'video-url'
   SocialPublisherAccountStatusType, // 'active' | 'inactive' | 'authenticationExpired'
 } from "@posty5/social-publisher-post";
 ```
