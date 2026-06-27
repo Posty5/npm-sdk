@@ -17,8 +17,7 @@ export type SocialPublisherPostAccountType = "youtube" | "facebook" | "instagram
 
 export type SocialPublisherPostScheduleType = "now" | "schedule";
 
-export type SocialPublisherPostSourceType = "video-file" | "video-url" | "facebook-video" | "youtube-video" | "tiktok-video";
-// | "instagram-video";
+export type SocialPublisherPostSourceType = "video-file" | "video-url";
 
 /**
  * Status of the optional post-publish comment, reported per-platform.

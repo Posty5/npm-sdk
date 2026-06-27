@@ -162,7 +162,6 @@ export interface ISocialPublisherPostStatusResponse {
     /**
      * Post URL, can be null if didn't upload any post or passed URL for platforms like facebook, tiktok, youtube
      */
-    postURL?: string;
   };
 
   /** Image-post metadata — only present when `type === "image"`. */

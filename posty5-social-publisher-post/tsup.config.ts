@@ -10,5 +10,7 @@ export default defineConfig({
     minify: false,
     treeshake: true,
     target: 'es2020',
-    external: ['@posty5/core'],
+    // Bundle @posty5/core into this package so consumers that install via
+    // `file:` get HttpClient + uploadToR2 inline (re-exported from src/index.ts).
+    noExternal: ['@posty5/core'],
 });

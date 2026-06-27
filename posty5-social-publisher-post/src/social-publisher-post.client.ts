@@ -260,6 +260,7 @@ export class SocialPublisherPostClient {
     // Step 4: Create post with uploaded file URLs
     const postSettings: ICreateSocialPublisherPostRequest = {
       ...settings,
+      source: "video-file",
       videoURL: uploadUrlsResponse.video.fileURL,
       thumbURL: uploadThumb?.thumbFileURL,
     };
@@ -281,28 +282,8 @@ export class SocialPublisherPostClient {
     // Create post with video URL
     const postSettings: ICreateSocialPublisherPostRequest = {
       ...settings,
+      source: "video-url",
       videoURL,
-      thumbURL: uploadThumb?.thumbFileURL,
-    };
-
-    return await this.createToWorkspaceByURL(postSettings, uploadThumb?.postId);
-  }
-
-  /**
-   * Publish a repost video from TikTok
-   * @param settings - Post creation settings
-   * @param videoURL - TikTok video URL (tiktok.com, vm.tiktok.com)
-   * @param thumb - Optional thumbnail image file or URL string
-   * @returns Created post response
-   */
-  private async publishRepostVideoToWorkspace(settings: IPostSetting, videoURL: string, thumb?: File | string): Promise<string> {
-    // Handle thumbnail upload (File or URL)
-    const uploadThumb = await this.handleThumbnailUpload(thumb);
-
-    // Create post with TikTok video URL
-    const postSettings: ICreateSocialPublisherPostRequest = {
-      ...settings,
-      postURL: videoURL,
       thumbURL: uploadThumb?.thumbFileURL,
     };
 
@@ -342,6 +323,7 @@ export class SocialPublisherPostClient {
     // Step 4: Create post with uploaded file URLs
     const postSettings: ICreateSocialPublisherAccountPostRequest = {
       ...settings,
+      source: "video-file",
       videoURL: uploadUrlsResponse.video.fileURL,
       thumbURL: uploadThumb?.thumbFileURL,
     };
@@ -359,6 +341,7 @@ export class SocialPublisherPostClient {
     // Create post with video URL
     const postSettings: ICreateSocialPublisherAccountPostRequest = {
       ...settings,
+      source: "video-url",
       videoURL,
       thumbURL: uploadThumb?.thumbFileURL,
     };
@@ -367,25 +350,9 @@ export class SocialPublisherPostClient {
   }
 
   /**
-   * Publish a repost video to account
-   */
-  private async publishRepostVideoToAccount(settings: IAccountPostSetting, videoURL: string, thumb?: File | string): Promise<string> {
-    // Handle thumbnail upload (File or URL)
-    const uploadThumb = await this.handleThumbnailUpload(thumb);
-
-    // Create post with TikTok video URL
-    const postSettings: ICreateSocialPublisherAccountPostRequest = {
-      ...settings,
-      postURL: videoURL,
-      thumbURL: uploadThumb?.thumbFileURL,
-    };
-
-    return await this.createToAccountByURL(postSettings, uploadThumb?.postId);
-  }
-
-  /**
-   * Publish a video to multiple social media platforms with auto-detection
-   * This is the recommended method for most use cases.
+   * Publish a video to connected social media accounts.
+   * Use original or authorized content only. TikTok Direct Post requires
+   * the creator-controlled Posty5 review and confirmation flow.
    *
    * @param options - Simplified publishing options
    * @returns Created post response
@@ -417,12 +384,6 @@ export class SocialPublisherPostClient {
    *     tiktok: { caption: 'Caption', privacy_level: 'public', disable_duet: false, disable_stitch: false, disable_comment: false }
    * });
    *
-   * // Repost from Facebook (auto-detected)
-   * await client.publishShortVideoToWorkspace({
-   *     workspaceId: 'workspace-123',
-   *     video: 'https://facebook.com/video/12345',
-   *     youtube: { title: 'Reposted', description: 'From FB', tags: [] }
-   * });
    * ```
    */
   async publishShortVideoToWorkspace(options: IPublishOptions): Promise<string> {
@@ -471,16 +432,14 @@ export class SocialPublisherPostClient {
       case "url": {
         return this.publishShortVideoToWorkspaceByURL(settings, options.video as string, options.thumbnail);
       }
-      case "repost": {
-        return this.publishRepostVideoToWorkspace(settings, options.video as string, options.thumbnail);
-      }
       default:
         throw new Error(`Unknown video source type: ${source}`);
     }
   }
 
   /**
-   * Publish a video to multiple social media platforms with auto-detection (Account)
+   * Publish a video to a connected social media account.
+   * Use original or authorized content only.
    *
    * @param options - Simplified publishing options for account
    * @returns Created post response
@@ -530,9 +489,6 @@ export class SocialPublisherPostClient {
       case "url": {
         return this.publishShortVideoToAccountByURL(settings, options.video as string, options.thumbnail);
       }
-      case "repost": {
-        return this.publishRepostVideoToAccount(settings, options.video as string, options.thumbnail);
-      }
       default:
         throw new Error(`Unknown video source type: ${source}`);
     }
@@ -546,34 +502,18 @@ export class SocialPublisherPostClient {
   }
 
   /**
-   * Auto-detect video source type
+   * Auto-detect video source type.
+   *
    * @param video - File or URL string
    * @returns Detected source type and video
    */
-  private detectVideoSource(video: File | string): "file" | "url" | "repost" {
+  private detectVideoSource(video: File | string): "file" | "url" {
     // Check if it's a File object
     if (video instanceof File) {
       return "file";
     }
 
-    // Check for platform-specific URLs
     if (typeof video === "string") {
-      // Facebook video URL
-      if (/^https?:\/\/(www\.)?(facebook\.com|fb\.watch)\/(reel|watch|.*\/videos)\/.*/i.test(video)) {
-        return "repost";
-      }
-
-      // TikTok video URL
-      if (/^https?:\/\/(www\.)?(tiktok\.com\/@[^\/]+\/video\/\d+|vm\.tiktok\.com\/\w+|vt\.tiktok\.com\/\w+)/i.test(video)) {
-        return "repost";
-      }
-
-      // YouTube Shorts URL
-      if (/^https?:\/\/(www\.)?(youtube\.com\/shorts\/|youtu\.be\/)[A-Za-z0-9_-]+/i.test(video)) {
-        return "repost";
-      }
-
-      // Generic video URL
       return "url";
     }
 
