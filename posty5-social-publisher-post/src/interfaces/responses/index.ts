@@ -138,6 +138,18 @@ export interface ISocialPublisherPostResponse {
 
   refId: string;
   tag: string;
+
+  // Media descriptors so list cards can preview the post's source upload
+  // (image/video), falling back to the stored thumbnail.
+  type?: "shortVideo" | "image" | string;
+  source?: SocialPublisherPostSourceType | string;
+  sourceURLs?: {
+    thumbURL?: string;
+    videoURL?: string;
+    postURL?: string;
+    imageURL?: string;
+  };
+  image?: { externalUrl?: string };
 }
 
 export interface ISocialPublisherPostStatusResponse {
