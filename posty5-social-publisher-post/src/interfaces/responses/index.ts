@@ -214,6 +214,10 @@ export interface ISocialPublisherPostStatusResponse {
     scheduledAt: Date;
     executedAt: Date;
   };
+  /** Custom reference id supplied when the post was created. */
+  refId?: string;
+  /** Custom tag supplied when the post was created. */
+  tag?: string;
 }
 
 export interface ISocialPublisherWorkspace {
