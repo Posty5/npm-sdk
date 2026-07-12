@@ -15,6 +15,7 @@ import {
   IPublishToAccountOptions,
   ICreateImagePostToWorkspaceRequest,
   ICreateImagePostToAccountRequest,
+  IRemovePostResponse,
 } from "./interfaces";
 
 /**
@@ -70,6 +71,30 @@ export class SocialPublisherPostClient {
    */
   private async generateUploadUrls(data: IGenerateUploadUrlsRequest): Promise<IGenerateUploadUrlsResponse> {
     const response = await this.http.post<IGenerateUploadUrlsResponse>(`${this.basePath}/generate-upload-urls`, data);
+    return response.result!;
+  }
+
+  /**
+   * Remove (delete) a post's published media directly from the connected
+   * platform pages. Runs synchronously on the server — the media is deleted
+   * from the platform immediately, not via a background job.
+   *
+   * Cost: 50 credits, charged ONLY when the removal succeeds (at least one
+   * platform cleared and no delete-capable platform failed). Instagram and
+   * TikTok expose no delete API, so a post published only to those platforms
+   * cannot be removed programmatically and no credits are charged.
+   *
+   * @param id - Post ID
+   * @returns Per-platform removal results
+   *
+   * @example
+   * ```ts
+   * const { results } = await client.removePost("post_123");
+   * // results.youtube?.success === true
+   * ```
+   */
+  async removePost(id: string): Promise<IRemovePostResponse> {
+    const response = await this.http.post<IRemovePostResponse>(`${this.basePath}/${id}/remove`, {});
     return response.result!;
   }
 

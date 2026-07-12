@@ -40,6 +40,23 @@ export interface IGenerateUploadUrlsResponse {
   };
 }
 
+/**
+ * Per-platform outcome of a {@link SocialPublisherPostClient.removePost} call.
+ * `notSupported` marks platforms (Instagram, TikTok) whose API can't delete a
+ * published post; `skipped` marks platforms that had nothing to delete.
+ */
+export interface IRemovePostPlatformResult {
+  success: boolean;
+  notSupported?: boolean;
+  skipped?: boolean;
+  error?: string;
+}
+
+export interface IRemovePostResponse {
+  _id: string;
+  results: Partial<Record<"youtube" | "facebook" | "instagram" | "tiktok", IRemovePostPlatformResult>>;
+}
+
 export interface ISocialPublisherPostStatusLog {
   status: SocialPublisherPostStatusType;
   error: string;

@@ -9,7 +9,10 @@ export type SocialPublisherPostStatusType =
   | "needsMaintenance"
   | "invalidVideoURL"
   | "invalidPostVideoURL"
-  | "retrying";
+  | "retrying"
+  | "removing"
+  | "removed"
+  | "removeFailed";
 
 export type SocialPublisherPostType = "shortVideo";
 
