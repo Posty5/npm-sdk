@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "npm-sdk",
+  "features": [
+    {
+      "name": "Authenticated HTTP client",
+      "owner": "core",
+      "source": "posty5-core/src/http/client.ts"
+    },
+    {
+      "name": "Short links",
+      "owner": "short-link",
+      "source": "posty5-short-link/src/short-link.client.ts"
+    },
+    {
+      "name": "QR codes",
+      "owner": "qr-code",
+      "source": "posty5-qr-code/src/qr-code.client.ts"
+    },
+    {
+      "name": "HTML hosting",
+      "owner": "html-hosting",
+      "source": "posty5-html-hosting/src/html-hosting.client.ts"
+    },
+    {
+      "name": "Hosting variables",
+      "owner": "html-hosting-variables",
+      "source": "posty5-html-hosting-variables/src/html-hosting-variables.client.ts"
+    },
+    {
+      "name": "Form submissions",
+      "owner": "html-hosting-form-submission",
+      "source": "posty5-html-hosting-form-submission/src/html-hosting-form-submission.client.ts"
+    },
+    {
+      "name": "Social workspaces",
+      "owner": "social-publisher-workspace",
+      "source": "posty5-social-publisher-workspace/src/social-publisher-workspace.client.ts"
+    },
+    {
+      "name": "Social posts",
+      "owner": "social-publisher-post",
+      "source": "posty5-social-publisher-post/src/social-publisher-post.client.ts"
+    }
+  ]
+}

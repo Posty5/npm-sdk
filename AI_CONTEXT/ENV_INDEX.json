@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "npm-sdk",
+  "note": "Names and purposes only; never values.",
+  "config": [
+    {
+      "name": "POSTY5_BASE_URL",
+      "purpose": "Fallback API origin when config.baseUrl is absent.",
+      "source": "posty5-core/src/http/client.ts",
+      "category": "environment",
+      "sensitive": false
+    },
+    {
+      "name": "POSTY5_API_KEY",
+      "purpose": "Fallback API key; secret.",
+      "source": "posty5-core/src/http/client.ts",
+      "category": "environment",
+      "sensitive": true
+    },
+    {
+      "name": "IPosty5Config.baseUrl",
+      "purpose": "Per-client API origin.",
+      "source": "posty5-core/src/types/config.ts",
+      "category": "runtime",
+      "sensitive": false
+    },
+    {
+      "name": "IPosty5Config.apiKey",
+      "purpose": "Per-client X-API-Key credential; secret.",
+      "source": "posty5-core/src/types/config.ts",
+      "category": "runtime",
+      "sensitive": true
+    },
+    {
+      "name": "IPosty5Config.debug",
+      "purpose": "Request/response debug logging; avoid sensitive payloads.",
+      "source": "posty5-core/src/types/config.ts",
+      "category": "runtime",
+      "sensitive": false
+    }
+  ]
+}

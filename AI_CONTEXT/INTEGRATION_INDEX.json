@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "npm-sdk",
+  "integrations": [
+    {
+      "name": "Posty5 API",
+      "purpose": "All SDK operations",
+      "source": "posty5-core/src/http/client.ts"
+    },
+    {
+      "name": "Axios/axios-retry",
+      "purpose": "HTTP transport and retry behavior",
+      "source": "posty5-core/package.json"
+    },
+    {
+      "name": "Signed object storage",
+      "purpose": "Direct uploads for hosting, workspace logos, and social media",
+      "source": "posty5-core/src/utils/upload.ts"
+    },
+    {
+      "name": "npm registry",
+      "purpose": "Eight public packages",
+      "source": "package.json"
+    }
+  ]
+}

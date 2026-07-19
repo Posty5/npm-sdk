@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "npm-sdk",
+  "excluded_generated_or_local": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "bin",
+    "obj",
+    ".angular",
+    ".astro",
+    ".vs",
+    ".git",
+    "archives",
+    "logs"
+  ],
+  "entries": [
+    {
+      "path": "package.json",
+      "role": "Workspace manifest"
+    },
+    {
+      "path": "posty5-core/src/index.ts",
+      "role": "Core exports"
+    },
+    {
+      "path": "posty5-core/src/http/client.ts",
+      "role": "Core HTTP client"
+    },
+    {
+      "path": "posty5-short-link/src/short-link.client.ts",
+      "role": "Package clients"
+    },
+    {
+      "path": "__tests__",
+      "role": "Integration tests"
+    },
+    {
+      "path": "jest.config.js",
+      "role": "Jest config"
+    },
+    {
+      "path": "posty5-core/src",
+      "role": "HTTP client, errors, types, pagination, and uploads."
+    },
+    {
+      "path": "posty5-short-link/src",
+      "role": "Short-link client/types."
+    },
+    {
+      "path": "posty5-qr-code/src",
+      "role": "QR client/types."
+    },
+    {
+      "path": "posty5-html-hosting/src",
+      "role": "HTML hosting client/types."
+    },
+    {
+      "path": "posty5-html-hosting-variables/src",
+      "role": "Hosting variable client/types."
+    },
+    {
+      "path": "posty5-html-hosting-form-submission/src",
+      "role": "Submission client/types."
+    },
+    {
+      "path": "posty5-social-publisher-workspace/src",
+      "role": "Social workspace client/types."
+    },
+    {
+      "path": "posty5-social-publisher-post/src",
+      "role": "Social post/upload client/types."
+    },
+    {
+      "path": "__tests__",
+      "role": "Live/integration-oriented Jest suite and media fixtures."
+    }
+  ]
+}

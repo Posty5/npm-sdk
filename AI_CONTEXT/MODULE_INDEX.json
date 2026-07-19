@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "npm-sdk",
+  "modules": [
+    {
+      "name": "core",
+      "purpose": "HttpClient, retry/error handling, common types, pagination, and signed uploads.",
+      "primary_path": "posty5-core/src"
+    },
+    {
+      "name": "short-link",
+      "purpose": "Short-link CRUD/list client.",
+      "primary_path": "posty5-short-link/src"
+    },
+    {
+      "name": "qr-code",
+      "purpose": "Seven QR types with create/update/get/list/delete.",
+      "primary_path": "posty5-qr-code/src"
+    },
+    {
+      "name": "html-hosting",
+      "purpose": "File/GitHub create/update and hosting management.",
+      "primary_path": "posty5-html-hosting/src"
+    },
+    {
+      "name": "html-hosting-variables",
+      "purpose": "pst5_-prefixed hosting variable CRUD/list.",
+      "primary_path": "posty5-html-hosting-variables/src"
+    },
+    {
+      "name": "html-hosting-form-submission",
+      "purpose": "Submission get/navigation/list/status/delete.",
+      "primary_path": "posty5-html-hosting-form-submission/src"
+    },
+    {
+      "name": "social-publisher-workspace",
+      "purpose": "Workspace CRUD/list and signed logo upload.",
+      "primary_path": "posty5-social-publisher-workspace/src"
+    },
+    {
+      "name": "social-publisher-post",
+      "purpose": "Video/image publishing, upload orchestration, status and list.",
+      "primary_path": "posty5-social-publisher-post/src"
+    }
+  ]
+}

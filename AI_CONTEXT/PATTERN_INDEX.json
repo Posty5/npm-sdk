@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-07-19",
+  "project": "npm-sdk",
+  "patterns": [
+    {
+      "name": "Injected client",
+      "rule": "Feature clients accept HttpClient in their constructor.",
+      "example": "posty5-short-link/src/short-link.client.ts"
+    },
+    {
+      "name": "Barrel export",
+      "rule": "Each package exports its client and public interfaces from src/index.ts.",
+      "example": "posty5-qr-code/src/index.ts"
+    },
+    {
+      "name": "Shared response/error handling",
+      "rule": "Transport and error transformation live in core.",
+      "example": "posty5-core/src/http/client.ts"
+    },
+    {
+      "name": "Request/response interface split",
+      "rule": "Feature interfaces are grouped under interfaces/requests and responses.",
+      "example": "posty5-html-hosting/src/interfaces"
+    },
+    {
+      "name": "Workspace release",
+      "rule": "Each package owns tsup build and prepublish scripts.",
+      "example": "posty5-html-hosting/package.json"
+    }
+  ]
+}
