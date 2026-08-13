@@ -41,6 +41,11 @@
       "name": "social-publisher-post",
       "purpose": "Video/image publishing, upload orchestration, status and list.",
       "primary_path": "posty5-social-publisher-post/src"
+    },
+    {
+      "name": "store",
+      "purpose": "Online Store management: products (incl. per-section saves, clone, Excel, AI), orders, tags, customers and shipping. Split into five sub-clients on StoreClient.",
+      "primary_path": "posty5-store/src"
     }
   ]
 }

@@ -1,8 +1,24 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import axiosRetry from "axios-retry";
-import { IHttpClientConfig, IPosty5Config, IRequestConfig } from "../types";
+import { IBinaryResponse, IHttpClientConfig, IPosty5Config, IRequestConfig } from "../types";
 import { transformError } from "../errors";
 import { IResponse } from "../interface";
+
+/**
+ * Pull the filename out of a `Content-Disposition` header. The server sends it
+ * percent-encoded, so decode it — and swallow a malformed encoding rather than
+ * failing a download that otherwise arrived intact.
+ */
+function parseFileName(disposition?: string): string | undefined {
+  if (!disposition) return undefined;
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
+  if (!match) return undefined;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
 
 /**
  * HTTP Client for making requests to the Posty5 API
@@ -169,6 +185,30 @@ export class HttpClient {
       if (this.config.debug) {
         console.log("[Posty5 SDK] DELETE Request Error:", error);
       }
+      throw transformError(error);
+    }
+  }
+
+  /**
+   * Make a GET request for a file download.
+   *
+   * Separate from `get` rather than a flag on it: a download answers with the
+   * file itself, not with the `{ message, result }` envelope every other
+   * endpoint uses, so it cannot share the return type.
+   */
+  public async getBinary(url: string, config?: IRequestConfig): Promise<IBinaryResponse> {
+    try {
+      const response = await this.axiosInstance.get(url, {
+        ...this.buildConfig(config),
+        responseType: "arraybuffer",
+      });
+
+      return {
+        data: response.data as ArrayBuffer,
+        contentType: String(response.headers?.["content-type"] || "application/octet-stream"),
+        fileName: parseFileName(response.headers?.["content-disposition"]),
+      };
+    } catch (error) {
       throw transformError(error);
     }
   }

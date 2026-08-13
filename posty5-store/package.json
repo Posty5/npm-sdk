@@ -1,7 +1,7 @@
 {
     "name": "@posty5/store",
     "version": "4.1.0",
-    "description": "Online Store management SDK for the Posty5 API (products, orders)",
+    "description": "Online Store management SDK for the Posty5 API (products, orders, tags, customers, shipping)",
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
@@ -40,6 +40,9 @@
         "online-store",
         "products",
         "orders",
+        "tags",
+        "customers",
+        "shipping",
         "sdk",
         "api",
         "typescript"

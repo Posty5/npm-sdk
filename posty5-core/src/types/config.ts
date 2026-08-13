@@ -39,3 +39,16 @@ export interface IRequestConfig {
     /** Skip retry logic */
     skipRetry?: boolean;
 }
+
+/**
+ * A file download — an endpoint that answers with the file itself rather than
+ * with the `{ message, result }` JSON envelope.
+ */
+export interface IBinaryResponse {
+    /** The file's bytes. */
+    data: ArrayBuffer;
+    /** Value of the response's `Content-Type` header. */
+    contentType: string;
+    /** Filename taken from the `Content-Disposition` header, when the server sent one. */
+    fileName?: string;
+}
