@@ -1,4 +1,5 @@
 import { HttpClient, IPaginationParams, uploadToR2 } from "@posty5/core";
+import { supportsResumableUpload, uploadResumable } from "./resumable-upload";
 import {
   ICreateSocialPublisherPostRequest,
   IGenerateUploadUrlsRequest,
@@ -16,6 +17,12 @@ import {
   ICreateImagePostToWorkspaceRequest,
   ICreateImagePostToAccountRequest,
   IRemovePostResponse,
+  IPublishLongVideoOptions,
+  IPublishLongVideoToAccountOptions,
+  IPublishLongVideoResult,
+  ILongVideoQuoteResponse,
+  IReschedulePostRequest,
+  IScheduleConfig,
 } from "./interfaces";
 
 /**
@@ -524,6 +531,274 @@ export class SocialPublisherPostClient {
    */
   async publishShortVideo(options: IPublishOptions): Promise<string> {
     return this.publishShortVideoToWorkspace(options);
+  }
+
+
+  // ─── Long video (up to 60 minutes) ───────────────────────────────────────
+
+  /**
+   * Price a long video before publishing it. Neither creates nor charges
+   * anything.
+   *
+   * The server reads the video, measures its duration, and returns the exact
+   * cost plus what each platform would do with a video that long. Show this
+   * before the user commits — the units come from the same function the create
+   * call charges with, so the quote and the bill cannot disagree.
+   *
+   * @param videoURL - URL of an uploaded or externally hosted video
+   *
+   * @example
+   * ```ts
+   * const quote = await client.getLongVideoQuote(fileURL);
+   * if (!quote.withinLimit) throw new Error(quote.reason);
+   * console.log(`${quote.durationSeconds}s costs ${quote.credits} credits`);
+   * const blocked = quote.platforms.filter((p) => !p.accepted);
+   * ```
+   */
+  async getLongVideoQuote(videoURL: string): Promise<ILongVideoQuoteResponse> {
+    if (!videoURL) {
+      throw new Error("videoURL is required");
+    }
+    const response = await this.http.post<ILongVideoQuoteResponse>(`${this.basePath}/long-video/quote`, { videoURL });
+    return response.result!;
+  }
+
+  /**
+   * Publish a video of up to 60 minutes to every account connected to a
+   * workspace.
+   *
+   * Handles the whole sequence for an uploaded file: request an upload
+   * destination, push the bytes, then create the post. Pass a URL instead of a
+   * `File` to publish something already hosted elsewhere.
+   *
+   * Cost is duration-based — 50 credits per started 5 minutes — so a 12-minute
+   * video costs 150. Call {@link getLongVideoQuote} first if you need to show
+   * the price. The duration is measured server-side; there is no duration
+   * option here because a client-supplied one would be a client-supplied price.
+   *
+   * Platforms differ on what they accept: a 40-minute video publishes to
+   * YouTube and Facebook but is refused by Instagram, whose Reels cap at 15
+   * minutes. Those targets come back in `refusedTargets` — the post still
+   * publishes to the rest.
+   *
+   * @example
+   * ```ts
+   * const result = await client.publishLongVideoToWorkspace({
+   *   workspaceId: "ws_123",
+   *   video: recordingFile,
+   *   youtube: { title: "Full session", description: "...", tags: ["workshop"] },
+   *   onProgress: (p) => console.log(`${p}%`),
+   * });
+   * console.log(`Charged ${result.credits} credits for ${result.durationSeconds}s`);
+   * for (const t of result.refusedTargets) console.warn(t.reason);
+   * ```
+   */
+  async publishLongVideoToWorkspace(options: IPublishLongVideoOptions): Promise<IPublishLongVideoResult> {
+    if (!options.workspaceId) {
+      throw new Error("workspaceId is required");
+    }
+    if (!options.video) {
+      throw new Error("video is required");
+    }
+    if (!options.youtube && !options.tiktok && !options.facebook && !options.instagram) {
+      throw new Error("Provide at least one platform configuration (youtube / tiktok / facebook / instagram)");
+    }
+
+    const isFile = this.detectVideoSource(options.video) === "file";
+    const upload = isFile ? await this.uploadLongVideo(
+          options.video as File,
+          options.thumbnail,
+          options.onProgress,
+          options.onUploadUrl,
+          options.resumeFrom,
+          options.signal,
+        ) : undefined;
+    const videoURL = upload ? upload.videoURL : (options.video as string);
+    const postId = upload?.postId;
+
+    const thumb = await this.handleThumbnailUpload(options.thumbnail, upload?.uploadUrls);
+
+    const body: ICreateSocialPublisherPostRequest = {
+      workspaceId: options.workspaceId,
+      youtube: options.youtube,
+      tiktok: options.tiktok,
+      facebook: options.facebook,
+      instagram: options.instagram,
+      schedule: this.buildSchedule(options.schedule),
+      source: isFile ? "video-file" : "video-url",
+      videoURL,
+      thumbURL: thumb?.thumbFileURL,
+      tag: options.tag,
+      refId: options.refId,
+      comment: options.comment,
+    };
+
+    const target = isFile ? "by-file" : "by-url";
+    const id = postId ?? thumb?.postId;
+    const url = id
+      ? `${this.basePath}/long-video/workspace/${target}/${id}`
+      : `${this.basePath}/long-video/workspace/${target}`;
+
+    const response = await this.http.post<IPublishLongVideoResult>(url, { ...body, createdFrom: "npmPackage" });
+    return this.normaliseLongVideoResult(response.result);
+  }
+
+  /**
+   * Publish a video of up to 60 minutes to a single connected account.
+   *
+   * With one target there is no partial success: if that platform will not take
+   * a video this long, the whole call is refused and nothing is charged. See
+   * {@link publishLongVideoToWorkspace} for the cost model.
+   */
+  async publishLongVideoToAccount(options: IPublishLongVideoToAccountOptions): Promise<IPublishLongVideoResult> {
+    if (!options.accountId) {
+      throw new Error("accountId is required");
+    }
+    if (!options.video) {
+      throw new Error("video is required");
+    }
+    if (!options.youtube && !options.tiktok && !options.facebook && !options.instagram) {
+      throw new Error("Provide the platform configuration matching the account (youtube / tiktok / facebook / instagram)");
+    }
+
+    const isFile = this.detectVideoSource(options.video) === "file";
+    const upload = isFile ? await this.uploadLongVideo(
+          options.video as File,
+          options.thumbnail,
+          options.onProgress,
+          options.onUploadUrl,
+          options.resumeFrom,
+          options.signal,
+        ) : undefined;
+    const videoURL = upload ? upload.videoURL : (options.video as string);
+    const postId = upload?.postId;
+
+    const thumb = await this.handleThumbnailUpload(options.thumbnail, upload?.uploadUrls);
+
+    const body: ICreateSocialPublisherAccountPostRequest = {
+      accountId: options.accountId,
+      youtube: options.youtube,
+      tiktok: options.tiktok,
+      facebook: options.facebook,
+      instagram: options.instagram,
+      schedule: this.buildSchedule(options.schedule),
+      source: isFile ? "video-file" : "video-url",
+      videoURL,
+      thumbURL: thumb?.thumbFileURL,
+      tag: options.tag,
+      refId: options.refId,
+      comment: options.comment,
+    };
+
+    const target = isFile ? "by-file" : "by-url";
+    const id = postId ?? thumb?.postId;
+    const url = id
+      ? `${this.basePath}/long-video/account/${target}/${id}`
+      : `${this.basePath}/long-video/account/${target}`;
+
+    const response = await this.http.post<IPublishLongVideoResult>(url, { ...body, createdFrom: "npmPackage" });
+    return this.normaliseLongVideoResult(response.result);
+  }
+
+  /**
+   * Re-schedule a post that has not published yet, or send it out now.
+   *
+   * Free — this costs no credits. Only posts still pending with a future
+   * publish time are eligible; anything that has started publishing is refused
+   * by the server with a reason.
+   *
+   * @example
+   * ```ts
+   * await client.reschedulePost("post_123", { schedule: new Date("2026-09-01T09:00:00Z") });
+   * await client.reschedulePost("post_123", { schedule: "now" });
+   * ```
+   */
+  async reschedulePost(id: string, data: IReschedulePostRequest): Promise<void> {
+    if (!id) {
+      throw new Error("id is required");
+    }
+    await this.http.put(`${this.basePath}/${id}`, {
+      schedule: this.buildSchedule(data.schedule),
+      ...(data.caption !== undefined ? { caption: data.caption } : {}),
+    });
+  }
+
+  /**
+   * Upload a long video and return the URL to publish from.
+   *
+   * Declares `postType: "longVideo"` so the server refuses now — on plan gating
+   * or an empty balance — rather than after an hour of transfer.
+   */
+  private async uploadLongVideo(
+    video: File,
+    thumb?: File | string,
+    onProgress?: (progress: number) => void,
+    onUploadUrl?: (uploadUrl: string) => void,
+    resumeFrom?: string,
+    signal?: AbortSignal,
+  ): Promise<{ videoURL: string; postId: string; uploadUrls: IGenerateUploadUrlsResponse }> {
+    if (video.size > this.maxVideoUploadSizeBytes) {
+      throw new Error(`Video file size (${video.size} bytes) exceeds maximum allowed size (${this.maxVideoUploadSizeBytes} bytes)`);
+    }
+
+    const allowedVideoTypes = [".mp4", ".mov", ".avi", ".mkv", ".webm"];
+    const videoExtension = "." + video.name.split(".").pop()?.toLowerCase();
+    if (!allowedVideoTypes.includes(videoExtension)) {
+      throw new Error(`Invalid video file type. Allowed types: ${allowedVideoTypes.join(", ")}`);
+    }
+
+    // Ask for the thumbnail slot in the SAME call, so both files land in this
+    // post's folder. Requesting it separately would allocate a second postId
+    // and scatter the media across two folders.
+    const uploadUrls = await this.generateUploadUrls({
+      videoFileType: video.type,
+      thumbFileType: thumb instanceof File ? thumb.type : undefined,
+      postType: "longVideo",
+    });
+
+    // Prefer the resumable transfer for a long video — this is the case a
+    // single PUT handles worst, since a dropped connection at 90% of an hour
+    // of footage otherwise starts again from zero. Servers without the
+    // resumable service omit the tus fields, and the signed PUT still works.
+    if (supportsResumableUpload(uploadUrls.video)) {
+      await uploadResumable(uploadUrls.video, video, {
+        onProgress,
+        onUploadUrl,
+        uploadUrl: resumeFrom,
+        signal,
+      });
+    } else {
+      await uploadToR2(uploadUrls.video.uploadFileURL!, video, {
+        contentType: video.type,
+        onProgress,
+      });
+    }
+
+    return { videoURL: uploadUrls.video.fileURL!, postId: uploadUrls.postId, uploadUrls };
+  }
+
+  /** Translate the friendly `"now" | Date` form into the wire shape. */
+  private buildSchedule(schedule?: "now" | Date): IScheduleConfig | undefined {
+    if (!schedule) return undefined;
+    return {
+      type: schedule === "now" ? "now" : "schedule",
+      scheduledAt: schedule instanceof Date ? schedule : undefined,
+    };
+  }
+
+  /**
+   * Guarantee the shape callers destructure. An older server that does not yet
+   * return the duration fields would otherwise hand back `undefined` where the
+   * types promise numbers.
+   */
+  private normaliseLongVideoResult(result?: Partial<IPublishLongVideoResult>): IPublishLongVideoResult {
+    return {
+      _id: result?._id!,
+      durationSeconds: result?.durationSeconds ?? 0,
+      creditUnits: result?.creditUnits ?? 0,
+      credits: result?.credits ?? 0,
+      refusedTargets: result?.refusedTargets ?? [],
+    };
   }
 
   /**

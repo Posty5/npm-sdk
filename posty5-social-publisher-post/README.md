@@ -288,6 +288,142 @@ const postId = await client.publishShortVideo({
 console.log("Scheduled for", publishDate, "- Post ID:", postId);
 ```
 
+### publishLongVideoToWorkspace()
+
+Publish a video of up to **60 minutes** to every account connected to a workspace.
+
+The SDK handles the whole sequence for an uploaded file — reserve an upload
+destination, push the bytes, create the post. Pass a URL string instead of a
+`File` to publish something already hosted elsewhere.
+
+```typescript
+const result = await client.publishLongVideoToWorkspace({
+  workspaceId: "workspace_123",
+  video: recordingFile, // File, or a direct https:// URL
+  youtube: {
+    title: "Full workshop recording",
+    description: "The complete two-part session.",
+    tags: ["workshop", "long-form"],
+    privacyStatus: "public",
+  },
+  facebook: { title: "Full workshop recording", description: "The complete session." },
+  onProgress: (percent) => console.log(`Upload ${percent}%`),
+});
+
+console.log(result.durationSeconds); // 2400 — measured by the server
+console.log(result.credits);         // 400 — 8 units x 50
+```
+
+#### Cost
+
+Long video is priced by **duration**: 50 credits for every *started* 5 minutes.
+
+| Video length | Units | Credits |
+| --- | --- | --- |
+| 4m 30s | 1 | 50 |
+| 12m | 3 | 150 |
+| 15m | 3 | 150 |
+| 15m 01s | 4 | 200 |
+| 60m | 12 | 600 |
+
+There is no `duration` option, and one would be ignored — the server measures
+the video itself, because a client-supplied duration would be a
+client-supplied price.
+
+Requires the `socialMediaPublisher.longVideoPost` plan feature.
+
+#### Quote before you publish
+
+```typescript
+const quote = await client.getLongVideoQuote(videoURL);
+
+if (!quote.withinLimit) throw new Error(quote.reason); // over 60 minutes
+console.log(`${quote.durationSeconds}s costs ${quote.credits} credits`);
+
+// Which targets can actually take a video this long?
+for (const p of quote.platforms.filter((p) => !p.accepted)) {
+  console.warn(`${p.platform}: ${p.reason}`);
+}
+```
+
+#### Interrupted uploads resume
+
+Long video uploads resumably: the file goes up in 8MiB chunks, so a dropped
+connection costs one chunk rather than the hour of footage before it. Keep the
+upload URL and you can continue the same transfer later — even after a page
+reload.
+
+```typescript
+let resumeFrom = localStorage.getItem("upload-url") ?? undefined;
+
+await client.publishLongVideoToWorkspace({
+  workspaceId: "workspace_123",
+  video: recordingFile,
+  youtube: { title: "Full recording", description: "...", tags: [] },
+  resumeFrom,
+  onUploadUrl: (url) => localStorage.setItem("upload-url", url),
+  signal: controller.signal, // aborting keeps what was uploaded
+});
+```
+
+The SDK falls back to a single signed PUT when the server does not offer the
+resumable service, so this needs no configuration on your side.
+
+#### Platforms disagree about "long"
+
+A 40-minute video is a fine YouTube post and an impossible Instagram one —
+Reels stop at 15 minutes. Rather than fail the whole post, a workspace publish
+goes out to the targets that accept it and tells you which it dropped:
+
+```typescript
+for (const target of result.refusedTargets) {
+  console.warn(`${target.platform} skipped: ${target.reason}`);
+}
+```
+
+Limits are checked when the post is created, never mid-upload. TikTok's cap is
+per-creator and read from the connected account.
+
+---
+
+### publishLongVideoToAccount()
+
+The same, targeting one connected account. With a single target there is no
+partial success: if that platform will not take a video this long, the call is
+refused and nothing is charged.
+
+```typescript
+const result = await client.publishLongVideoToAccount({
+  accountId: "account_456",
+  video: recordingFile,
+  youtube: { title: "Episode 14", description: "The full episode.", tags: ["podcast"] },
+  schedule: new Date("2026-09-15T10:00:00Z"),
+});
+```
+
+---
+
+### reschedulePost()
+
+Move a post that has not published yet to a different time, or send it out now.
+Free — this costs no credits.
+
+```typescript
+// Move it
+await client.reschedulePost("post_123", { schedule: new Date("2026-09-01T09:00:00Z") });
+
+// Or publish it immediately
+await client.reschedulePost("post_123", { schedule: "now" });
+
+// Optionally replace the caption at the same time
+await client.reschedulePost("post_123", { schedule: "now", caption: "Updated caption" });
+```
+
+Only posts still pending with a future publish time are eligible. Anything that
+has already started publishing is refused by the server with a reason.
+
+---
+
 ---
 
 ### list()

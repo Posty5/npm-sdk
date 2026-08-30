@@ -1,4 +1,4 @@
-import { SocialPublisherPostScheduleType, SocialPublisherPostSourceType } from "../../types/type";
+import { SocialPublisherPostScheduleType, SocialPublisherPostSourceType, SocialPublisherPostType } from "../../types/type";
 
 export interface IYouTubeConfig {
   title: string;
@@ -220,6 +220,13 @@ export interface IAccountPostSetting {
 export interface IGenerateUploadUrlsRequest {
   thumbFileType?: string;
   videoFileType?: string;
+  /**
+   * Post type these uploads are for. Sending `"longVideo"` makes the server
+   * check plan gating and affordability now, before you spend an hour
+   * uploading something that cannot be published. The duration-accurate
+   * charge still happens when the post is created.
+   */
+  postType?: SocialPublisherPostType;
 }
 
 /**
@@ -611,4 +618,81 @@ export interface IListParams {
   "facebook.postInfo.isAllow"?: boolean;
   "instagram.postInfo.isAllow"?: boolean;
   "tiktok.postInfo.isAllow"?: boolean;
+}
+
+// ─── Long video (up to 60 minutes) ─────────────────────────────────────────
+
+/**
+ * Longest video the API accepts for a `longVideo` post: 60 minutes.
+ * Exported so callers can check a file before starting an upload, but the
+ * server measures the real duration and is the only authority on it.
+ */
+export const LONG_VIDEO_MAX_DURATION_SECONDS = 3600;
+
+/** One charge unit covers each started 5 minutes of video. */
+export const LONG_VIDEO_CREDIT_UNIT_SECONDS = 300;
+
+/**
+ * Options for {@link SocialPublisherPostClient.publishLongVideoToWorkspace}.
+ *
+ * Identical to {@link IPublishOptions} apart from `onProgress` — a 60-minute
+ * upload is long enough that a caller needs to report it — and the absence of
+ * any duration field. The duration is measured server-side from the file, and
+ * the price is derived from that measurement, so a client-supplied duration
+ * would be a client-supplied price.
+ */
+export interface ILongVideoUploadControls {
+  /**
+   * Called once the upload exists on the server, with its URL.
+   *
+   * Persist this if you want to resume the same transfer after a crash or a
+   * page reload: the ticket expires in minutes, but an upload that already
+   * exists resumes by its own URL and is unaffected. Pass it back as
+   * `resumeFrom`.
+   */
+  onUploadUrl?: (uploadUrl: string) => void;
+
+  /**
+   * Resume a previous attempt instead of starting a new upload. Use the URL
+   * handed to `onUploadUrl` on the earlier run.
+   */
+  resumeFrom?: string;
+
+  /**
+   * Abort the transfer. What has already been uploaded stays on the server and
+   * can be resumed with `resumeFrom`; no post is created, so nothing is
+   * charged.
+   */
+  signal?: AbortSignal;
+}
+
+export interface IPublishLongVideoOptions extends IPublishOptions, ILongVideoUploadControls {
+  /**
+   * Called as the upload proceeds, with a percentage.
+   *
+   * NOTE: the underlying uploader reports 0 then 100 rather than continuous
+   * progress — intermediate values need `XMLHttpRequest`, which is not
+   * available in Node. Treat this as "started" / "finished" until the core
+   * uploader gains streaming progress.
+   */
+  onProgress?: (progress: number) => void;
+}
+
+/** Account-targeted counterpart of {@link IPublishLongVideoOptions}. */
+export interface IPublishLongVideoToAccountOptions extends IPublishToAccountOptions, ILongVideoUploadControls {
+  /** See the note on {@link IPublishLongVideoOptions.onProgress}. */
+  onProgress?: (progress: number) => void;
+}
+
+/**
+ * Re-schedule (or edit) a post that has not published yet.
+ *
+ * Only posts still pending with a future publish time accept this; anything
+ * that has started publishing is refused by the server.
+ */
+export interface IReschedulePostRequest {
+  /** New publish moment. Pass a `Date`, or `"now"` to publish immediately. */
+  schedule: "now" | Date;
+  /** Optionally replace the caption at the same time. */
+  caption?: string;
 }

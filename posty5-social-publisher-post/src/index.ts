@@ -1,5 +1,6 @@
 export * from './social-publisher-post.client';
 export * from './interfaces';
+export * from './resumable-upload';
 export * from './types/type';
 // Re-export HttpClient + R2 upload helper so consumers don't have to dig into
 // nested node_modules to instantiate the client. Mirrors what users would do

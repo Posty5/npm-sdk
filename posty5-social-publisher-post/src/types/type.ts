@@ -14,7 +14,14 @@ export type SocialPublisherPostStatusType =
   | "removed"
   | "removeFailed";
 
-export type SocialPublisherPostType = "shortVideo";
+/**
+ * Content type of a post.
+ *
+ * `longVideo` was added in 4.2.0; `image` and `text` were always returned by
+ * the API but missing from this union. Code that switches on this field must
+ * handle values it does not recognise — the set grows as the platform does.
+ */
+export type SocialPublisherPostType = "shortVideo" | "longVideo" | "image" | "text";
 
 export type SocialPublisherPostAccountType = "youtube" | "facebook" | "instagram" | "tiktok";
 

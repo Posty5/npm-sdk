@@ -6,38 +6,47 @@ export interface IUploadConfig {
   fields: Record<string, string>;
 }
 
+/**
+ * One upload destination the API authorized.
+ *
+ * The same slot is offered two ways. `uploadFileURL` is a signed R2 PUT — one
+ * request, no resume. The `tus*` fields describe the same destination as a
+ * resumable transfer. Both land the file at `fileURL`, so nothing downstream
+ * cares which was used.
+ *
+ * The resumable fields are optional on purpose: an API not deployed with the
+ * resumable service omits them, and clients fall back to the signed PUT.
+ */
+export interface IUploadTarget {
+  /** Public URL of the finished object. Known before the upload starts. */
+  fileURL: string | undefined;
+  /** Signed URL for a single PUT. */
+  uploadFileURL: string | undefined;
+  /** Object key inside the bucket. */
+  bucketFilePath: string | undefined;
+  /**
+   * Absolute tus endpoint for this same destination, when resumable uploads
+   * are configured.
+   */
+  tusEndpoint?: string;
+  /**
+   * Signed capability naming this exact destination, sent as the tus
+   * `Upload-Metadata` key `ticket`. Short-lived, and never to be logged or
+   * persisted.
+   */
+  ticket?: string;
+  /** When the ticket stops being accepted for creating an upload. */
+  ticketExpiresAt?: string;
+  /** Maximum accepted size in bytes, so a client can fail fast. */
+  maxSize?: number;
+}
+
 export interface IGenerateUploadUrlsResponse {
   postId: string;
 
-  thumb: {
-    /**
-     * Public URL to access file from Cloud Bucket
-     */
-    fileURL: string | undefined;
-    /**
-     * Upload URL to upload file to Cloud Bucket (Signed URL)
-     */
-    uploadFileURL: string | undefined;
-    /**
-     * Path in Cloud Bucket
-     */
-    bucketFilePath: string | undefined;
-  };
+  thumb: IUploadTarget;
 
-  video: {
-    /**
-     * Public URL to access file from Cloud Bucket
-     */
-    fileURL: string | undefined;
-    /**
-     * Upload URL to upload file to Cloud Bucket (Signed URL)
-     */
-    uploadFileURL: string | undefined;
-    /**
-     * Path in Cloud Bucket
-     */
-    bucketFilePath: string | undefined;
-  };
+  video: IUploadTarget;
 }
 
 /**
@@ -158,7 +167,7 @@ export interface ISocialPublisherPostResponse {
 
   // Media descriptors so list cards can preview the post's source upload
   // (image/video), falling back to the stored thumbnail.
-  type?: "shortVideo" | "image" | string;
+  type?: "shortVideo" | "longVideo" | "image" | string;
   source?: SocialPublisherPostSourceType | string;
   sourceURLs?: {
     thumbURL?: string;
@@ -173,7 +182,7 @@ export interface ISocialPublisherPostStatusResponse {
   _id: string;
   numbering: string;
 
-  type: "shortVideo" | "image";
+  type: "shortVideo" | "longVideo" | "image";
   source: SocialPublisherPostSourceType;
   sourceURLs: {
     /**
@@ -195,6 +204,9 @@ export interface ISocialPublisherPostStatusResponse {
 
   /** Image-post metadata — only present when `type === "image"`. */
   image?: IImageDTO;
+
+  /** Long-video metadata — only present when `type === "longVideo"`. */
+  video?: IVideoDTO;
 
   currentStatus: SocialPublisherPostStatusType;
   currentError: string;
@@ -311,4 +323,94 @@ export interface IBaseStatusHistoryGroupedDay<StatusType> {
 export interface IBaseStatusHistoryGroupedItem<StatusType> {
   time: Date;
   status: StatusType;
+}
+
+// ─── Long video (up to 60 minutes) ─────────────────────────────────────────
+
+/**
+ * Long-video metadata carried on a post. Present only when the post's `type`
+ * is `longVideo`.
+ */
+export interface IVideoDTO {
+  /** Duration measured server-side, in seconds. */
+  durationSeconds: number;
+  /** Charge units billed — one per started 5 minutes. */
+  creditUnits?: number;
+  container?: string;
+  videoCodec?: string;
+  audioCodec?: string;
+  width?: number;
+  height?: number;
+  sizeBytes?: number;
+}
+
+/** What one platform would do with a video of a given length. */
+export interface ILongVideoPlatformVerdict {
+  platform: "youtube" | "facebook" | "instagram" | "tiktok";
+  accepted: boolean;
+  /** The limit that applied, in seconds, when one did. */
+  limitSeconds?: number;
+  /** Why the platform refused. Present only when `accepted` is false. */
+  reason?: string;
+}
+
+/**
+ * Result of {@link SocialPublisherPostClient.getLongVideoQuote} — what the
+ * post will cost, before committing to it.
+ */
+export interface ILongVideoQuoteResponse {
+  /** Duration measured server-side, in seconds, rounded up. */
+  durationSeconds: number;
+  /** The ceiling the API enforces (3600). */
+  maxDurationSeconds: number;
+  /** False when the video is over the ceiling; `reason` then says by how much. */
+  withinLimit: boolean;
+  /** Charge units — one per started 5 minutes. Zero when over the limit. */
+  units: number;
+  /** This plan's cost per unit (50 by default). */
+  creditsPerUnit: number;
+  /** Total credits the post will cost. */
+  credits: number;
+  /** True when the plan does not include long video posting. */
+  isGated: boolean;
+  container?: string;
+  videoCodec?: string;
+  width?: number;
+  height?: number;
+  /** What each platform would do with a video this long. */
+  platforms: ILongVideoPlatformVerdict[];
+  /** Present only when `withinLimit` is false. */
+  reason?: string;
+}
+
+/**
+ * A connected platform dropped from a workspace post because the video is too
+ * long for it. The rest of the post still publishes.
+ */
+export interface ILongVideoRefusedTarget {
+  platform: "youtube" | "facebook" | "instagram" | "tiktok";
+  /** Names that platform's limit and this video's length. */
+  reason: string;
+}
+
+/**
+ * Result of publishing a long video. Unlike the short-video helpers, which
+ * return just an id, this carries what was measured and what was charged —
+ * and which targets, if any, were dropped for exceeding their own limit.
+ */
+export interface IPublishLongVideoResult {
+  /** Created post ID. */
+  _id: string;
+  /** Duration measured server-side, in seconds. */
+  durationSeconds: number;
+  /** Charge units billed. */
+  creditUnits: number;
+  /** Credits actually charged. */
+  credits: number;
+  /**
+   * Targets dropped because the video exceeded their duration limit. Empty
+   * when every connected account accepted it. Always empty for account-targeted
+   * posts, which are refused outright rather than partially published.
+   */
+  refusedTargets: ILongVideoRefusedTarget[];
 }
