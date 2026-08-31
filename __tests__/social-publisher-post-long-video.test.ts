@@ -28,6 +28,10 @@ function makeHttp(results: any[] = []) {
       calls.push({ method: "PUT", url, body });
       return { result: next() };
     }),
+    delete: jest.fn(async (url: string) => {
+      calls.push({ method: "DELETE", url });
+      return { result: next() };
+    }),
   };
   return http;
 }
@@ -291,6 +295,24 @@ describe("reschedulePost", () => {
     const http = makeHttp();
     const client = new SocialPublisherPostClient(http);
     await expect(client.reschedulePost("", { schedule: "now" })).rejects.toThrow("id is required");
+    expect(http.calls).toHaveLength(0);
+  });
+});
+
+describe("deletePost", () => {
+  it("DELETEs the post", async () => {
+    const http = makeHttp([{}]);
+    const client = new SocialPublisherPostClient(http);
+
+    await client.deletePost("post_abc");
+
+    expect(http.calls[0]).toEqual({ method: "DELETE", url: "/api/social-publisher-post/post_abc" });
+  });
+
+  it("requires an id", async () => {
+    const http = makeHttp();
+    const client = new SocialPublisherPostClient(http);
+    await expect(client.deletePost("")).rejects.toThrow("id is required");
     expect(http.calls).toHaveLength(0);
   });
 });

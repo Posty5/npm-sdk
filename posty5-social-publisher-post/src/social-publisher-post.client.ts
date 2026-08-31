@@ -724,6 +724,26 @@ export class SocialPublisherPostClient {
   }
 
   /**
+   * Delete a post that has not published yet, releasing its uploaded media in
+   * the same request.
+   *
+   * Free, and nothing is refunded — nothing was charged for a post that never
+   * went out. A post that HAS published is refused; use {@link removePost} to
+   * take down media that is already live.
+   *
+   * @example
+   * ```ts
+   * await client.deletePost("post_123");
+   * ```
+   */
+  async deletePost(id: string): Promise<void> {
+    if (!id) {
+      throw new Error("id is required");
+    }
+    await this.http.delete(`${this.basePath}/${id}`);
+  }
+
+  /**
    * Upload a long video and return the URL to publish from.
    *
    * Declares `postType: "longVideo"` so the server refuses now — on plan gating
