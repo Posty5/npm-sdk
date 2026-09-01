@@ -45,6 +45,20 @@ export interface IResumableUploadOptions {
   chunkSize?: number;
   /** Abort the transfer. A partially uploaded file can be resumed later. */
   signal?: AbortSignal;
+  /**
+   * Tell the server to discard the partial upload when `signal` fires.
+   *
+   * Off by default, and deliberately so: the reason abort leaves the bytes in
+   * place is that "cancel" and "pause" are the same gesture in most UIs, and a
+   * user who paused a 40-minute video does not expect to start over. Turn this
+   * on where the abort really is final — a wizard the user closed, a file they
+   * replaced — so the server stops holding megabytes nobody will claim.
+   *
+   * Best-effort: a failed termination is swallowed, because the caller is
+   * already being handed an AbortError and the server expires the upload on its
+   * own after 24h regardless.
+   */
+  terminateOnAbort?: boolean;
   /** Content type stamped on the request when the blob does not carry one. */
   fallbackType?: string;
 }
@@ -141,6 +155,31 @@ async function getOffset(uploadUrl: string, signal?: AbortSignal): Promise<numbe
   return Number(response.headers.get("Upload-Offset") ?? 0);
 }
 
+/**
+ * Discard an upload the server is still holding (tus Termination extension).
+ *
+ * Exported because the decision is the caller's: an upload URL persisted from
+ * `onUploadUrl` outlives the transfer that created it, and only the caller knows
+ * whether the user means to come back to it. Without this the bytes sit on the
+ * server until its 24h expiry sweep.
+ *
+ * Resolves `true` when the server confirms, `false` when it refuses or is
+ * unreachable — never throws, since nothing useful can be done about a failed
+ * cleanup of something that expires on its own.
+ */
+export async function terminateUpload(uploadUrl: string): Promise<boolean> {
+  try {
+    const response = await fetch(uploadUrl, {
+      method: "DELETE",
+      headers: { "Tus-Resumable": TUS_VERSION },
+    });
+    // 404/410 mean it is already gone, which is the outcome that was asked for.
+    return response.status === 204 || response.status === 404 || response.status === 410;
+  } catch {
+    return false;
+  }
+}
+
 async function safeText(response: Response): Promise<string> {
   try {
     return (await response.text()).slice(0, 300);
@@ -219,7 +258,7 @@ export async function uploadResumable(
   file: Blob,
   options: IResumableUploadOptions = {},
 ): Promise<string> {
-  const { onProgress, onUploadUrl, chunkSize = DEFAULT_CHUNK_SIZE, signal, fallbackType = "application/octet-stream" } = options;
+  const { onProgress, onUploadUrl, chunkSize = DEFAULT_CHUNK_SIZE, signal, fallbackType = "application/octet-stream", terminateOnAbort = false } = options;
 
   if (!supportsResumableUpload(target)) {
     throw new Error("This upload target does not support resumable uploads.");
@@ -244,6 +283,14 @@ export async function uploadResumable(
     onUploadUrl?.(uploadUrl);
   }
 
+  /**
+   * The transfer's own signal is already aborted by the time this runs, so the
+   * DELETE cannot carry it — a fetch with an aborted signal never leaves.
+   */
+  const discardIfAsked = async () => {
+    if (terminateOnAbort && uploadUrl) await terminateUpload(uploadUrl);
+  };
+
   onProgress?.(file.size ? Math.round((offset / file.size) * 100) : 0);
 
   // A round that ends where it started is not automatically fatal: a spurious
@@ -253,10 +300,21 @@ export async function uploadResumable(
   let consecutiveStalls = 0;
 
   while (offset < file.size) {
-    if (isAborted(signal)) throw abortError();
+    if (isAborted(signal)) {
+      await discardIfAsked();
+      throw abortError();
+    }
 
     const end = Math.min(offset + chunkSize, file.size);
-    const next = await patchChunk(uploadUrl, file.slice(offset, end), offset, signal);
+    let next: number;
+    try {
+      next = await patchChunk(uploadUrl, file.slice(offset, end), offset, signal);
+    } catch (error: any) {
+      // An abort raised from inside a chunk lands here rather than at the loop
+      // guard above, so the cleanup has to sit on both paths.
+      if (error?.name === "AbortError") await discardIfAsked();
+      throw error;
+    }
 
     if (next <= offset) {
       if (++consecutiveStalls >= MAX_CONSECUTIVE_STALLS) {

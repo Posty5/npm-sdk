@@ -71,6 +71,39 @@ Sections: `updateBasicInformation`, `updateMedia`, `updatePrice`, `updateStock`,
 `updateVariants`, `updateTags`, `updateSeo`, `updateSettings`, `updateLanding`,
 `updateShipping`, `updatePurchase`.
 
+A section is written whole — fields you leave out go back to their defaults
+rather than keeping their saved values. Send the section as you want it to end
+up.
+
+#### Holding stock back
+
+`saleBuffer` reserves units so a product reads as sold out before the shelf is
+literally empty:
+
+```ts
+await store.products.updateStock(storeId, productId, {
+  stock: 42,
+  saleBuffer: 3,           // out of stock at 3 remaining, not 0
+  outOfStockBehavior: "hide", // or "showUnavailable", or "inherit"
+});
+```
+
+`null` and `0` are different answers, which is why `saleBuffer` is nullable:
+
+| `saleBuffer` | Meaning |
+| --- | --- |
+| `null` (default) | Use the store's reserve. |
+| `0` | Sell down to the last unit, *ignoring* the store's reserve. |
+| `n` | Sold out at `n` remaining. |
+
+A `0` that meant "unset" would silently re-apply the store's buffer, so the two
+had to stay distinguishable.
+
+`outOfStockBehavior` decides what a sold-out product looks like: `hide` takes it
+off the listings, the product page, the design sections and the sitemap;
+`showUnavailable` leaves it on the shelf marked unavailable; `inherit` (the
+default) defers to the store's own setting.
+
 ### Clone, import, AI
 
 ```ts
@@ -206,6 +239,70 @@ Per-product surcharges are separate, and always charged **per unit**:
 await store.products.updateShipping(storeId, productId, { extraFeePerUnit: 5, note: "Bulky" });
 ```
 
+### Package profiles - pricing by the size of the parcel
+
+A **profile** is a set of brackets ("up to 1 kg", "up to 5 kg"); an
+**assignment** attaches one to a place with a fee per bracket. At checkout the
+cart is measured, and the first bracket the parcel fits sets the fee.
+
+```ts
+// A profile, then the brackets. A profile with no brackets is a legal first state.
+const profile = await store.shipping.createProfile(storeId, { name: "By weight", type: "weight" });
+await store.shipping.addProfileConditions(storeId, profile._id, [
+  { label: "Up to 1 kg", maxWeight: 1, order: 0 },
+  { label: "Up to 5 kg", maxWeight: 5, order: 1 },
+]);
+
+// Price it somewhere. Fees point at bracket keys.
+await store.shipping.assignProfile(storeId, "eg", {
+  level: "governorate",
+  governorateCode: "C",
+  profileId: profile._id,
+  fees: [{ conditionKey: "cnd_a", fee: 30 }, { conditionKey: "cnd_b", fee: 55 }],
+  isDefault: true,
+});
+
+// What applies at a place, and whether it is the place's own or inherited.
+const view = await store.shipping.listAssignments(storeId, "eg", {
+  level: "city",
+  governorateCode: "C",
+  cityKey: "cairo",
+});
+console.log(view.inheritedFrom, view.isInherited);
+```
+
+Products carry the parcel these brackets are matched against:
+
+```ts
+await store.products.updateShipping(storeId, productId, {
+  weight: 2.5,                        // kg
+  length: 30, width: 20, height: 15,  // cm
+});
+```
+
+Four rules decide what a buyer is charged, and each is easy to get backwards:
+
+- **Profiles answer before the flat chain.** Where no bracket matches, the flat
+  country -> governorate -> city chain still answers, so profiles add to a
+  store's setup rather than replacing it.
+- **The most specific tier holding profiles owns the answer outright.** A city
+  with its own profiles ignores the governorate's completely - even for a parcel
+  none of its own brackets fit, in which case the cart falls to the flat rate
+  rather than climbing back up. A merchant who prices a city separately means
+  "this is what this city costs", not "add these to what the country said".
+- **An unmeasured parcel fits nothing.** `null` on a product measurement means
+  "not measured", and a limit the cart cannot be compared against is unanswered,
+  not satisfied - otherwise one product with a forgotten weight would ship the
+  whole cart at the cheapest bracket. On a *bracket limit* `null` means the
+  opposite: no cap on that measurement.
+- **The default profile wins over a cheaper one.** Two profiles at one place are
+  alternatives ("by weight" or "by size"); naming a default is a decision, not a
+  tie-break. Without one, the cheaper match is quoted.
+
+An unpriced bracket (`fee: null`) is safe to save - a parcel landing in it falls
+through to the flat chain rather than shipping free - and `unpricedCount` on the
+assignment tells you how many are still waiting.
+
 ## API
 
 ### `store.products` — `/api/store-products`
@@ -297,6 +394,19 @@ await store.products.updateShipping(storeId, productId, { extraFeePerUnit: 5, no
 | `applyFee(storeId, iso, input)` | `POST /:storeId/countries/:iso/routes/apply-fee` |
 | `clearRoute(storeId, rateId)` | `DELETE /:storeId/routes/:rateId` |
 | `previewFee(storeId, params)` | `GET /:storeId/preview-fee` |
+| `listProfiles(storeId, filters?)` | `GET /:storeId/profiles` |
+| `getProfile(storeId, profileId)` | `GET /:storeId/profiles/:profileId` |
+| `createProfile(storeId, input)` | `POST /:storeId/profiles` |
+| `updateProfile(storeId, profileId, changes)` | `PUT /:storeId/profiles/:profileId` |
+| `deleteProfile(storeId, profileId)` | `DELETE /:storeId/profiles/:profileId` |
+| `addProfileConditions(storeId, profileId, conditions[])` | `POST /:storeId/profiles/:profileId/conditions` |
+| `removeProfileCondition(storeId, profileId, conditionKey)` | `DELETE /:storeId/profiles/:profileId/conditions/:conditionKey` |
+| `downloadProfileTemplate(storeId, type?)` | `GET /:storeId/profiles/template` |
+| `importProfileConditions(storeId, profileId, file)` | `POST /:storeId/profiles/:profileId/conditions/import` |
+| `listAssignments(storeId, iso, place)` | `GET /:storeId/countries/:iso/assignments` |
+| `assignProfile(storeId, iso, input)` | `POST /:storeId/countries/:iso/assignments` |
+| `setDefaultAssignment(storeId, assignmentId)` | `PUT /:storeId/assignments/:assignmentId/default` |
+| `removeAssignment(storeId, assignmentId)` | `DELETE /:storeId/assignments/:assignmentId` |
 
 ### Shorthands
 

@@ -17,6 +17,7 @@ import {
   ICreateImagePostToWorkspaceRequest,
   ICreateImagePostToAccountRequest,
   IRemovePostResponse,
+  ILongVideoUploadControls,
   IPublishLongVideoOptions,
   IPublishLongVideoToAccountOptions,
   IPublishLongVideoResult,
@@ -608,10 +609,13 @@ export class SocialPublisherPostClient {
     const upload = isFile ? await this.uploadLongVideo(
           options.video as File,
           options.thumbnail,
-          options.onProgress,
-          options.onUploadUrl,
-          options.resumeFrom,
-          options.signal,
+          {
+            onProgress: options.onProgress,
+            onUploadUrl: options.onUploadUrl,
+            resumeFrom: options.resumeFrom,
+            signal: options.signal,
+            terminateOnAbort: options.terminateOnAbort,
+          },
         ) : undefined;
     const videoURL = upload ? upload.videoURL : (options.video as string);
     const postId = upload?.postId;
@@ -665,10 +669,13 @@ export class SocialPublisherPostClient {
     const upload = isFile ? await this.uploadLongVideo(
           options.video as File,
           options.thumbnail,
-          options.onProgress,
-          options.onUploadUrl,
-          options.resumeFrom,
-          options.signal,
+          {
+            onProgress: options.onProgress,
+            onUploadUrl: options.onUploadUrl,
+            resumeFrom: options.resumeFrom,
+            signal: options.signal,
+            terminateOnAbort: options.terminateOnAbort,
+          },
         ) : undefined;
     const videoURL = upload ? upload.videoURL : (options.video as string);
     const postId = upload?.postId;
@@ -751,12 +758,10 @@ export class SocialPublisherPostClient {
    */
   private async uploadLongVideo(
     video: File,
-    thumb?: File | string,
-    onProgress?: (progress: number) => void,
-    onUploadUrl?: (uploadUrl: string) => void,
-    resumeFrom?: string,
-    signal?: AbortSignal,
+    thumb: File | string | undefined,
+    controls: ILongVideoUploadControls & { onProgress?: (progress: number) => void } = {},
   ): Promise<{ videoURL: string; postId: string; uploadUrls: IGenerateUploadUrlsResponse }> {
+    const { onProgress, onUploadUrl, resumeFrom, signal, terminateOnAbort } = controls;
     if (video.size > this.maxVideoUploadSizeBytes) {
       throw new Error(`Video file size (${video.size} bytes) exceeds maximum allowed size (${this.maxVideoUploadSizeBytes} bytes)`);
     }
@@ -786,6 +791,7 @@ export class SocialPublisherPostClient {
         onUploadUrl,
         uploadUrl: resumeFrom,
         signal,
+        terminateOnAbort,
       });
     } else {
       await uploadToR2(uploadUrls.video.uploadFileURL!, video, {

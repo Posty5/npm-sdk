@@ -369,6 +369,52 @@ await client.publishLongVideoToWorkspace({
 The SDK falls back to a single signed PUT when the server does not offer the
 resumable service, so this needs no configuration on your side.
 
+#### Cancelling for good
+
+Aborting leaves the uploaded bytes on the server, because in most interfaces
+"pause" and "cancel" are the same button and a user who paused a 40-minute video
+does not expect to start over. Where the abort really is final — a wizard the
+user closed, a file they swapped out — say so, and the server stops holding
+megabytes nobody will claim:
+
+```typescript
+await client.publishLongVideoToWorkspace({
+  // ...
+  signal: controller.signal,
+  terminateOnAbort: true,
+});
+```
+
+For an upload URL you persisted earlier and have decided not to resume, discard
+it directly. It never throws — a cleanup that fails is not worth an error, since
+the server expires abandoned uploads after 24 hours anyway:
+
+```typescript
+import { terminateUpload } from "@posty5/social-publisher-post";
+
+const discarded = await terminateUpload(savedUploadUrl);
+localStorage.removeItem("upload-url");
+```
+
+#### What counts as a video
+
+Both long-video helpers take a **browser `File` or `Blob`**, or a URL to a video
+already hosted somewhere reachable. They do **not** accept a Node `ReadStream` or
+a filesystem path — the same boundary the short-video helpers have always had.
+
+From Node, read the file and hand over a `Blob`:
+
+```typescript
+import { readFile } from "node:fs/promises";
+
+const bytes = await readFile("./recording.mp4");
+const video = new File([bytes], "recording.mp4", { type: "video/mp4" });
+```
+
+That buffers the whole file in memory, which is the reason the streaming variant
+does not exist yet rather than an oversight. For anything large from a server,
+prefer uploading to your own storage first and publishing by URL.
+
 #### Platforms disagree about "long"
 
 A 40-minute video is a fine YouTube post and an impossible Instagram one —
