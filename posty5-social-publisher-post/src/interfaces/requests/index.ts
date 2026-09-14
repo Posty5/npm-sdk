@@ -664,16 +664,30 @@ export interface ILongVideoUploadControls {
    * charged.
    */
   signal?: AbortSignal;
+
+  /**
+   * Discard the partial upload when `signal` fires, instead of leaving it
+   * resumable.
+   *
+   * Off by default: in most interfaces "pause" and "cancel" are the same
+   * button, and a user who paused a 40-minute video does not expect to start
+   * over. Set it where the abort really is final — a closed wizard, a replaced
+   * file — so the server stops holding megabytes nobody will claim.
+   *
+   * Best-effort. A failed termination is not reported, because the server
+   * expires abandoned uploads after 24 hours regardless.
+   */
+  terminateOnAbort?: boolean;
 }
 
 export interface IPublishLongVideoOptions extends IPublishOptions, ILongVideoUploadControls {
   /**
    * Called as the upload proceeds, with a percentage.
    *
-   * NOTE: the underlying uploader reports 0 then 100 rather than continuous
-   * progress — intermediate values need `XMLHttpRequest`, which is not
-   * available in Node. Treat this as "started" / "finished" until the core
-   * uploader gains streaming progress.
+   * Resumable transfers report per chunk — 8MiB of an hour-long file at a time
+   * — so this moves continuously. It falls back to 0 then 100 only on a server
+   * without the resumable service, where the single signed PUT would need
+   * `XMLHttpRequest` to report anything in between.
    */
   onProgress?: (progress: number) => void;
 }

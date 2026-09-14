@@ -1,5 +1,29 @@
 # Changelog
 
+## 4.4.0
+
+### Added
+
+- **Explicit upload termination (tus Termination extension).** Aborting still
+  leaves the partial upload resumable, which is the right default — in most
+  interfaces "pause" and "cancel" are the same button. Where the abort really is
+  final, two ways to say so:
+  - `terminateOnAbort: true` on both long-video publish helpers sends a `DELETE`
+    for the partial upload when `signal` fires.
+  - `terminateUpload(uploadUrl)` discards an upload URL you persisted earlier
+    and decided not to resume. It never throws — a cleanup that fails is not
+    worth an error, since the server expires abandoned uploads after 24 hours.
+
+### Documentation
+
+- README now states the file boundary the long-video helpers have always had:
+  browser `File`/`Blob` or a hosted URL, **not** a Node `ReadStream` or a
+  filesystem path — with the `readFile` -> `File` bridge for Node callers and a
+  note on why the streaming variant does not exist.
+- `onProgress` no longer claims to report only 0 and 100. That has been per-chunk
+  since resumable uploads landed in 4.3.0; the 0/100 behaviour survives only on a
+  server without the resumable service.
+
 ## 4.3.0
 
 ### Added

@@ -5,7 +5,7 @@
  * POST's headers, base64 metadata, the PATCH loop, offset re-sync on conflict,
  * resume, and abort.
  */
-import { supportsResumableUpload, uploadResumable, DEFAULT_CHUNK_SIZE } from '@posty5/social-publisher-post';
+import { supportsResumableUpload, uploadResumable, terminateUpload, DEFAULT_CHUNK_SIZE } from '@posty5/social-publisher-post';
 
 type Req = { url: string; method: string; headers: Record<string, string>; bodySize: number };
 
@@ -53,6 +53,13 @@ function mockServer(opts: { size: number; startOffset?: number; patch?: (i: numb
       headers,
       bodySize: init.body?.size ?? 0,
     });
+
+    // Termination carries no signal on purpose — it runs *because* the
+    // transfer's signal aborted, and a fetch with an aborted signal never
+    // leaves. So it is answered before the abort guard below.
+    if (init.method === 'DELETE') {
+      return { status: 204, ok: true, headers: new Map() as any, text: async () => '' };
+    }
 
     if (init.signal?.aborted) {
       const err: any = new Error('aborted');
@@ -248,5 +255,70 @@ describe('aborting', () => {
 
     await expect(uploadResumable(TARGET, fakeFile(10), { signal: controller.signal })).rejects.toThrow('Upload aborted');
     expect(requests).toHaveLength(0);
+  });
+
+  it('leaves the partial upload on the server by default', async () => {
+    const size = 30;
+    const controller = new AbortController();
+    const { requests } = mockServer({
+      size,
+      patch: (i) => {
+        // Abort midway: the first chunk lands, the second finds the signal set.
+        if (i === 1) controller.abort();
+        return undefined;
+      },
+    });
+
+    await expect(
+      uploadResumable(TARGET, fakeFile(size), { chunkSize: 10, signal: controller.signal }),
+    ).rejects.toThrow('Upload aborted');
+
+    // Pause and cancel are the same gesture in most UIs, so the bytes stay put
+    // and the transfer can be resumed by its upload URL.
+    expect(requests.filter((r) => r.method === 'DELETE')).toHaveLength(0);
+  });
+
+  it('discards the partial upload when the caller asks it to', async () => {
+    const size = 30;
+    const controller = new AbortController();
+    const { requests } = mockServer({
+      size,
+      patch: (i) => {
+        if (i === 1) controller.abort();
+        return undefined;
+      },
+    });
+
+    await expect(
+      uploadResumable(TARGET, fakeFile(size), {
+        chunkSize: 10,
+        signal: controller.signal,
+        terminateOnAbort: true,
+      }),
+    ).rejects.toThrow('Upload aborted');
+
+    const deletes = requests.filter((r) => r.method === 'DELETE');
+    expect(deletes).toHaveLength(1);
+    expect(deletes[0].url).toBe(UPLOAD_URL);
+    expect(deletes[0].headers['Tus-Resumable']).toBe('1.0.0');
+  });
+});
+
+describe('terminateUpload', () => {
+  it('reports success when the server confirms', async () => {
+    mockServer({ size: 0 });
+    await expect(terminateUpload(UPLOAD_URL)).resolves.toBe(true);
+  });
+
+  it('treats an already-gone upload as terminated', async () => {
+    (globalThis as any).fetch = jest.fn(async () => ({ status: 410, ok: false, headers: new Map() as any, text: async () => '' }));
+    await expect(terminateUpload(UPLOAD_URL)).resolves.toBe(true);
+  });
+
+  it('never throws — a failed cleanup of something that expires anyway is not an error', async () => {
+    (globalThis as any).fetch = jest.fn(async () => {
+      throw new Error('network down');
+    });
+    await expect(terminateUpload(UPLOAD_URL)).resolves.toBe(false);
   });
 });

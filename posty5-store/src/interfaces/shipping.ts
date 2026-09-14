@@ -244,3 +244,167 @@ export interface IShippingFeePreview {
   isAllowed?: boolean;
   [key: string]: unknown;
 }
+
+/** ─── Package profiles (task12) ─────────────────────────────────────────────
+ *
+ * A profile is a set of BRACKETS — "up to 1 kg", "up to 5 kg" — and an
+ * assignment attaches one to a place with a fee per bracket. At checkout the
+ * cart's parcel is measured, the most specific tier holding profiles answers,
+ * and the first bracket the parcel fits sets the fee.
+ *
+ * Two things about this are easy to get backwards, and both cost money:
+ *
+ *   - A profile answers BEFORE the flat country/governorate/city chain. Where
+ *     no profile matches, the flat chain still answers, so profiles are additive
+ *     to a store's existing setup rather than a replacement for it.
+ *   - The most specific tier with any profiles owns the answer OUTRIGHT — it is
+ *     never merged with the tiers above. A city with its own profiles ignores
+ *     the governorate's completely, even for a parcel none of its brackets fit.
+ */
+
+/** What a profile measures. Immutable after creation. */
+export type ShippingProfileType = "weight" | "dimension";
+
+/** Which tier an assignment lives at. */
+export type ShippingAssignmentLevel = "country" | "governorate" | "city";
+
+/**
+ * One bracket. Every limit is nullable and `null` means "no cap on this
+ * measurement" — the opposite of a `null` on the parcel, which means "not
+ * measured" and fits nothing.
+ */
+export interface IShippingProfileCondition {
+  /** Client-owned identity a fee points at. Generated server-side when omitted. */
+  key?: string;
+  /** Shown next to the fee input; generated from the limits when left empty. */
+  label?: string;
+  /** kg. */
+  maxWeight?: number | null;
+  /** cm. */
+  maxLength?: number | null;
+  maxWidth?: number | null;
+  maxHeight?: number | null;
+  order?: number;
+}
+
+export interface IShippingProfileFilters {
+  /** Match on the profile name. */
+  text?: string;
+  type?: ShippingProfileType;
+  cursor?: string;
+  pageSize?: number;
+  sortField?: string;
+  sortType?: "asc" | "desc";
+}
+
+export interface IShippingProfile {
+  _id: string;
+  name: string;
+  type: ShippingProfileType;
+  description?: string;
+  conditions: IShippingProfileCondition[];
+  conditionsCount: number;
+  /** How many places use it. A profile in use cannot be deleted. */
+  assignmentsCount: number;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: unknown;
+}
+
+export interface ICreateShippingProfileInput {
+  name: string;
+  /**
+   * Immutable afterwards: it decides which limits a bracket may carry, so
+   * changing it would reinterpret every bracket already written and every fee
+   * already priced against them.
+   */
+  type: ShippingProfileType;
+  description?: string;
+  /** Optional — the wizard saves name and type first and fills brackets after. */
+  conditions?: IShippingProfileCondition[];
+}
+
+/** Note the absence of `type`. See {@link ICreateShippingProfileInput.type}. */
+export interface IUpdateShippingProfileInput {
+  name?: string;
+  description?: string;
+  /** Replaces the bracket list wholesale. To append, use `addProfileConditions`. */
+  conditions?: IShippingProfileCondition[];
+}
+
+/** ─── Profile assignments ─────────────────────────────────────────────────── */
+
+/**
+ * Where an assignment lives. `governorateCode` is required at governorate and
+ * city level, and `cityKey` at city level: city names repeat across
+ * governorates, so the pair is the identity everywhere in this module.
+ */
+export interface IShippingAssignmentPlace {
+  level: ShippingAssignmentLevel;
+  governorateCode?: string;
+  cityKey?: string;
+}
+
+/** One bracket's price at one place. */
+export interface IShippingAssignmentFee {
+  conditionKey: string;
+  /** `null` = not priced here yet; a parcel landing in it falls through. */
+  fee: number | null;
+}
+
+/** One priced bracket, as the dialog lists it. */
+export interface IShippingAssignmentFeeRow extends IShippingAssignmentFee {
+  label: string;
+  maxWeight: number | null;
+  maxLength: number | null;
+  maxWidth: number | null;
+  maxHeight: number | null;
+  order: number;
+}
+
+/** One profile assigned to one place. */
+export interface IShippingAssignment {
+  _id: string;
+  profileId: string;
+  profileName: string;
+  type: ShippingProfileType;
+  level: ShippingAssignmentLevel;
+  governorateCode: string;
+  governorateName: string;
+  cityKey: string;
+  cityName: string;
+  /** Wins over a cheaper alternative at the same place. */
+  isDefault: boolean;
+  fees: IShippingAssignmentFeeRow[];
+  /** Brackets still waiting for a price. */
+  unpricedCount: number;
+  order: number;
+  [key: string]: unknown;
+}
+
+/**
+ * What a place's profiles look like once inheritance is applied.
+ *
+ * `inheritedFrom` is what lets a UI say "these are the country's, and they stop
+ * applying the moment you add one here" instead of showing an empty list that
+ * reads like "nothing ships here".
+ */
+export interface IShippingAssignmentsView {
+  items: IShippingAssignment[];
+  /** Which tier the listed rows actually come from. */
+  inheritedFrom: ShippingAssignmentLevel | "none";
+  /** True when the rows belong to a level ABOVE the one being read. */
+  isInherited: boolean;
+  [key: string]: unknown;
+}
+
+export interface IAssignShippingProfileInput extends IShippingAssignmentPlace {
+  profileId: string;
+  /**
+   * One entry per bracket. A missing or `null` fee is a bracket the merchant
+   * has not priced — safe to save, and the parcel falls through to the flat
+   * chain rather than shipping free.
+   */
+  fees?: IShippingAssignmentFee[];
+  isDefault?: boolean;
+}

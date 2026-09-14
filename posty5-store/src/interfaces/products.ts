@@ -17,6 +17,22 @@ export interface IProductOptionInput {
   values: string[];
 }
 
+/** ─── Stock policy ─────────────────────────────────────────────────────────
+ *
+ * A sold-out product is a merchant decision, not a fixed rule: some stores want
+ * it on the shelf marked unavailable, others want it gone. The store sets the
+ * default and a product may overrule it.
+ */
+
+/** What the STORE does with a sold-out product. */
+export type StoreOutOfStockBehavior = "showUnavailable" | "hide";
+
+/**
+ * What THIS product does. `inherit` — the default — defers to the store, which
+ * is why the product type has a third member the store type does not.
+ */
+export type ProductOutOfStockBehavior = "inherit" | StoreOutOfStockBehavior;
+
 /** ─── Create / update ──────────────────────────────────────────────────── */
 
 export interface ICreateProductInput {
@@ -69,6 +85,10 @@ export interface IProductSummary {
   price: number;
   compareAtPrice?: number | null;
   stock?: number | null;
+  /** See {@link IProductStockInput.saleBuffer}. `null` = inherit the store's. */
+  saleBuffer?: number | null;
+  /** See {@link IProductStockInput.outOfStockBehavior}. */
+  outOfStockBehavior?: ProductOutOfStockBehavior;
   sku?: string;
   status: ProductStatus;
   sortOrder?: number;
@@ -103,6 +123,20 @@ export interface IProductPriceInput {
 export interface IProductStockInput {
   /** `null` = stock not tracked. */
   stock: number | null;
+  /**
+   * Units held back from sale on this product.
+   *
+   * `null` (the default) means "use the store's reserve"; `0` means "sell down
+   * to the last unit" *regardless* of it. That is the whole reason the field is
+   * nullable rather than defaulting to `0` — the two are different answers, and
+   * a `0` that meant "unset" would silently re-apply the store's buffer.
+   *
+   * A product counts as out of stock at `stock - buffer <= 0`, so a buffer of 3
+   * on a stock of 3 is sold out with three units still on the shelf.
+   */
+  saleBuffer?: number | null;
+  /** `inherit` (the default) defers to the store's out-of-stock policy. */
+  outOfStockBehavior?: ProductOutOfStockBehavior;
 }
 
 export interface IVariantValueInput {
@@ -194,6 +228,32 @@ export interface IProductShippingInput {
   extraFeePerUnit?: number | null;
   /** Merchant-facing reason; snapshotted onto the order, never shown to buyers. */
   note?: string;
+
+  /* ─── The parcel (task12) ────────────────────────────────────────────────
+   *
+   * What a package profile prices against. `null` is "not measured" — and it
+   * matters, because an unmeasured parcel fits NO bracket and the cart falls
+   * back to the store's flat rate rather than being quoted the cheapest one.
+   * `0` is rejected by the server: a parcel of no size is not a measurement.
+   */
+
+  /** Weight in kg. */
+  weight?: number | null;
+  /** Length in cm. */
+  length?: number | null;
+  /** Width in cm. */
+  width?: number | null;
+  /** Height in cm. */
+  height?: number | null;
+
+  /**
+   * Which profile the four measurements above were filled from, when the
+   * merchant used a bracket as a quick-fill. Provenance only — the profile is
+   * not consulted again at checkout, the measurements are.
+   */
+  packageProfileId?: string | null;
+  /** Which bracket of that profile. Provenance only, as above. */
+  packageConditionKey?: string;
 }
 
 export type ProductPurchaseMode = "store" | "external" | "both";
