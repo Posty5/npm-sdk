@@ -1,5 +1,46 @@
 # Changelog
 
+## 4.5.0
+
+### Added
+
+- **Up to five comments per post.** `comments?: ICommentRequest[]` on every
+  create-post request that took a single `comment`, each with its own
+  `delayMinutes`, its own optional image and its own per-platform flags.
+  `MAX_POST_COMMENTS`, `MAX_COMMENT_LENGTH` and `MAX_COMMENT_DELAY_MINUTES` are
+  exported so a caller can validate before sending rather than after a 400.
+- **An image per comment**, as `imageUrl` (any plan, costs us no storage) or
+  `imageStorageKey` (uploaded through the account's
+  `default-comments/upload-urls`, plan-gated). They are not interchangeable: the
+  key is what tells the API the object is ours, and therefore what its cleanup
+  path uses when the post or the comment is deleted. A public URL sent in the
+  key field makes the image read as external and it is never cleaned up.
+- **Per-comment status.** `ICommentStatusDTO[]` on `comments` for each platform,
+  carrying the order, the text, the delay and the outcome.
+
+### Deprecated
+
+- `comment?` on every create-post request, in favour of `comments`. It still
+  compiles and will for one major version. Send one or the other - the API
+  refuses a request carrying both. `commentInfo` on each platform's status stays
+  alongside `comments`, mirroring the first entry.
+
+### Fixed
+
+- **The documented credit cost was wrong, on both halves.** A comment is **25
+  credits**, not "+1" - the API charges `socialMediaPublisher.commentOnPost`,
+  which its plan data prices at 25. And an image post is **50 credits**, not 5.
+  Both numbers now come from the API's plan data rather than from memory, and
+  both are stated on the interfaces and in the README.
+
+### Documentation
+
+- The comment JSDoc now states the two caveats a caller has no UI to learn from:
+  **TikTok is not supported** (it exposes no public comment-posting endpoint, so
+  a comment aimed at it reports `notSupported` rather than failing), and **an
+  image is Facebook only** (Instagram's and YouTube's comment endpoints are
+  text-only, so an image bound for either is dropped with a reason).
+
 ## 4.4.0
 
 ### Added

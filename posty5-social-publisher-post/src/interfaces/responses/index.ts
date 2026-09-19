@@ -104,7 +104,11 @@ export interface IImageDTO {
 
 /**
  * Per-platform comment status block returned on the post status response.
- * Present only when the post was created with a `comment` payload.
+ * Present only when the post was created with a comment payload.
+ *
+ * With a LIST of comments this describes the first one; the whole list, one
+ * entry per comment, is {@link ICommentStatusDTO}[] on `comments`. The singular
+ * block is kept so a caller written against one comment keeps reading.
  *
  * TikTok always returns `currentStatus = "notSupported"`.
  */
@@ -123,6 +127,26 @@ export interface ICommentInfoDTO {
   postedAt?: Date;
   /** Grouped history of status transitions for this platform comment. */
   statusHistoryGrouped?: IBaseStatusHistoryGroupedDay<CommentStatusType>[];
+}
+
+/**
+ * One comment's status on one platform.
+ *
+ * `order` is the position it posts in, which is also the position it was sent
+ * in — the API takes the order from the array rather than from a field on the
+ * comment, so two comments cannot claim the same slot.
+ */
+export interface ICommentStatusDTO extends ICommentInfoDTO {
+  /** Position in the list, from 0. Also the order it posts in. */
+  order: number;
+  /** The text as it was sent, so a status row is readable without the request. */
+  text?: string;
+  /** Minutes waited after the post went live. `0` means immediately. */
+  delayMinutes?: number;
+  /** The image attached, if any. Facebook only; dropped elsewhere with a reason. */
+  imageUrl?: string;
+  /** Set when this comment was copied from the account's saved defaults. */
+  defaultCommentId?: string;
 }
 
 export interface ISocialPublisherPostPlatform {
@@ -273,12 +297,22 @@ export interface ISocialPublisherPostTikTokPostDetails extends ISocialPublisherP
   privacy_level: string;
   /** Per-platform comment status — TikTok always reports `notSupported`. */
   commentInfo?: ICommentInfoDTO;
+  /** One entry per comment, every one of them `notSupported` on TikTok. */
+  comments?: ICommentStatusDTO[];
 }
 export interface ISocialPublisherPostFacebookPagePostDetails extends ISocialPublisherPostAccount {
   description: string;
   title: string;
   /** Per-platform comment status (only present when a comment was requested). */
   commentInfo?: ICommentInfoDTO;
+  /**
+   * One entry per comment on this platform, in posting order.
+   *
+   * Present when the post was created with `comments[]`. `commentInfo` above
+   * mirrors the first entry, so a caller written before the list existed keeps
+   * working.
+   */
+  comments?: ICommentStatusDTO[];
 }
 
 export interface ISocialPublisherPostInstagramPostDetails extends ISocialPublisherPostAccount {
@@ -287,6 +321,14 @@ export interface ISocialPublisherPostInstagramPostDetails extends ISocialPublish
   is_published_to_both_feed_and_story: boolean;
   /** Per-platform comment status (only present when a comment was requested). */
   commentInfo?: ICommentInfoDTO;
+  /**
+   * One entry per comment on this platform, in posting order.
+   *
+   * Present when the post was created with `comments[]`. `commentInfo` above
+   * mirrors the first entry, so a caller written before the list existed keeps
+   * working.
+   */
+  comments?: ICommentStatusDTO[];
 }
 
 export interface ISocialPublisherPostYouTubePostDetails extends ISocialPublisherPostAccount {
@@ -301,6 +343,14 @@ export interface ISocialPublisherPostYouTubePostDetails extends ISocialPublisher
   localizations: any;
   /** Per-platform comment status (only present when a comment was requested). */
   commentInfo?: ICommentInfoDTO;
+  /**
+   * One entry per comment on this platform, in posting order.
+   *
+   * Present when the post was created with `comments[]`. `commentInfo` above
+   * mirrors the first entry, so a caller written before the list existed keeps
+   * working.
+   */
+  comments?: ICommentStatusDTO[];
 }
 
 export interface ISocialPublisherPostNextPreviousResponse {

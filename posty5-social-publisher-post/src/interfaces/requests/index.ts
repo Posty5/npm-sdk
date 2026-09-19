@@ -59,7 +59,10 @@ export interface IImageMediaRequest {
 
 /**
  * Image-post create request (workspace target).
- * Image posts cost **5 credits** + 1 for an optional auto-comment.
+ * Image posts cost **50 credits**, and each comment that actually posts is a
+ * further **25**. Both numbers come from the API's plan data
+ * (`socialMediaPublisher.imagePost` and `socialMediaPublisher.commentOnPost`);
+ * the "5 credits + 1" this line used to carry was wrong on both halves.
  * YouTube community posts are always reported as `notSupported`.
  */
 export interface ICreateImagePostToWorkspaceRequest {
@@ -76,7 +79,24 @@ export interface ICreateImagePostToWorkspaceRequest {
   facebook?: IFacebookPageConfig;
   instagram?: IInstagramConfig;
   schedule?: IScheduleConfig;
+  /**
+   * A single post-publish comment.
+   *
+   * @deprecated Use {@link comments} instead. Kept for one major version so
+   * existing callers keep compiling; the API refuses a request carrying BOTH,
+   * so send one or the other.
+   */
   comment?: ICommentRequest;
+  /**
+   * Up to {@link MAX_POST_COMMENTS} post-publish comments, in the order they
+   * post.
+   *
+   * Each carries its own delay, its own optional image and its own per-platform
+   * flags — see {@link ICommentRequest}. **25 credits each**, charged per
+   * comment that actually posts; a comment aimed at no enabled platform is
+   * dropped before it is charged.
+   */
+  comments?: ICommentRequest[];
   tag?: string;
   refId?: string;
 }
@@ -95,22 +115,84 @@ export interface ICreateImagePostToAccountRequest {
   facebook?: IFacebookPageConfig;
   instagram?: IInstagramConfig;
   schedule?: IScheduleConfig;
+  /**
+   * A single post-publish comment.
+   *
+   * @deprecated Use {@link comments} instead. Kept for one major version so
+   * existing callers keep compiling; the API refuses a request carrying BOTH,
+   * so send one or the other.
+   */
   comment?: ICommentRequest;
+  /**
+   * Up to {@link MAX_POST_COMMENTS} post-publish comments, in the order they
+   * post.
+   *
+   * Each carries its own delay, its own optional image and its own per-platform
+   * flags — see {@link ICommentRequest}. **25 credits each**, charged per
+   * comment that actually posts; a comment aimed at no enabled platform is
+   * dropped before it is charged.
+   */
+  comments?: ICommentRequest[];
   tag?: string;
   refId?: string;
 }
 
+/** At most this many comments may ride on one post. Enforced server-side. */
+export const MAX_POST_COMMENTS = 5;
+
+/** Longest a comment may be. */
+export const MAX_COMMENT_LENGTH = 2200;
+
+/** Longest a comment may wait after the post before it is published. */
+export const MAX_COMMENT_DELAY_MINUTES = 24 * 60;
+
 /**
- * Optional post-publish comment.
- * Adds a comment under each platform post once it is published.
+ * One post-publish comment.
  *
- * Pricing: +1 credit on top of the video charge (Pro plan).
- * TikTok comments are not supported by the platform and will always
- * be reported as `notSupported` in the status response.
+ * Posted under each enabled platform post once the post itself is live, either
+ * immediately or after a delay.
+ *
+ * **Pricing: 25 credits per comment**, charged per comment that actually posts —
+ * not per post, and not "+1". Earlier versions of this file documented "+1
+ * credit", which was never the price: the API charges
+ * `socialMediaPublisher.commentOnPost`, which its plan data prices at 25. A
+ * comment aimed at no enabled platform is dropped before it is charged.
+ *
+ * **TikTok is not supported** and never will be through this API: TikTok exposes
+ * no public comment-posting endpoint. A comment aimed at it reports
+ * `notSupported` rather than failing.
+ *
+ * **An image is Facebook only.** Instagram's and YouTube's comment endpoints are
+ * text-only, so an image bound for either is dropped with a reason rather than
+ * failing the comment.
  */
 export interface ICommentRequest {
-  /** Comment text (1..2200 characters). */
+  /** Comment text (1..{@link MAX_COMMENT_LENGTH} characters). Required. */
   text: string;
+  /**
+   * How long to wait after the post is published, in minutes.
+   *
+   * `0` or omitted posts it as soon as the post is live. Maximum
+   * {@link MAX_COMMENT_DELAY_MINUTES} (24 hours) — the API refuses more.
+   */
+  delayMinutes?: number;
+  /**
+   * A publicly reachable image to attach. **Facebook only** (see above).
+   *
+   * Use this OR {@link imageStorageKey}, not both. A URL costs us no storage and
+   * is available on every plan; uploading is plan-gated.
+   */
+  imageUrl?: string;
+  /**
+   * The storage key of an image uploaded through the account's
+   * `default-comments/upload-urls` endpoint.
+   *
+   * Prefer {@link imageUrl} unless you have uploaded the bytes yourself: the key
+   * is what tells the API the object is OURS, which is what its cleanup path
+   * uses when the post or the comment is deleted. Sending a public URL in this
+   * field makes the image read as external and it will never be cleaned up.
+   */
+  imageStorageKey?: string;
   /** Post the comment on Facebook (default: true). */
   postToFacebook?: boolean;
   /** Post the comment on Instagram (default: true). */
@@ -133,11 +215,23 @@ export interface ICreateSocialPublisherPostRequest {
   thumbURL?: string;
   schedule?: IScheduleConfig;
   /**
-   * Optional post-publish comment (Pro plan, +1 credit).
-   * Once the video is published, a comment is added under each enabled
-   * platform post. TikTok is not supported.
+   * A single post-publish comment.
+   *
+   * @deprecated Use {@link comments} instead. Kept for one major version so
+   * existing callers keep compiling; the API refuses a request carrying BOTH,
+   * so send one or the other.
    */
   comment?: ICommentRequest;
+  /**
+   * Up to {@link MAX_POST_COMMENTS} post-publish comments, in the order they
+   * post.
+   *
+   * Each carries its own delay, its own optional image and its own per-platform
+   * flags — see {@link ICommentRequest}. **25 credits each**, charged per
+   * comment that actually posts; a comment aimed at no enabled platform is
+   * dropped before it is charged.
+   */
+  comments?: ICommentRequest[];
   /**
    * Tag (optional)
    * Use this field to filter posts by tag.
@@ -164,11 +258,23 @@ export interface ICreateSocialPublisherAccountPostRequest {
   thumbURL?: string;
   schedule?: IScheduleConfig;
   /**
-   * Optional post-publish comment (Pro plan, +1 credit).
-   * Once the video is published, a comment is added under each enabled
-   * platform post. TikTok is not supported.
+   * A single post-publish comment.
+   *
+   * @deprecated Use {@link comments} instead. Kept for one major version so
+   * existing callers keep compiling; the API refuses a request carrying BOTH,
+   * so send one or the other.
    */
   comment?: ICommentRequest;
+  /**
+   * Up to {@link MAX_POST_COMMENTS} post-publish comments, in the order they
+   * post.
+   *
+   * Each carries its own delay, its own optional image and its own per-platform
+   * flags — see {@link ICommentRequest}. **25 credits each**, charged per
+   * comment that actually posts; a comment aimed at no enabled platform is
+   * dropped before it is charged.
+   */
+  comments?: ICommentRequest[];
   /**
    * Tag (optional)
    * Use this field to filter posts by tag.
@@ -192,8 +298,24 @@ export interface IPostSetting {
   instagram?: IInstagramConfig;
   schedule?: IScheduleConfig;
   source: SocialPublisherPostSourceType;
-  /** Optional post-publish comment (Pro plan, +1 credit). TikTok is not supported. */
+  /**
+   * A single post-publish comment.
+   *
+   * @deprecated Use {@link comments} instead. Kept for one major version so
+   * existing callers keep compiling; the API refuses a request carrying BOTH,
+   * so send one or the other.
+   */
   comment?: ICommentRequest;
+  /**
+   * Up to {@link MAX_POST_COMMENTS} post-publish comments, in the order they
+   * post.
+   *
+   * Each carries its own delay, its own optional image and its own per-platform
+   * flags — see {@link ICommentRequest}. **25 credits each**, charged per
+   * comment that actually posts; a comment aimed at no enabled platform is
+   * dropped before it is charged.
+   */
+  comments?: ICommentRequest[];
   /** Optional caller-supplied tag, persisted on the created post for filtering. */
   tag?: string;
   /** Optional caller-supplied reference ID, persisted on the created post for filtering. */
@@ -209,8 +331,24 @@ export interface IAccountPostSetting {
   instagram?: IInstagramConfig;
   schedule?: IScheduleConfig;
   source: SocialPublisherPostSourceType;
-  /** Optional post-publish comment (Pro plan, +1 credit). TikTok is not supported. */
+  /**
+   * A single post-publish comment.
+   *
+   * @deprecated Use {@link comments} instead. Kept for one major version so
+   * existing callers keep compiling; the API refuses a request carrying BOTH,
+   * so send one or the other.
+   */
   comment?: ICommentRequest;
+  /**
+   * Up to {@link MAX_POST_COMMENTS} post-publish comments, in the order they
+   * post.
+   *
+   * Each carries its own delay, its own optional image and its own per-platform
+   * flags — see {@link ICommentRequest}. **25 credits each**, charged per
+   * comment that actually posts; a comment aimed at no enabled platform is
+   * dropped before it is charged.
+   */
+  comments?: ICommentRequest[];
   /** Optional caller-supplied tag, persisted on the created post for filtering. */
   tag?: string;
   /** Optional caller-supplied reference ID, persisted on the created post for filtering. */
@@ -299,10 +437,23 @@ export interface IPublishOptions {
   refId?: string;
 
   /**
-   * Optional post-publish comment (Pro plan, +1 credit).
-   * TikTok comments are not supported.
+   * A single post-publish comment.
+   *
+   * @deprecated Use {@link comments} instead. Kept for one major version so
+   * existing callers keep compiling; the API refuses a request carrying BOTH,
+   * so send one or the other.
    */
   comment?: ICommentRequest;
+  /**
+   * Up to {@link MAX_POST_COMMENTS} post-publish comments, in the order they
+   * post.
+   *
+   * Each carries its own delay, its own optional image and its own per-platform
+   * flags — see {@link ICommentRequest}. **25 credits each**, charged per
+   * comment that actually posts; a comment aimed at no enabled platform is
+   * dropped before it is charged.
+   */
+  comments?: ICommentRequest[];
 }
 
 /**
@@ -374,10 +525,23 @@ export interface IPublishToAccountOptions {
   refId?: string;
 
   /**
-   * Optional post-publish comment (Pro plan, +1 credit).
-   * TikTok comments are not supported.
+   * A single post-publish comment.
+   *
+   * @deprecated Use {@link comments} instead. Kept for one major version so
+   * existing callers keep compiling; the API refuses a request carrying BOTH,
+   * so send one or the other.
    */
   comment?: ICommentRequest;
+  /**
+   * Up to {@link MAX_POST_COMMENTS} post-publish comments, in the order they
+   * post.
+   *
+   * Each carries its own delay, its own optional image and its own per-platform
+   * flags — see {@link ICommentRequest}. **25 credits each**, charged per
+   * comment that actually posts; a comment aimed at no enabled platform is
+   * dropped before it is charged.
+   */
+  comments?: ICommentRequest[];
 }
 
 /**
@@ -437,10 +601,23 @@ export interface IQuickPublishBaseOptions {
   refId?: string;
 
   /**
-   * Optional post-publish comment (Pro plan, +1 credit).
-   * TikTok comments are not supported.
+   * A single post-publish comment.
+   *
+   * @deprecated Use {@link comments} instead. Kept for one major version so
+   * existing callers keep compiling; the API refuses a request carrying BOTH,
+   * so send one or the other.
    */
   comment?: ICommentRequest;
+  /**
+   * Up to {@link MAX_POST_COMMENTS} post-publish comments, in the order they
+   * post.
+   *
+   * Each carries its own delay, its own optional image and its own per-platform
+   * flags — see {@link ICommentRequest}. **25 credits each**, charged per
+   * comment that actually posts; a comment aimed at no enabled platform is
+   * dropped before it is charged.
+   */
+  comments?: ICommentRequest[];
 }
 
 /**

@@ -190,33 +190,67 @@ const postId = await client.publishShortVideo({
 console.log("Published to YouTube and TikTok:", postId);
 ```
 
-**Example - Auto-Comment After Publish (Pro plan, +1 credit):**
+**Example - Comments After Publish (25 credits each):**
 
 ```typescript
-// Publish a video and queue a comment for each platform.
-// TikTok comments are not supported â€” the platform will always
-// report `commentInfo.currentStatus === "notSupported"`.
+// Publish a video and queue up to five comments under each platform post.
+// TikTok is never one of them: it exposes no public comment-posting endpoint,
+// so a comment aimed at it reports `notSupported` rather than failing.
 const postId = await client.publishShortVideo({
   workspaceId: "workspace-123",
   video: videoFile,
   youtube: { title: "Launch day", description: "We shipped!", tags: ["launch"] },
   facebook: { description: "We shipped!" },
   instagram: { description: "We shipped! ðŸš€" },
-  comment: {
-    text: "Drop your favourite feature below ðŸ‘‡",
-    postToFacebook: true,
-    postToInstagram: true,
-    postToYoutube: true,
-    // postToTiktok defaults to false â€” TikTok does not support API comments
-  },
+  // Up to five, in the order they post. 25 credits each, charged per comment
+  // that actually posts.
+  comments: [
+    {
+      text: "Drop your favourite feature below",
+      postToFacebook: true,
+      postToInstagram: true,
+      postToYoutube: true,
+      // postToTiktok defaults to false - TikTok exposes no comment API
+    },
+    {
+      // An hour later, to catch the second wave.
+      text: "Still reading? The changelog is in the description.",
+      delayMinutes: 60,
+    },
+    {
+      // An image is Facebook only; Instagram and YouTube comments are
+      // text-only, so it is dropped there with a reason rather than failing.
+      text: "Here is the before and after.",
+      imageUrl: "https://cdn.example.com/before-after.jpg",
+      postToFacebook: true,
+      postToInstagram: false,
+      postToYoutube: false,
+    },
+  ],
 });
 
-// Later, poll status to see how each comment landed:
+// Later, poll status to see how each comment landed.
 const status = await client.getStatus(postId);
-console.log("YouTube comment:", status.youtube?.commentInfo?.currentStatus);
-console.log("Facebook comment URL:", status.facebook?.commentInfo?.commentURL);
-console.log("TikTok comment:", status.tiktok?.commentInfo?.currentStatus); // "notSupported"
+
+// One entry per comment, in posting order.
+for (const comment of status.facebook?.comments ?? []) {
+  console.log(`#${comment.order}`, comment.currentStatus, comment.commentURL);
+}
+
+// TikTok reports every comment as notSupported - that is the permanent answer,
+// not a failure.
+console.log("TikTok:", status.tiktok?.comments?.[0]?.currentStatus); // "notSupported"
 ```
+
+> **Migrating from `comment`.** The singular field still compiles and is
+> deprecated for one major version. Send one or the other - the API refuses a
+> request carrying both. The singular `commentInfo` on each platform's status
+> also stays, mirroring the first entry of `comments`.
+
+> **Pricing.** 25 credits per comment that actually posts, from the API's
+> `socialMediaPublisher.commentOnPost`. Earlier releases of this README said
+> "+1 credit", which was never the price. A comment aimed at no enabled platform
+> is dropped before it is charged.
 
 **Example - Multi-Platform Publishing:**
 
