@@ -1,7 +1,7 @@
 # @posty5/store
 
 Online Store management SDK for the [Posty5](https://posty5.com) API — run a
-store's **catalogue, orders, tags, customers and shipping** from anywhere.
+store's **catalogue, orders, tags, customers, shipping and dropshipping suppliers** from anywhere.
 
 ## Install
 
@@ -15,7 +15,8 @@ Create an [API key](https://studio.posty5.com) and pass it to `@posty5/core`'s
 `HttpClient` (sent as the `X-API-Key` header). Every call is scoped to a store
 id and authorized by the key owner's store permission — `products.manage` for
 the catalogue and tags, `orders.*` for orders and customers, `settings.manage`
-for shipping. A store's owner holds all of them.
+for shipping, and `suppliers.view` / `suppliers.manage` / `suppliers.import` /
+`suppliers.orders.manage` for dropshipping. A store's owner holds all of them.
 
 > An API key carries the full identity of the user who created it; it is not
 > scoped to a single store. Treat it as you would a password.
@@ -28,8 +29,8 @@ const http = new HttpClient({ apiKey: process.env.POSTY5_API_KEY });
 const store = new StoreClient(http);
 ```
 
-The client is split into five areas: `store.products`, `store.orders`,
-`store.tags`, `store.customers` and `store.shipping`.
+The client is split into six areas: `store.products`, `store.orders`,
+`store.tags`, `store.customers`, `store.shipping` and `store.suppliers`.
 
 ## Products
 
@@ -162,6 +163,13 @@ const workbook = await store.orders.exportToExcel(storeId, { status: "delivered"
 The status workflow is enforced server-side: `pending → confirmed → processing →
 shipped → delivered`, with `cancelled`/`refused` reachable from any non-terminal
 state and the three terminal states accepting nothing further.
+
+An order with dropshipped items is split into parts: `order.fulfilmentGroups`
+holds one for the store's own items and one per supplier connection, each with
+its own `status` and `shipment`. The order moves at the pace of its slowest
+part, so on a multi-part order `shipped` and `delivered` are reached by the
+parts rather than set by hand. List rows carry `fulfilmentSummary`, and
+`search(storeId, { needsAttention: true })` finds orders with a paused part.
 
 ## Tags
 
@@ -303,6 +311,60 @@ An unpriced bracket (`fee: null`) is safe to save - a parcel landing in it falls
 through to the flat chain rather than shipping free - and `unpricedCount` on the
 assignment tells you how many are still waiting.
 
+## Suppliers
+
+Dropshipping: connect a supplier account, import its products, and follow the
+orders sent to it. Connecting, importing, sending and paying need the store
+owner's plan to include dropshipping (Pro and above).
+
+```ts
+import { isQueuedImport } from "@posty5/store";
+
+// 1. Connect — credential keys come from the catalogue entry.
+const { items: catalogue } = await store.suppliers.catalogue(storeId);
+const cj = catalogue.find((entry) => entry.key === "cjdropshipping")!;
+// cj.credentialFields → [{ key: "apiKey", label: "API key", secret: true }]
+const connection = await store.suppliers.connect(storeId, {
+  supplierKey: "cjdropshipping",
+  mode: "test", // CJdropshipping has a sandbox: test orders are never charged or shipped
+  credentials: { apiKey: process.env.CJ_API_KEY! },
+});
+
+// 2. Decide what it may do on its own — every connection starts on "manual".
+await store.suppliers.updateAutomation(storeId, connection._id, { mode: "submit", maxCostPerOrder: 50 });
+
+// 3. Browse, preview, import.
+const page = await store.suppliers.browseProducts(storeId, connection._id, { q: "mug" });
+const request = { items: [{ supplierProductId: page.items[0].supplierProductId }] };
+const preview = await store.suppliers.previewImport(storeId, connection._id, request);
+if (!preview.rows[0].duplicateOf) {
+  const result = await store.suppliers.importProducts(storeId, connection._id, request);
+  if (isQueuedImport(result)) {
+    const status = await store.suppliers.getImportStatus(storeId, result.jobId);
+  }
+}
+
+// 4. Watch the queue and act on a paused part.
+const queue = await store.suppliers.listSupplierOrders(storeId, { needsReview: true });
+for (const supplierOrder of queue.items) {
+  if (supplierOrder.reviewReason === "costChanged") {
+    await store.suppliers.retry(storeId, supplierOrder._id, { acceptCost: true });
+  }
+}
+```
+
+- **Credentials are write-only.** No response carries them; a connection says
+  only `hasCredentials`. The SDK never logs a request body.
+- **Paused outcomes throw.** `submitGroup`, `retry` and `pay` answer a pause
+  (`needsReview`, `failed`, a part already being sent) as a 400, so they throw
+  the core `ValidationError`; read the supplier order again to see why.
+- **No duplicates.** A second `submitGroup` finds the first supplier order, and
+  `pay` reads the supplier's status first — an order already paid there is
+  recorded, not paid again.
+- **Money.** A key holding `suppliers.orders.manage` can spend the merchant's
+  balance at the supplier. Treat it accordingly.
+- Supplier routes page by number (`page`, `pageSize`), not by cursor.
+
 ## API
 
 ### `store.products` — `/api/store-products`
@@ -408,6 +470,41 @@ assignment tells you how many are still waiting.
 | `setDefaultAssignment(storeId, assignmentId)` | `PUT /:storeId/assignments/:assignmentId/default` |
 | `removeAssignment(storeId, assignmentId)` | `DELETE /:storeId/assignments/:assignmentId` |
 
+### `store.suppliers` — `/api/store-suppliers`
+
+| Method | Endpoint | Permission |
+| --- | --- | --- |
+| `catalogue(storeId)` | `GET /:storeId/catalogue` | `suppliers.view` |
+| `list(storeId)` | `GET /:storeId` | `suppliers.view` |
+| `connect(storeId, input)` | `POST /:storeId` | `suppliers.manage` |
+| `startOAuth(storeId, input)` | `POST /:storeId/oauth/start` | `suppliers.manage` |
+| `replaceCredentials(storeId, id, input)` | `PUT /:storeId/:id` | `suppliers.manage` |
+| `updateSettings(storeId, id, input)` | `PUT /:storeId/:id/settings` | `suppliers.manage` |
+| `updateAutomation(storeId, id, automation)` | `PUT /:storeId/:id/automation` | `suppliers.manage` |
+| `setEnabled(storeId, id, enabled)` | `PUT /:storeId/:id/enabled` | `suppliers.manage` |
+| `test(storeId, id)` | `POST /:storeId/:id/test` | `suppliers.manage` |
+| `getBalance(storeId, id)` | `GET /:storeId/:id/balance` | `suppliers.view` |
+| `getDisconnectImpact(storeId, id)` | `GET /:storeId/:id/impact` | `suppliers.view` |
+| `disconnect(storeId, id, { force? })` | `DELETE /:storeId/:id` | `suppliers.manage` |
+| `browseProducts(storeId, id, filters?)` | `GET /:storeId/:id/products` | `suppliers.import` |
+| `getProduct(storeId, id, supplierProductId)` | `GET /:storeId/:id/products/:supplierProductId` | `suppliers.import` |
+| `resolveUrl(storeId, id, url)` | `POST /:storeId/:id/products/resolve-url` | `suppliers.import` |
+| `previewImport(storeId, id, input)` | `POST /:storeId/:id/import/preview` | `suppliers.import` |
+| `importProducts(storeId, id, input)` | `POST /:storeId/:id/import` | `suppliers.import` |
+| `getImportStatus(storeId, jobId)` | `GET /:storeId/imports/:jobId` | `suppliers.import` |
+| `listLinks(storeId, filters?)` | `GET /:storeId/links` | `suppliers.view` |
+| `createLink(storeId, input)` | `POST /:storeId/links` | `suppliers.import` |
+| `updateLink(storeId, linkId, changes)` | `PUT /:storeId/links/:linkId` | `suppliers.import` |
+| `deleteLink(storeId, linkId)` | `DELETE /:storeId/links/:linkId` | `suppliers.import` |
+| `syncLink(storeId, linkId)` | `POST /:storeId/links/:linkId/sync` | `suppliers.import` |
+| `listSupplierOrders(storeId, filters?)` | `GET /:storeId/orders` | `suppliers.view` |
+| `getSupplierOrder(storeId, supplierOrderId)` | `GET /:storeId/orders/:supplierOrderId` | `suppliers.view` |
+| `submitGroup(storeId, orderId, groupKey, { payNow? })` | `POST /:storeId/orders/:orderId/groups/:groupKey/submit` | `suppliers.orders.manage` |
+| `retry(storeId, supplierOrderId, { acceptCost? })` | `POST /:storeId/orders/:supplierOrderId/retry` | `suppliers.orders.manage` |
+| `pay(storeId, supplierOrderId)` | `POST /:storeId/orders/:supplierOrderId/pay` | `suppliers.orders.manage` |
+| `cancel(storeId, supplierOrderId)` | `POST /:storeId/orders/:supplierOrderId/cancel` | `suppliers.orders.manage` |
+| `fulfilGroupManually(storeId, orderId, groupKey)` | `POST /:storeId/orders/:orderId/groups/:groupKey/fulfil-manually` | `suppliers.orders.manage` |
+
 ### Shorthands
 
 `bulkCreateProducts`, `searchOrders`, `createOrder` and `updateOrderStatus`
@@ -445,7 +542,9 @@ await writeFile(file.fileName ?? "orders.xlsx", Buffer.from(file.data));
 Product, order and store operations (`addProduct`, `manualOrder`,
 `orderStatusChange`, `exportOrders`, AI generation) are charged to the store
 owner per the account's plan; see `GET /api/plans/operation-costs`. Tag
-operations are free and unmetered.
+operations are free and unmetered. Importing a supplier product is charged like
+adding a product; connecting, linking, syncing and every supplier-order action
+are free.
 
 ## License
 

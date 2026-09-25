@@ -43,6 +43,18 @@ if (!TEST_CONFIG.apiKey) {
   console.log(`🌐 Base URL: ${TEST_CONFIG.baseUrl}\n`);
 }
 
+/**
+ * Store dropshipping fixtures (`store-suppliers.test.ts`). Every live store test
+ * skips when `storeId` is empty, so a missing fixture is visible, not a failure.
+ * The integration must be a `test`-mode connection so no money can move.
+ */
+export const STORE_TEST_CONFIG = {
+  storeId: process.env.POSTY5_TEST_STORE_ID || "",
+  supplierIntegrationId: process.env.POSTY5_TEST_SUPPLIER_INTEGRATION_ID || "",
+  supplierProductId: process.env.POSTY5_TEST_SUPPLIER_PRODUCT_ID || "",
+  productId: process.env.POSTY5_TEST_PRODUCT_ID || "",
+};
+
 // Global test timeout
 jest.setTimeout(30000);
 

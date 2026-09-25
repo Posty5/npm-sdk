@@ -4,6 +4,8 @@ export * from "./orders";
 export * from "./tags";
 export * from "./customers";
 export * from "./shipping";
+export * from "./suppliers";
+export * from "./supplier-orders";
 
 import { IBulkImportReport } from "./common";
 

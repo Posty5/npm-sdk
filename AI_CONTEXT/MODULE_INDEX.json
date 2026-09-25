@@ -44,7 +44,7 @@
     },
     {
       "name": "store",
-      "purpose": "Online Store management: products (incl. per-section saves, clone, Excel, AI), orders, tags, customers and shipping. Split into five sub-clients on StoreClient.",
+      "purpose": "Online Store management: products (incl. per-section saves, clone, Excel, AI), orders (incl. dropshipping parts), tags, customers, shipping and dropshipping suppliers. Split into six sub-clients on StoreClient. In the workspace and the publish workflow since 4.3.0.",
       "primary_path": "posty5-store/src"
     }
   ]

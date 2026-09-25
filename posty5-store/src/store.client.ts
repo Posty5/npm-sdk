@@ -4,6 +4,7 @@ import { StoreOrdersClient } from "./clients/orders.client";
 import { StoreProductsClient } from "./clients/products.client";
 import { StoreShippingClient } from "./clients/shipping.client";
 import { StoreTagsClient } from "./clients/tags.client";
+import { StoreSuppliersClient } from "./clients/suppliers.client";
 import {
   IBulkImportReport,
   IBulkProductInput,
@@ -22,7 +23,9 @@ import {
  * `X-API-Key` header). Every call is scoped to a store id and authorized by the
  * key owner's store permission: `products.manage` for the catalogue and tags,
  * `orders.view` / `orders.create` / `orders.updateStatus` for orders and
- * customers, `settings.manage` for shipping. A store's owner holds all of them.
+ * customers, `settings.manage` for shipping, and `suppliers.view` /
+ * `suppliers.manage` / `suppliers.import` / `suppliers.orders.manage` for
+ * dropshipping. A store's owner holds all of them.
  *
  * An API key carries the full identity of the user who created it — it is not
  * scoped to one store. Treat it as you would a password.
@@ -60,6 +63,8 @@ export class StoreClient {
   public readonly customers: StoreCustomersClient;
   /** Shipping countries, cities and fees. */
   public readonly shipping: StoreShippingClient;
+  /** Dropshipping: supplier connections, imports, product links and supplier orders. */
+  public readonly suppliers: StoreSuppliersClient;
 
   constructor(http: HttpClient) {
     this.products = new StoreProductsClient(http);
@@ -67,6 +72,7 @@ export class StoreClient {
     this.tags = new StoreTagsClient(http);
     this.customers = new StoreCustomersClient(http);
     this.shipping = new StoreShippingClient(http);
+    this.suppliers = new StoreSuppliersClient(http);
   }
 
   // ─── Shorthands ───────────────────────────────────────────────────────────
@@ -90,7 +96,11 @@ export class StoreClient {
     return this.orders.create(storeId, order);
   }
 
-  /** Shorthand for `orders.updateStatus`. */
+  /**
+   * Shorthand for `orders.updateStatus`. On an order in several parts, `shipped`
+   * and `delivered` are reached by the parts themselves (the order moves at the
+   * pace of its slowest part), not set by hand.
+   */
   async updateOrderStatus(storeId: string, orderId: string, status: StoreOrderStatus, note?: string): Promise<IStoreOrder> {
     return this.orders.updateStatus(storeId, orderId, status, note);
   }

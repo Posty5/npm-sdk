@@ -3,7 +3,7 @@
 | Public surface | Behavior | Source |
 | --- | --- | --- |
 | `HttpClient` | get/post/put/patch/delete, getBinary (file downloads), setApiKey, clearAuth. | `posty5-core/src/http/client.ts` |
-| `StoreClient` | Five sub-clients — `products`, `orders`, `tags`, `customers`, `shipping` — plus four legacy shorthands. | `posty5-store/src/store.client.ts` |
+| `StoreClient` | Six sub-clients — `products`, `orders`, `tags`, `customers`, `shipping`, `suppliers` (dropshipping, `/api/store-suppliers`) — plus four legacy shorthands. | `posty5-store/src/store.client.ts` |
 | `ShortLinkClient` | list/get/create/update/delete. | `posty5-short-link/src/short-link.client.ts` |
 | `QRCodeClient` | create/update by QR type plus get/list/delete. | `posty5-qr-code/src/qr-code.client.ts` |
 | `HtmlHostingClient` | file/GitHub create/update, get/list/lookup/forms/cache/delete. | `posty5-html-hosting/src/html-hosting.client.ts` |

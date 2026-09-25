@@ -1,3 +1,4 @@
+import { IOrderFulfilmentGroup, IOrderFulfilmentSummary, IStoreSupplierOrder } from "./supplier-orders";
 import { IDateRangeParams, IPaginationParams } from "./common";
 
 export type StoreOrderStatus =
@@ -32,6 +33,8 @@ export interface IOrderSearchFilters extends IPaginationParams, IDateRangeParams
   productId?: string;
   /** Orders containing any product carrying one of these tags. */
   tagIds?: string[];
+  /** Dropshipping: only orders with a part that needs attention. */
+  needsAttention?: boolean;
 }
 
 export interface IStoreOrderSummary {
@@ -45,6 +48,8 @@ export interface IStoreOrderSummary {
   orderSource: string;
   createdFrom: string;
   createdAt: string;
+  /** Dropshipping: progress across the order's parts. */
+  fulfilmentSummary?: IOrderFulfilmentSummary;
 }
 
 /** Full order details — loosely typed, the API returns the whole document. */
@@ -56,6 +61,13 @@ export interface IStoreOrder {
   orderSource: string;
   createdFrom: string;
   totals: { subtotal: number; shipping: number; total: number; currency: string };
+  /**
+   * Dropshipping: the order's parts — one for the store's own items and one per
+   * supplier connection. An order from before parts existed has one merchant part.
+   */
+  fulfilmentGroups?: IOrderFulfilmentGroup[];
+  /** The supplier orders behind the parts; present only for a caller holding `suppliers.view`. */
+  supplierOrders?: IStoreSupplierOrder[];
   [key: string]: unknown;
 }
 

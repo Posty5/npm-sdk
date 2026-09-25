@@ -80,6 +80,15 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      # Last on purpose: it was never published by CI before 4.3.0, and a run that
+      # stops earlier (an unchanged package's version already exists) can be
+      # re-run from workflow_dispatch with this step the easiest to reach.
+      - name: Publish posty5-store
+        working-directory: ./posty5-store
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: 📧 Send publish email notification
         if: always() # if the publish succeeds or fails
         uses: dawidd6/action-send-mail@v18

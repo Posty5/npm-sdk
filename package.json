@@ -22,7 +22,8 @@
         "posty5-html-hosting-variables",
         "posty5-html-hosting-form-submission",
         "posty5-social-publisher-workspace",
-        "posty5-social-publisher-post"
+        "posty5-social-publisher-post",
+        "posty5-store"
     ],
     "devDependencies": {
         "@types/jest": "^29.5.11",
@@ -37,6 +38,7 @@
         "typescript",
         "short-link",
         "qr-code",
+        "store",
         "html-hosting",
         "social-publisher"
     ],
