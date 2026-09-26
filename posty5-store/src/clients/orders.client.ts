@@ -77,6 +77,9 @@ export class StoreOrdersClient extends BaseStoreClient {
    * reachable from any non-terminal state and the terminal states accepting
    * nothing further. Charges the deferred `orderStatusChange`. The note is
    * customer-facing — it reaches the status event and the notification email.
+   * On an order in several parts (`fulfilmentGroups`), `shipped` and `delivered`
+   * are reached by the parts themselves — the order moves at the pace of its
+   * slowest part — not set by hand.
    */
   async updateStatus(storeId: string, orderId: string, status: StoreOrderStatus, note?: string): Promise<IStoreOrder> {
     const res = await this.http.post<IStoreOrder>(`${this.base}/${storeId}/${orderId}/status`, { status, note: note ?? "" });

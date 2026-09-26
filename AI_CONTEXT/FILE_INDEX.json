@@ -72,6 +72,70 @@
       "role": "Social post/upload client/types."
     },
     {
+      "path": "posty5-store/src",
+      "role": "Online store client/types (@posty5/store): products, orders, tags, customers, shipping, suppliers."
+    },
+    {
+      "path": "posty5-store/src/store.client.ts",
+      "role": "StoreClient facade: six sub-clients and the four shorthands."
+    },
+    {
+      "path": "posty5-store/src/clients/base.client.ts",
+      "role": "BaseStoreClient: shared http handle and toQuery()."
+    },
+    {
+      "path": "posty5-store/src/clients/products.client.ts",
+      "role": "store.products - /api/store-products."
+    },
+    {
+      "path": "posty5-store/src/clients/orders.client.ts",
+      "role": "store.orders - /api/store-orders."
+    },
+    {
+      "path": "posty5-store/src/clients/tags.client.ts",
+      "role": "store.tags - /api/store-tags."
+    },
+    {
+      "path": "posty5-store/src/clients/customers.client.ts",
+      "role": "store.customers - /api/store-customers."
+    },
+    {
+      "path": "posty5-store/src/clients/shipping.client.ts",
+      "role": "store.shipping - store shipping zones, rates and carriers."
+    },
+    {
+      "path": "posty5-store/src/clients/suppliers.client.ts",
+      "role": "store.suppliers - /api/store-suppliers (dropshipping: connections, catalogue, import, links, supplier orders, part actions)."
+    },
+    {
+      "path": "posty5-store/src/interfaces",
+      "role": "Store DTOs and inputs; common.ts holds cursor paging and page-number paging (IPageNumberParams, IPagedItems)."
+    },
+    {
+      "path": "posty5-store/src/interfaces/suppliers.ts",
+      "role": "Supplier vocabularies, catalogue, connection (no credential field), products, import, links."
+    },
+    {
+      "path": "posty5-store/src/interfaces/supplier-orders.ts",
+      "role": "Supplier order DTO, queue filters, action result, order parts (fulfilment groups)."
+    },
+    {
+      "path": "posty5-store/src/helpers/supplier-import.helper.ts",
+      "role": "isQueuedImport type guard for importProducts results."
+    },
+    {
+      "path": "posty5-store/README.md",
+      "role": "@posty5/store README (Suppliers walk-through, API tables)."
+    },
+    {
+      "path": "posty5-store/CHANGELOG.md",
+      "role": "@posty5/store changelog (starts at 4.3.0)."
+    },
+    {
+      "path": "__tests__/store-suppliers.test.ts",
+      "role": "store.suppliers route tests (offline stub) and fixture-gated live tests."
+    },
+    {
       "path": "__tests__",
       "role": "Live/integration-oriented Jest suite and media fixtures."
     }

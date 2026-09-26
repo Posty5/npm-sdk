@@ -103,7 +103,7 @@ export interface IStoreSupplierAutomation {
   allowUnpaidOrders: boolean;
   /** The most one order may cost at the supplier. */
   maxCostPerOrder?: number | null;
-  /** The most the supplier cost may be, as a percentage of what the shopper paid. */
+  /** The most the supplier cost may be, as a fraction of what the shopper paid (0.7 = 70%). */
   maxCostRatio?: number | null;
   /** ISO-2 countries orders may be sent to; empty means any. */
   allowedCountries: string[];

@@ -12,6 +12,7 @@
 | `posty5-html-hosting-form-submission/src` | Submission client/types. |
 | `posty5-social-publisher-workspace/src` | Social workspace client/types. |
 | `posty5-social-publisher-post/src` | Social post/upload client/types. |
+| `posty5-store/src` | Online store client/types (`@posty5/store`): `store.client.ts` facade, `clients/` (products, orders, tags, customers, shipping, suppliers), `interfaces/`, `helpers/`. |
 | `__tests__` | Live/integration-oriented Jest suite and media fixtures. |
 
 ## Root entrypoints

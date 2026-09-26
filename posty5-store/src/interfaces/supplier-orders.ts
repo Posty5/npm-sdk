@@ -1,3 +1,4 @@
+import { IPageNumberParams } from "./common";
 import { StoreDropshippingContractModel } from "./suppliers";
 
 /** ─── Dropshipping: supplier orders and order parts ────────────────────────
@@ -120,19 +121,6 @@ export interface IStoreSupplierOrder {
   createdAt?: string;
   updatedAt?: string;
   [key: string]: unknown;
-}
-
-/** Page-number paging (the supplier routes do not use cursors). */
-export interface IPageNumberParams {
-  page?: number;
-  pageSize?: number;
-}
-
-export interface IPagedItems<T> {
-  items: T[];
-  page: number;
-  pageSize: number;
-  total: number;
 }
 
 export interface ISupplierOrderSearchFilters extends IPageNumberParams {

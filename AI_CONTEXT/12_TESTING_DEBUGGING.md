@@ -20,7 +20,17 @@
 runs only when `POSTY5_API_KEY` and `POSTY5_TEST_STORE_ID` are set.
 `POSTY5_TEST_SUPPLIER_INTEGRATION_ID` (a **test-mode** connection),
 `POSTY5_TEST_SUPPLIER_PRODUCT_ID` and `POSTY5_TEST_PRODUCT_ID` enable the
-link/unlink round trip. The live part never connects, imports, sends or pays.
+balance/test/browse/preview reads, the automation round trip (restored in
+`finally`) and the link → update → sync → unlink round trip. Guarded, each
+skipped visibly without its variable:
+
+| Variable | Enables |
+| --- | --- |
+| `POSTY5_TEST_ALLOW_CHARGES=true` | `importProducts` of one draft (charges credits; the product is deleted afterwards). |
+| `POSTY5_TEST_ORDER_ID` + `POSTY5_TEST_GROUP_KEY` | `submitGroup`, `retry`, `pay` on a part of the test-mode connection; each must answer `testMode`. |
+| `POSTY5_TEST_ALLOW_PART_TAKEOVER=true` (with the two above) | `cancel` then `fulfilGroupManually` — ends the fixture part's supplier flow, so re-make it afterwards. |
+
+The live part never connects, disconnects or writes a credential.
 The offline part imports `@posty5/store` from its build, so run
 `npm run build:all` first.
 
