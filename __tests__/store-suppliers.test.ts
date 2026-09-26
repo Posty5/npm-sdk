@@ -122,7 +122,7 @@ describe("Store suppliers — routes (offline)", () => {
   it("maps supplier orders and encodes the part key", async () => {
     const { http, calls } = stubHttp();
     const client = new StoreSuppliersClient(http);
-    await client.listSupplierOrders("s1", { needsReview: true, page: 1 });
+    await client.listSupplierOrders("s1", { needsReview: true, pageSize: 25 });
     await client.getSupplierOrder("s1", "so1");
     await client.submitGroup("s1", "o1", "supplier:i1", { payNow: true });
     await client.retry("s1", "so1", { acceptCost: true });
@@ -138,9 +138,22 @@ describe("Store suppliers — routes (offline)", () => {
       `POST ${base}/orders/so1/cancel`,
       `POST ${base}/orders/o1/groups/supplier%3Ai1/fulfil-manually`,
     ]);
-    expect(calls[0].params).toEqual({ needsReview: "true", page: 1 });
+    expect(calls[0].params).toEqual({ needsReview: "true", pageSize: 25 });
     expect(calls[2].body).toEqual({ payNow: true });
     expect(calls[3].body).toEqual({ acceptCost: true });
+  });
+
+  it("pages supplier orders by cursor and returns the list envelope", async () => {
+    const envelope = {
+      items: [{ _id: "so2" }],
+      pagination: { nextCursor: "c3", previousCursor: "c1", hasMore: true, totalCount: 30, pageSize: 25 },
+    };
+    const { http, calls } = stubHttp(envelope);
+    const page = await new StoreSuppliersClient(http).listSupplierOrders("s1", { cursor: "c2", pageSize: 25, status: "failed" });
+    expect(calls[0]).toEqual({ method: "GET", url: `${base}/orders`, params: { cursor: "c2", pageSize: 25, status: "failed" } });
+    expect(calls[0].params).not.toHaveProperty("page");
+    expect(page).toEqual(envelope);
+    expect(page.pagination.nextCursor).toBe("c3");
   });
 
   it("tells a queued import from an inline one", () => {
@@ -190,10 +203,15 @@ describeLive("Store suppliers — live (fixture store, test-mode connection)", (
     }
   });
 
-  it("lists paused supplier orders, paged by number", async () => {
+  it("lists paused supplier orders, paged by cursor", async () => {
     const page = await store.suppliers.listSupplierOrders(storeId, { needsReview: true, pageSize: 5 });
     expect(Array.isArray(page.items)).toBe(true);
-    expect(typeof page.total).toBe("number");
+    expect(typeof page.pagination.hasMore).toBe("boolean");
+    expect(typeof page.pagination.totalCount).toBe("number");
+    if (page.pagination.hasMore) {
+      const next = await store.suppliers.listSupplierOrders(storeId, { needsReview: true, pageSize: 5, cursor: page.pagination.nextCursor! });
+      expect(Array.isArray(next.items)).toBe(true);
+    }
   });
 
   it("filters store orders by parts that need attention", async () => {

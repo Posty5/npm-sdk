@@ -318,7 +318,7 @@ orders sent to it. Connecting, importing, sending and paying need the store
 owner's plan to include dropshipping (Pro and above).
 
 ```ts
-import { isQueuedImport } from "@posty5/store";
+import { isQueuedImport, IStoreSupplierOrder } from "@posty5/store";
 
 // 1. Connect — credential keys come from the catalogue entry.
 const { items: catalogue } = await store.suppliers.catalogue(storeId);
@@ -344,9 +344,17 @@ if (!preview.rows[0].duplicateOf) {
   }
 }
 
-// 4. Watch the queue and act on a paused part.
-const queue = await store.suppliers.listSupplierOrders(storeId, { needsReview: true });
-for (const supplierOrder of queue.items) {
+// 4. Watch the queue and act on a paused part. The queue pages by cursor; read
+//    every page first, because a retry changes the list the cursor walks.
+const paused: IStoreSupplierOrder[] = [];
+let cursor: string | undefined;
+do {
+  const queue = await store.suppliers.listSupplierOrders(storeId, { needsReview: true, cursor, pageSize: 100 });
+  paused.push(...queue.items);
+  cursor = queue.pagination.hasMore ? queue.pagination.nextCursor ?? undefined : undefined;
+} while (cursor);
+
+for (const supplierOrder of paused) {
   if (supplierOrder.reviewReason === "costChanged") {
     await store.suppliers.retry(storeId, supplierOrder._id, { acceptCost: true });
   }
@@ -363,7 +371,10 @@ for (const supplierOrder of queue.items) {
   recorded, not paid again.
 - **Money.** A key holding `suppliers.orders.manage` can spend the merchant's
   balance at the supplier. Treat it accordingly.
-- Supplier routes page by number (`page`, `pageSize`), not by cursor.
+- The supplier-order queue (`listSupplierOrders`) pages by cursor like every
+  other list — `cursor` and `pageSize` (default 25, max 100), answered as
+  `{ items, pagination }`. Only the supplier's own catalogue
+  (`browseProducts`) pages by number (`page`, `pageSize`).
 
 ## API
 
@@ -513,7 +524,9 @@ remain on `StoreClient` itself and delegate to the sub-clients.
 ## Pagination
 
 Lists page by opaque cursor, not by page number, so a list stays stable while
-rows are written underneath it:
+rows are written underneath it. This includes the supplier-order queue
+(`store.suppliers.listSupplierOrders`); the one exception is a supplier's own
+catalogue (`store.suppliers.browseProducts`), which pages by `page`:
 
 ```ts
 let cursor: string | undefined;

@@ -29,26 +29,6 @@ export interface IPaginated<T> {
   pagination: IPaginationMeta;
 }
 
-/**
- * Page-number paging, for the supplier routes (`/api/store-suppliers`), which
- * page by `?page=` rather than by cursor. Deliberately not `IPaginationParams`:
- * a cursor passed to these routes would be ignored.
- */
-export interface IPageNumberParams {
-  /** 1-based page number. */
-  page?: number;
-  /** Rows per page. */
-  pageSize?: number;
-}
-
-/** A page of a page-number list. */
-export interface IPagedItems<T> {
-  items: T[];
-  page: number;
-  pageSize: number;
-  total: number;
-}
-
 /** A created-at range. Both ends are needed — one alone is ignored. */
 export interface IDateRangeParams {
   fromDate?: string;

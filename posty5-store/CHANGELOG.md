@@ -13,6 +13,11 @@ published and are not tracked here.
   suppliers connected by signing in); browsing, previewing and importing
   supplier products; product links and sync; the supplier-order queue and the
   part actions `submitGroup`, `retry`, `pay`, `cancel`, `fulfilGroupManually`.
+  `listSupplierOrders` pages by cursor like every other list: it takes
+  `IPaginationParams` (`cursor`, `pageSize` — default 25, max 100) plus the
+  filters, and returns `IPaginated<IStoreSupplierOrder>`
+  (`{ items, pagination }`). The page-number types `IPageNumberParams` and
+  `IPagedItems` that an unpublished draft used for it are gone.
 - **`isQueuedImport`** — tells a queued import (`jobId`) from an inline one.
 - **Types** for suppliers, connections (no credential field anywhere),
   products, imports, links, supplier orders and order parts.

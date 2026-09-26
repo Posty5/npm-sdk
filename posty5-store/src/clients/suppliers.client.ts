@@ -5,7 +5,7 @@ import {
   ICreateSupplierLinkInput,
   IDisconnectSupplierResult,
   IImportSupplierProductsInput,
-  IPagedItems,
+  IPaginated,
   IReplaceSupplierCredentialsInput,
   IStartSupplierOAuthInput,
   IStoreProductSupplierLink,
@@ -221,9 +221,14 @@ export class StoreSuppliersClient extends BaseStoreClient {
 
   // ─── Supplier orders ──────────────────────────────────────────────────────
 
-  /** Supplier orders, newest first, paged by number. `suppliers.view`. */
-  async listSupplierOrders(storeId: string, filters: ISupplierOrderSearchFilters = {}): Promise<IPagedItems<IStoreSupplierOrder>> {
-    const res = await this.http.get<IPagedItems<IStoreSupplierOrder>>(`${this.base}/${storeId}/orders`, { params: this.toQuery(filters) });
+  /**
+   * Supplier orders, newest first, paged by cursor in the store's list
+   * envelope (`{ items, pagination }`). Pass `pagination.nextCursor` back as
+   * `cursor` while `pagination.hasMore` is true. `pageSize` defaults to 25,
+   * max 100. `suppliers.view`.
+   */
+  async listSupplierOrders(storeId: string, filters: ISupplierOrderSearchFilters = {}): Promise<IPaginated<IStoreSupplierOrder>> {
+    const res = await this.http.get<IPaginated<IStoreSupplierOrder>>(`${this.base}/${storeId}/orders`, { params: this.toQuery(filters) });
     return res.result!;
   }
 

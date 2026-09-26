@@ -1,4 +1,4 @@
-import { IPageNumberParams } from "./common";
+import { IPaginationParams } from "./common";
 import { StoreDropshippingContractModel } from "./suppliers";
 
 /** ─── Dropshipping: supplier orders and order parts ────────────────────────
@@ -123,7 +123,13 @@ export interface IStoreSupplierOrder {
   [key: string]: unknown;
 }
 
-export interface ISupplierOrderSearchFilters extends IPageNumberParams {
+/**
+ * Filters for the supplier-order queue. Paged by cursor like every other store
+ * list: pass the previous page's `pagination.nextCursor` as `cursor`.
+ * `pageSize` defaults to 25 here and is capped at 100. The list is always
+ * newest first, so `sortField` / `sortType` are ignored.
+ */
+export interface ISupplierOrderSearchFilters extends IPaginationParams {
   status?: StoreSupplierOrderStatus;
   /** Only paused supplier orders. */
   needsReview?: boolean;

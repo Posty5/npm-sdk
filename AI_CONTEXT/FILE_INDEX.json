@@ -109,7 +109,7 @@
     },
     {
       "path": "posty5-store/src/interfaces",
-      "role": "Store DTOs and inputs; common.ts holds cursor paging and page-number paging (IPageNumberParams, IPagedItems)."
+      "role": "Store DTOs and inputs; common.ts holds cursor paging (IPaginationParams, IPaginated), used by every list including the supplier-order queue."
     },
     {
       "path": "posty5-store/src/interfaces/suppliers.ts",
