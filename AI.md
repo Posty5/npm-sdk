@@ -1,5 +1,7 @@
 # Posty5 JavaScript SDK - AI Entry Point
 
+> New feature? It ships with an article, a guide page, and SDK + MCP coverage when it has a public API — see [`../AI_RULES.md`](../AI_RULES.md) §14.
+
 This repository is the npm workspaces TypeScript SDK monorepo. Eight publishable JavaScript/TypeScript packages sharing a core HTTP client and typed clients for Posty5 links, QR codes, hosting, form submissions, variables, and social publishing.
 
 ## Required reading order
