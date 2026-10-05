@@ -12,7 +12,7 @@ import * as path from "path";
 
 /**
  * The catalogue's promises (mcp-server feature, npm-sdk/mcp-tool-catalogue-
- * package): 135 tools, stable names and order, the catalogue's own arguments
+ * package): 138 tools, stable names and order, the catalogue's own arguments
  * on every write, confirmation on every ✋ tool, and a server that registers
  * exactly what its access level and toolsets allow.
  */
@@ -20,8 +20,8 @@ import * as path from "path";
 /** Tools per toolset, from the plan's catalogue table. */
 const EXPECTED_COUNTS: Record<string, number> = {
   account: 4,
-  "short-links": 5,
-  "qr-codes": 6,
+  "short-links": 6,
+  "qr-codes": 8,
   "html-hosting": 20,
   "social-publisher": 21,
   store: 1,
@@ -33,7 +33,9 @@ const EXPECTED_COUNTS: Record<string, number> = {
 
 /** The ✋ tools of the table. */
 const CONFIRM_TOOLS = [
+  "short_link_create_many",
   "short_link_delete",
+  "qr_code_create_many",
   "qr_code_delete",
   "html_page_delete",
   "html_variable_delete",
@@ -70,8 +72,8 @@ function registeredNames(options: Parameters<typeof createPosty5McpServer>[0]): 
 }
 
 describe("@posty5/mcp — the catalogue", () => {
-  it("holds 135 tools, as many per toolset as the table lists", () => {
-    expect(CATALOGUE).toHaveLength(135);
+  it("holds 138 tools, as many per toolset as the table lists", () => {
+    expect(CATALOGUE).toHaveLength(138);
     for (const name of TOOLSET_NAMES) {
       expect([name, CATALOGUE.filter((tool) => tool.toolset === name).length]).toEqual([name, EXPECTED_COUNTS[name]]);
     }

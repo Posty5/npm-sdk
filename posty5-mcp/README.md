@@ -66,7 +66,7 @@ The server writes the protocol to stdout and everything else to stderr.
 | `store-shipping` | — | Countries, routes, profiles, assignments |
 | `store-dropshipping` | — | Supplier catalogue, imports, product links, supplier orders |
 
-135 tools in all; `listToolsets()` and `listTools()` describe them.
+138 tools in all; `listToolsets()` and `listTools()` describe them.
 
 ## 🔐 Access levels and confirmation
 
@@ -78,6 +78,15 @@ A tool above the connection's level is not listed and is refused if called.
 Irreversible or paid tools take `confirm`: called without `confirm: true` they
 change nothing and answer with what they would do (and the live price when the
 action is charged), so the assistant can ask the user first.
+
+### Batches
+
+`short_link_create_many` and `qr_code_create_many` create 1–25 items in one
+call and always take `confirm`: a batch costs up to 25 times the base price.
+A refused row is reported and skipped. `qr_code_create_many` with `zip: true`
+runs a bulk job and answers a **signed link to a ZIP of the images** that
+expires within minutes; `qr_code_get_bulk_job` reports a job still running and
+hands out fresh links. Webhook endpoints are not exposed through MCP.
 
 ## 🏷️ What gets recorded
 

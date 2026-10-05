@@ -26,3 +26,13 @@ export interface IQrCodeTargetArgs {
   latitude?: number;
   longitude?: number;
 }
+
+/** The per-row label fields of `qr_code_create_many`. */
+export interface IQrBulkRowLabels {
+  name?: string;
+  customId?: string;
+  tag?: string;
+  refId?: string;
+  templateId?: string;
+  fileName?: string;
+}

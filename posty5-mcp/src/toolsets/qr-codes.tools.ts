@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { QR_CODE_MODES, QR_CODE_REQUIRED_FIELDS, QR_CODE_STATUSES, QR_CODE_TYPES, QR_TEMPLATE_SCOPES, WIFI_AUTHENTICATION_TYPES } from "../config/qr-codes-enums.config";
+import { MCP_BULK_MAX_ROWS } from "../config/limits.config";
+import { CREATE_QR_CODE_FEATURE_PATH } from "../config/link-costs.config";
+import { batchIdempotencyKey, describeBatch, describeQrBulkJob, runQrZipJob, unwrapBulkError } from "../core/link-bulk.helper";
 import { defineTool, idField, pageFields, pickPage, requireFields, withoutPaging } from "../core/define-tool.helper";
-import { createQrCode, resolveQrCodeMode, updateQrCode } from "../core/qr-codes.helper";
+import { createQrCode, resolveQrCodeMode, toQrBulkRow, updateQrCode } from "../core/qr-codes.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
 const QR_CODE_ID = "The QR code's _id, from qr_code_list.";
@@ -106,6 +109,69 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
       return createQrCode(clients.qrCodes, { name, templateId, refId, tag, customLandingId, mode }, args);
     },
     entity: (result) => ({ entityType: "qrCode", entityId: result?._id }),
+  }),
+  defineTool({
+    name: "qr_code_create_many",
+    toolset: "qr-codes",
+    access: "write",
+    title: "Create QR codes in a batch",
+    description:
+      `Creates 1 to ${MCP_BULK_MAX_ROWS} QR codes in one call; each row takes the same type and fields as qr_code_create, and needs a templateId (or one in defaults). mode defaults to "dynamic" as in qr_code_create; Wi-Fi is always static. ` +
+      "A row the API refuses is reported with its errors and skipped. Returns created, failed and one item per row (row is 1-based) with its qrCodeDownloadURL. " +
+      'zip: true runs it as a bulk job instead and answers a signed link to a ZIP of all the images; the link expires within minutes, so give it to the user promptly. If the job is still running after a short wait, the answer holds a jobId for qr_code_get_bulk_job.',
+    input: z.object({
+      rows: z
+        .array(
+          z.object({
+            ...targetFields,
+            templateId: z.string().optional().describe("The template that styles the QR code, from qr_code_list_templates; overrides defaults.templateId."),
+            ...labelFields,
+            customId: z.string().max(32).optional().describe("A custom landing id, when the plan allows it."),
+            fileName: z.string().optional().describe("zip: the image's file name inside the ZIP."),
+            mode: z.enum(QR_CODE_MODES).optional().describe('"dynamic" (default) or "static". type "wifi" is always static.'),
+          }),
+        )
+        .min(1)
+        .max(MCP_BULK_MAX_ROWS, `At most ${MCP_BULK_MAX_ROWS} rows per call; upload a file in the Posty5 dashboard for more.`)
+        .describe(`The QR codes to create, at most ${MCP_BULK_MAX_ROWS}.`),
+      defaults: z
+        .object({ templateId: z.string().optional(), tag: z.string().optional(), refId: z.string().optional() })
+        .optional()
+        .describe("Applied to every row that does not set the field."),
+      zip: z.boolean().optional().describe("true: also build a ZIP of the images and answer a signed, expiring link to it."),
+      image: z
+        .object({
+          format: z.enum(["png", "svg", "pdf"]).default("png"),
+          sizePx: z.number().int().min(10).max(2000).optional().describe("Image width in pixels; default the template's."),
+        })
+        .optional()
+        .describe("zip: the images' format and size."),
+    }),
+    annotations: { idempotent: true, openWorld: true },
+    confirm: {
+      describe: ({ rows, zip }) => describeBatch(rows.length, "QR code", zip ? " The images are also packed into a ZIP, behind a link that expires within minutes." : ""),
+      costFeaturePath: CREATE_QR_CODE_FEATURE_PATH,
+    },
+    run: async ({ rows, defaults, zip, image }, { clients, call }) => {
+      const items = rows.map((row, index) => {
+        requireFields(row, QR_CODE_REQUIRED_FIELDS[row.type], `rows[${index}] type "${row.type}"`);
+        return toQrBulkRow(row, resolveQrCodeMode(row, row.mode, true));
+      });
+      const idempotencyKey = batchIdempotencyKey(call);
+      if (zip) return runQrZipJob(clients.qrCodes, items, { defaults, image, idempotencyKey });
+      return unwrapBulkError(() => clients.qrCodes.createMany(items, { defaults, idempotencyKey }));
+    },
+    entity: (result) => ({ entityType: "qrCode", count: result?.created }),
+  }),
+  defineTool({
+    name: "qr_code_get_bulk_job",
+    toolset: "qr-codes",
+    access: "read",
+    title: "Get a QR bulk job",
+    description:
+      "The status and counters of a QR bulk job started by qr_code_create_many with zip: true. Once it has finished, the answer holds signed links to the image ZIP, the per-row result CSV and the refused rows' CSV; they expire within minutes, so give them to the user promptly.",
+    input: z.object({ jobId: idField("The jobId from qr_code_create_many.") }),
+    run: async ({ jobId }, { clients }) => describeQrBulkJob(clients.qrCodes, await clients.qrCodes.getBulkJob(jobId)),
   }),
   defineTool({
     name: "qr_code_update",

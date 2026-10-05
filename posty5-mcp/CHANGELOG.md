@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- `short_link_create_many` and `qr_code_create_many` (write, always `confirm`):
+  1–25 rows per call, per-row results, the call's `idempotencyKey` (or the
+  host's `callId`) sent as the batch key. `qr_code_create_many` with
+  `zip: true` runs a QR bulk job, waits up to 45 s and answers signed,
+  expiring links to the image ZIP. New read tool `qr_code_get_bulk_job`.
+  138 tools. Needs `@posty5/core`, `@posty5/short-link` and `@posty5/qr-code`
+  4.5.0.
 - `qr_code_create` takes `mode` (`"static"` | `"dynamic"`), **default
   `"dynamic"`** so the target can be changed later with `qr_code_update`;
   Wi-Fi codes are always static (a dynamic Wi-Fi request is refused before

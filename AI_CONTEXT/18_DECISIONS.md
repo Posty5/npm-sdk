@@ -117,3 +117,14 @@ Do not invent historical rationale. Record evidence-based current decisions and 
   error/5xx is safe. Every chunk is sent with `skipRetry: true`.
 - **`verifyWebhookSignature` is Node only** (`node:crypto`, `Buffer`); the
   clients stay isomorphic. The raw body is required.
+- **MCP batch tools always need `confirm: true`** (`short_link_create_many`,
+  `qr_code_create_many`, BW-D12): a batch spends up to N times the base price,
+  so even a 2-row batch is quoted first (live price of one create via
+  `costFeaturePath`). Capped at `MCP_BULK_MAX_ROWS` = 25; bigger files are a
+  dashboard upload. `zip: true` runs a QR bulk job and answers only signed,
+  expiring links (`qr_code_get_bulk_job` refreshes them) — never bytes.
+  Rows take `qr_code_create`'s flat per-type fields (same schema object, not a
+  copied discriminated union) and default to `dynamic` like it.
+- **No MCP webhook-endpoint tools** (BW-D12): an agent that can register an
+  endpoint can be prompt-injected into sending visit data to a URL it chose.
+  No export or short-link bulk-job tools either.

@@ -1,6 +1,9 @@
 import { z } from "zod";
+import { MCP_BULK_MAX_ROWS } from "../config/limits.config";
+import { CREATE_SHORT_LINK_FEATURE_PATH } from "../config/link-costs.config";
 import { SHORT_LINK_STATUSES } from "../config/short-links-enums.config";
 import { defineTool, idField, pageFields, pickPage, withoutPaging } from "../core/define-tool.helper";
+import { batchIdempotencyKey, describeBatch, unwrapBulkError } from "../core/link-bulk.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
 const SHORT_LINK_ID = "The short link's _id, from short_link_list.";
@@ -63,6 +66,41 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
     }),
     run: (args, { clients }) => clients.shortLinks.create(args),
     entity: (result) => ({ entityType: "shortLink", entityId: result?._id }),
+  }),
+  defineTool({
+    name: "short_link_create_many",
+    toolset: "short-links",
+    access: "write",
+    title: "Create short links in a batch",
+    description: `Creates 1 to ${MCP_BULK_MAX_ROWS} short links in one call. Each row needs a templateId, or give one in defaults. A row the API refuses is reported with its errors and skipped; the rest are created and live at once. Returns created, failed and one item per row (row is 1-based) with its short URL. For bigger batches, upload a file in the Posty5 dashboard.`,
+    input: z.object({
+      rows: z
+        .array(
+          z.object({
+            url: z.string().url().describe("The URL the short link opens."),
+            name: z.string().optional().describe("A label for finding the link later."),
+            customId: z.string().optional().describe("A custom landing id (the short URL's last part), when the plan allows it."),
+            tag: z.string().optional(),
+            refId: z.string().optional(),
+            templateId: z.string().optional().describe("QR code template id, from qr_code_list_templates; overrides defaults.templateId."),
+          }),
+        )
+        .min(1)
+        .max(MCP_BULK_MAX_ROWS, `At most ${MCP_BULK_MAX_ROWS} rows per call; upload a file in the Posty5 dashboard for more.`)
+        .describe(`The links to create, at most ${MCP_BULK_MAX_ROWS}.`),
+      defaults: z
+        .object({ templateId: z.string().optional(), tag: z.string().optional(), refId: z.string().optional() })
+        .optional()
+        .describe("Applied to every row that does not set the field."),
+    }),
+    annotations: { idempotent: true, openWorld: true },
+    confirm: {
+      describe: ({ rows }) => describeBatch(rows.length, "short link"),
+      costFeaturePath: CREATE_SHORT_LINK_FEATURE_PATH,
+    },
+    run: ({ rows, defaults }, { clients, call }) =>
+      unwrapBulkError(() => clients.shortLinks.createMany(rows, { defaults, idempotencyKey: batchIdempotencyKey(call) })),
+    entity: (result) => ({ entityType: "shortLink", count: result?.created }),
   }),
   defineTool({
     name: "short_link_update",

@@ -20,8 +20,8 @@ const QR_CODE = {
 };
 
 describe("mcp qr-codes toolset", () => {
-  it("holds the catalogue's six tools, in its order", () => {
-    expect(QR_CODE_TOOLS.map((tool) => tool.name)).toEqual(["qr_code_list", "qr_code_get", "qr_code_list_templates", "qr_code_create", "qr_code_update", "qr_code_delete"]);
+  it("holds the catalogue's eight tools, in its order", () => {
+    expect(QR_CODE_TOOLS.map((tool) => tool.name)).toEqual(["qr_code_list", "qr_code_get", "qr_code_list_templates", "qr_code_create", "qr_code_create_many", "qr_code_get_bulk_job", "qr_code_update", "qr_code_delete"]);
   });
 
   it("qr_code_list sends its filters and paging as query params", async () => {

@@ -28,3 +28,12 @@ export const IDEMPOTENCY_KEY_MAX_LENGTH = 128;
 
 /** Result fields never handed to a model: bulky, binary, or secret-shaped. */
 export const STRIPPED_RESULT_FIELDS = ["uploadFileConfig", "uploadImageConfig", "uploadUrl", "htmlContent", "fileBase64", "data:image"];
+
+/** Most rows one `short_link_create_many` / `qr_code_create_many` call may carry (BW-D12); bigger batches are a dashboard file upload. */
+export const MCP_BULK_MAX_ROWS = 25;
+
+/** How long `qr_code_create_many` with `zip: true` waits for its bulk job before handing back the job id, in milliseconds. */
+export const MCP_BULK_JOB_WAIT_MS = 45 * 1000;
+
+/** How often that wait polls the job, in milliseconds. */
+export const MCP_BULK_JOB_POLL_MS = 2 * 1000;

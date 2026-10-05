@@ -1,7 +1,7 @@
-import type { IQRCode, IQRCodeRequest, IUpdateQRCodeRequest, QRCodeClient, QRCodeMode } from "@posty5/qr-code";
+import type { IQRCode, IQrCodeBulkRow, IQRCodeRequest, IUpdateQRCodeRequest, QRCodeClient, QRCodeMode } from "@posty5/qr-code";
 import { QR_CODE_DEFAULT_MODE, QR_CODE_STATIC_ONLY_TYPES } from "../config/qr-codes-enums.config";
 import { ToolInputError } from "./tool-input.error";
-import type { IQrCodeTargetArgs } from "../interfaces/qr-codes.interface";
+import type { IQrBulkRowLabels, IQrCodeTargetArgs } from "../interfaces/qr-codes.interface";
 
 /**
  * The SDK's per-type target blocks, out of the tool's flat arguments. Optional
@@ -77,5 +77,28 @@ export function updateQrCode(client: QRCodeClient, id: string, base: IUpdateQRCo
       return client.updateURL(id, { ...base, url: blocks.url });
     case "geolocation":
       return client.updateGeolocation(id, { ...base, geolocation: blocks.geolocation });
+  }
+}
+
+/** One `qr_code_create_many` row (flat target fields, as `qr_code_create` takes them) as the SDK's type-tagged bulk row. */
+export function toQrBulkRow(row: IQrCodeTargetArgs & IQrBulkRowLabels, mode: QRCodeMode | undefined): IQrCodeBulkRow {
+  const blocks = targetBlocks(row);
+  const { name, customId, tag, refId, templateId, fileName } = row;
+  const base = { mode, name, customId, tag, refId, templateId, fileName };
+  switch (row.type) {
+    case "freeText":
+      return { ...base, type: "freeText", target: { text: blocks.text } };
+    case "email":
+      return { ...base, type: "email", target: blocks.email };
+    case "wifi":
+      return { ...base, type: "wifi", target: blocks.wifi };
+    case "call":
+      return { ...base, type: "call", target: blocks.call };
+    case "sms":
+      return { ...base, type: "sms", target: blocks.sms };
+    case "url":
+      return { ...base, type: "url", target: blocks.url };
+    case "geolocation":
+      return { ...base, type: "geolocation", target: blocks.geolocation };
   }
 }
