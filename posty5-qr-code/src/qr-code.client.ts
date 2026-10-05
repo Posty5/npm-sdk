@@ -100,7 +100,7 @@ export class QRCodeClient {
         text: data.text,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     };
     // console.log("createFreeText payload:", JSON.stringify(payload, null, 2));
     const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/freeText`, payload);
@@ -139,7 +139,7 @@ export class QRCodeClient {
         text: `mailto:${qrCodeTarget.email.email}?subject=${qrCodeTarget.email.subject}&body=${qrCodeTarget.email.body}`,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }
@@ -176,7 +176,7 @@ export class QRCodeClient {
         text: `WIFI:T:${qrCodeTarget.wifi.authenticationType};S:${qrCodeTarget.wifi.name};P:${qrCodeTarget.wifi.password};`,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }
@@ -211,7 +211,7 @@ export class QRCodeClient {
         text: `tel:${qrCodeTarget.call.phoneNumber}`,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }
@@ -247,7 +247,7 @@ export class QRCodeClient {
         text: `sms:${qrCodeTarget.sms.phoneNumber}?body=${qrCodeTarget.sms.message}`,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }
@@ -283,7 +283,7 @@ export class QRCodeClient {
         text: qrCodeTarget.url.url,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }
@@ -318,7 +318,7 @@ export class QRCodeClient {
         text: `geo:${qrCodeTarget.geolocation.latitude},${qrCodeTarget.geolocation.longitude}`,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }
@@ -361,7 +361,7 @@ export class QRCodeClient {
         text: data.text,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     };
 
     const response = await this.http.put<ICreateQRCodeResponse>(`${this.basePath}/freeText/${id}`, payload);
@@ -400,7 +400,7 @@ export class QRCodeClient {
         text: `mailto:${qrCodeTarget.email.email}?subject=${qrCodeTarget.email.subject}&body=${qrCodeTarget.email.body}`,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }
@@ -437,7 +437,7 @@ export class QRCodeClient {
         text: `WIFI:S:${qrCodeTarget.wifi.name};T:${qrCodeTarget.wifi.authenticationType};P:${qrCodeTarget.wifi.password};;`,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }
@@ -472,7 +472,7 @@ export class QRCodeClient {
         text: `tel:${qrCodeTarget.call.phoneNumber}`,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }
@@ -508,7 +508,7 @@ export class QRCodeClient {
         text: `sms:${qrCodeTarget.sms.phoneNumber}?body=${qrCodeTarget.sms.message}`,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }
@@ -544,7 +544,7 @@ export class QRCodeClient {
         text: qrCodeTarget.url.url,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }
@@ -579,7 +579,7 @@ export class QRCodeClient {
         text: `geo:${qrCodeTarget.geolocation.latitude},${qrCodeTarget.geolocation.longitude}`,
       },
       templateType: "user",
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }

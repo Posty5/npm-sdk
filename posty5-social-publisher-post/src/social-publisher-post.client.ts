@@ -24,6 +24,11 @@ import {
   ILongVideoQuoteResponse,
   IReschedulePostRequest,
   IScheduleConfig,
+  ICreateTextPostToWorkspaceRequest,
+  ICreateTextPostToAccountRequest,
+  ICreateStoryPostToWorkspaceRequest,
+  ICreateStoryPostToAccountRequest,
+  ICreatePostResult,
 } from "./interfaces";
 
 /**
@@ -124,7 +129,7 @@ export class SocialPublisherPostClient {
     const url = id ? `${this.basePath}/short-video/workspace/by-file/${id}` : `${this.basePath}/short-video/workspace/by-file`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result?._id!;
   }
@@ -138,7 +143,7 @@ export class SocialPublisherPostClient {
     const url = id ? `${this.basePath}/short-video/workspace/by-url/${id}` : `${this.basePath}/short-video/workspace/by-url`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result?._id!;
   }
@@ -152,7 +157,7 @@ export class SocialPublisherPostClient {
     const url = id ? `${this.basePath}/short-video/account/by-file/${id}` : `${this.basePath}/short-video/account/by-file`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result?._id!;
   }
@@ -166,7 +171,7 @@ export class SocialPublisherPostClient {
     const url = id ? `${this.basePath}/short-video/account/by-url/${id}` : `${this.basePath}/short-video/account/by-url`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result?._id!;
   }
@@ -191,7 +196,7 @@ export class SocialPublisherPostClient {
     const url = id ? `${this.basePath}/image/workspace/${id}` : `${this.basePath}/image/workspace`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result?._id!;
   }
@@ -205,9 +210,53 @@ export class SocialPublisherPostClient {
     const url = id ? `${this.basePath}/image/account/${id}` : `${this.basePath}/image/account`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     return response.result?._id!;
+  }
+
+  /**
+   * Publish a text-only post to every text-capable account in a workspace
+   * (Facebook, Threads, X). Platforms that cannot take text are reported in
+   * `skippedPlatforms`; X below the Pro plan is dropped into `refusedTargets`.
+   */
+  async createTextPostToWorkspace(data: ICreateTextPostToWorkspaceRequest): Promise<ICreatePostResult> {
+    const response = await this.http.post<ICreatePostResult>(`${this.basePath}/text/workspace`, {
+      ...data,
+      createdFrom: this.http.createdFrom,
+    });
+    return response.result!;
+  }
+
+  /** Publish a text-only post to one account. */
+  async createTextPostToAccount(data: ICreateTextPostToAccountRequest): Promise<ICreatePostResult> {
+    const response = await this.http.post<ICreatePostResult>(`${this.basePath}/text/account`, {
+      ...data,
+      createdFrom: this.http.createdFrom,
+    });
+    return response.result!;
+  }
+
+  /**
+   * Publish a story to every story-capable account in a workspace. Media by URL
+   * only in this release: `image: { source: "image-url", externalUrl }`, or
+   * `source: "video-url"` with `videoURL`.
+   */
+  async createStoryPostToWorkspace(data: ICreateStoryPostToWorkspaceRequest): Promise<ICreatePostResult> {
+    const response = await this.http.post<ICreatePostResult>(`${this.basePath}/story/workspace`, {
+      ...data,
+      createdFrom: this.http.createdFrom,
+    });
+    return response.result!;
+  }
+
+  /** Publish a story to one account. Media by URL only, as for the workspace form. */
+  async createStoryPostToAccount(data: ICreateStoryPostToAccountRequest): Promise<ICreatePostResult> {
+    const response = await this.http.post<ICreatePostResult>(`${this.basePath}/story/account`, {
+      ...data,
+      createdFrom: this.http.createdFrom,
+    });
+    return response.result!;
   }
 
   /**
@@ -643,7 +692,7 @@ export class SocialPublisherPostClient {
       ? `${this.basePath}/long-video/workspace/${target}/${id}`
       : `${this.basePath}/long-video/workspace/${target}`;
 
-    const response = await this.http.post<IPublishLongVideoResult>(url, { ...body, createdFrom: "npmPackage" });
+    const response = await this.http.post<IPublishLongVideoResult>(url, { ...body, createdFrom: this.http.createdFrom });
     return this.normaliseLongVideoResult(response.result);
   }
 
@@ -703,7 +752,7 @@ export class SocialPublisherPostClient {
       ? `${this.basePath}/long-video/account/${target}/${id}`
       : `${this.basePath}/long-video/account/${target}`;
 
-    const response = await this.http.post<IPublishLongVideoResult>(url, { ...body, createdFrom: "npmPackage" });
+    const response = await this.http.post<IPublishLongVideoResult>(url, { ...body, createdFrom: this.http.createdFrom });
     return this.normaliseLongVideoResult(response.result);
   }
 
@@ -724,8 +773,12 @@ export class SocialPublisherPostClient {
     if (!id) {
       throw new Error("id is required");
     }
+    // The edit route takes the schedule flat (`scheduleType` + `scheduledAt`), not
+    // the `schedule` object the create routes take, and refuses `scheduledAt` with "now".
     await this.http.put(`${this.basePath}/${id}`, {
-      schedule: this.buildSchedule(data.schedule),
+      ...(data.schedule === "now"
+        ? { scheduleType: "now" }
+        : { scheduleType: "schedule", scheduledAt: data.schedule.toISOString() }),
       ...(data.caption !== undefined ? { caption: data.caption } : {}),
     });
   }

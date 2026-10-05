@@ -464,3 +464,5 @@ export interface IPublishLongVideoResult {
    */
   refusedTargets: ILongVideoRefusedTarget[];
 }
+
+export * from "./text-and-story";

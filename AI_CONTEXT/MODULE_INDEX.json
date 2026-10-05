@@ -46,6 +46,16 @@
       "name": "store",
       "purpose": "Online Store management: products (incl. per-section saves, clone, Excel, AI), orders (incl. dropshipping parts), tags, customers, shipping and dropshipping suppliers. Split into six sub-clients on StoreClient. In the workspace and the publish workflow since 4.3.0.",
       "primary_path": "posty5-store/src"
+    },
+    {
+      "name": "account",
+      "purpose": "Who an API key is, credits, credit history and summary, live operation prices. New in 4.3.0.",
+      "primary_path": "posty5-account/src"
+    },
+    {
+      "name": "mcp",
+      "purpose": "@posty5/mcp: every SDK service as MCP tools (135 in 10 toolsets), createPosty5McpServer, listTools/listToolsets, and the posty5-mcp stdio binary. Access levels, confirm gate, aiModel attribution, idempotency. New in 1.0.0.",
+      "primary_path": "posty5-mcp/src"
     }
   ]
 }

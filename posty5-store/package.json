@@ -1,6 +1,6 @@
 {
     "name": "@posty5/store",
-    "version": "4.3.0",
+    "version": "4.4.0",
     "description": "Online Store management SDK for the Posty5 API (products, orders, tags, customers, shipping, dropshipping suppliers)",
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",
@@ -52,7 +52,7 @@
     "author": "Posty5",
     "license": "MIT",
     "peerDependencies": {
-        "@posty5/core": "^4.2.0"
+        "@posty5/core": "^4.3.0"
     },
     "devDependencies": {
         "@posty5/core": "file:../posty5-core",

@@ -14,7 +14,7 @@ export type StoreOrderStatus =
 export type StoreOrderSource = "facebook" | "instagram" | "whatsapp" | "phone" | "other";
 
 /** Technical origin of the record. */
-export type StoreOrderCreatedFrom = "storefront" | "cpanel" | "api" | "swagger" | "dotnet" | "npmPackage";
+export type StoreOrderCreatedFrom = "storefront" | "cpanel" | "api" | "swagger" | "dotnet" | "npmPackage" | "mcp";
 
 /**
  * The filters every order list shares — search, statistics, export and print

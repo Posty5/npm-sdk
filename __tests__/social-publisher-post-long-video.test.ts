@@ -16,6 +16,8 @@ function makeHttp(results: any[] = []) {
   const next = () => (queue.length ? queue.shift() : {});
   const http: any = {
     calls,
+    // The real HttpClient's default; create methods stamp it since 4.6.0.
+    createdFrom: "npmPackage",
     get: jest.fn(async (url: string) => {
       calls.push({ method: "GET", url });
       return { result: next() };
@@ -259,7 +261,9 @@ describe("scheduling", () => {
 });
 
 describe("reschedulePost", () => {
-  it("PUTs the new time to the post", async () => {
+  // The edit route's schema (updatePostSchema) takes scheduleType + scheduledAt flat
+  // and refuses unknown keys — the create routes' `schedule` object is not accepted.
+  it("PUTs the new time to the post, flat", async () => {
     const when = new Date("2026-09-20T08:00:00Z");
     const http = makeHttp([{}]);
     const client = new SocialPublisherPostClient(http);
@@ -269,15 +273,15 @@ describe("reschedulePost", () => {
     expect(http.calls[0]).toEqual({
       method: "PUT",
       url: "/api/social-publisher-post/post_abc",
-      body: { schedule: { type: "schedule", scheduledAt: when } },
+      body: { scheduleType: "schedule", scheduledAt: "2026-09-20T08:00:00.000Z" },
     });
   });
 
-  it("can flip a scheduled post to publish now", async () => {
+  it("can flip a scheduled post to publish now, without a scheduledAt", async () => {
     const http = makeHttp([{}]);
     const client = new SocialPublisherPostClient(http);
     await client.reschedulePost("post_abc", { schedule: "now" });
-    expect(http.calls[0].body.schedule).toEqual({ type: "now", scheduledAt: undefined });
+    expect(http.calls[0].body).toEqual({ scheduleType: "now" });
   });
 
   it("passes a replacement caption through only when given", async () => {

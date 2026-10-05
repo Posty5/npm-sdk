@@ -54,7 +54,7 @@ export class HtmlHostingClient {
     // Step 1: Create the HTML page record and get upload configuration
     const response = await this.http.post<ICreateHtmlPageResponse>(`${this.basePath}/file`, {
       ...data,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     const result = response.result!.details;
     const uploadConfig = response.result!.uploadFileConfig;
@@ -82,7 +82,7 @@ export class HtmlHostingClient {
   async createWithGithubFile(data: ICreateHtmlPageRequestWithGithub): Promise<IHtmlPageCreateWithGithubResponse> {
     const response = await this.http.post<ICreateHtmlPageResponse>(`${this.basePath}/github`, {
       ...data,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     const result = response.result!.details;
 

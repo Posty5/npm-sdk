@@ -15,3 +15,4 @@ import { IBulkImportReport } from "./common";
  * existing code keeps compiling.
  */
 export type IBulkProductsReport = IBulkImportReport;
+export * from "./stores";

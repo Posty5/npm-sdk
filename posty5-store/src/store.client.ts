@@ -5,6 +5,7 @@ import { StoreProductsClient } from "./clients/products.client";
 import { StoreShippingClient } from "./clients/shipping.client";
 import { StoreTagsClient } from "./clients/tags.client";
 import { StoreSuppliersClient } from "./clients/suppliers.client";
+import { StoreStoresClient } from "./clients/stores.client";
 import {
   IBulkImportReport,
   IBulkProductInput,
@@ -12,6 +13,7 @@ import {
   IOrderSearchFilters,
   IPaginated,
   IStoreOrder,
+  IStoreLookupItem,
   IStoreOrderSummary,
   StoreOrderStatus,
 } from "./interfaces";
@@ -65,6 +67,8 @@ export class StoreClient {
   public readonly shipping: StoreShippingClient;
   /** Dropshipping: supplier connections, imports, product links and supplier orders. */
   public readonly suppliers: StoreSuppliersClient;
+  /** The stores the key can manage — where a `storeId` comes from. */
+  public readonly stores: StoreStoresClient;
 
   constructor(http: HttpClient) {
     this.products = new StoreProductsClient(http);
@@ -73,6 +77,16 @@ export class StoreClient {
     this.customers = new StoreCustomersClient(http);
     this.shipping = new StoreShippingClient(http);
     this.suppliers = new StoreSuppliersClient(http);
+    this.stores = new StoreStoresClient(http);
+  }
+
+  /**
+   * The stores you own or are staff on, optionally filtered by name or slug.
+   * Shorthand for `stores.lookup`; each `_id` is the `storeId` the other
+   * methods take.
+   */
+  async listStores(term?: string, pageSize?: number): Promise<IStoreLookupItem[]> {
+    return this.stores.lookup(term, pageSize);
   }
 
   // ─── Shorthands ───────────────────────────────────────────────────────────

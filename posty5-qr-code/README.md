@@ -1125,6 +1125,19 @@ We're here to help you succeed with Posty5!
 
 ---
 
+## 🎨 QR code templates (4.3.0)
+
+```ts
+import { QRCodeTemplateClient } from "@posty5/qr-code";
+
+const templates = new QRCodeTemplateClient(http);
+const mine = await templates.listUserTemplates({ term: "blue" });
+const shared = await templates.listPublicTemplates();
+// pass a template _id as templateId when creating a QR code
+```
+
+---
+
 ## 📄 License
 
 MIT License - see [LICENSE](./LICENSE) file for details.

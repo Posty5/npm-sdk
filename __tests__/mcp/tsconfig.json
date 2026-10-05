@@ -1,0 +1,15 @@
+{
+  "//": "ts-jest settings for @posty5/mcp and its suites. Strict like the package's own build: zod's inferred types need strictNullChecks, without which every field reads as optional.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022", "DOM"],
+    "types": ["jest", "node"],
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": false
+  },
+  "include": ["./**/*.ts", "../../posty5-mcp/src/**/*.ts"]
+}

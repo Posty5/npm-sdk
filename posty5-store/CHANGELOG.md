@@ -1,5 +1,30 @@
 # Changelog
 
+## 4.4.0
+
+- **`store.stores` / `listStores(term?)`** — the stores the key can manage (owned or staffed), from `GET /api/store/lookup`; each `_id` is the `storeId` every other method takes.
+- `orders.create` tags the order with the client's `createdFrom` when the API accepts it for orders (`STORE_ORDER_CREATED_FROM_VALUES`, now including `"mcp"`), otherwise `"npmPackage"`.
+- Needs `@posty5/core` 4.3.0 or later.
+
+### Shipping: package profiles follow the API's parcel-price model
+
+The API (2026-09-25) made a profile one parcel size, priced per place, and
+removed the bracket and assignment routes. The client follows it:
+
+- **Added:** `shipping.getPlacePrices`, `savePlacePrices`, `listParcelPrices`,
+  `updateParcelPrice`, `removeParcelPrice` (`/countries/:iso/parcel-prices`,
+  `/parcel-prices`), and `importProfiles(storeId, type, file)`
+  (`POST /profiles/import`, one profile per spreadsheet row).
+- **Changed:** `createProfile` / `updateProfile` take exactly one size
+  (`conditions: [condition]`); `IShippingProfile` carries `condition` and
+  `pricing`; `deleteProfile` returns `{ removedPrices }` — it removes the
+  profile's prices instead of refusing while they exist.
+- **Removed** (their routes return 404): `addProfileConditions`,
+  `removeProfileCondition`, `importProfileConditions`, `listAssignments`,
+  `assignProfile`, `setDefaultAssignment`, `removeAssignment`, and the
+  `IShippingAssignment*` / `IAssignShippingProfileInput` types except
+  `IShippingAssignmentPlace`.
+
 ## 4.3.0
 
 The first version published to npm. Earlier versions (up to 4.2.0) were never

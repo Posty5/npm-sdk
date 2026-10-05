@@ -9,6 +9,23 @@ export interface IPosty5Config {
     apiKey?: string;
     /** Enable debug logging */
     debug?: boolean;
+    /**
+     * Extra headers sent with every request. `X-Posty5-Client` may be
+     * overridden here (an integration naming itself); `X-API-Key` may not —
+     * `apiKey` always wins.
+     */
+    headers?: Record<string, string>;
+    /**
+     * The `createdFrom` label stamped on records this client creates (default
+     * `"npmPackage"`). A free label the API stores for your own filtering;
+     * store manual orders accept only the values the API lists and fall back
+     * to the default otherwise.
+     */
+    createdFrom?: string;
+    /** Retries after a retryable failure (default 3; `0` disables). POST and PATCH are never retried once the server has answered. */
+    maxRetries?: number;
+    /** Request timeout in milliseconds (default 30000). */
+    timeout?: number;
 }
 
 /**
@@ -16,14 +33,8 @@ export interface IPosty5Config {
  * Includes all options including internal ones
  */
 export interface IHttpClientConfig extends IPosty5Config {
-    /** Request timeout in milliseconds (internal, fixed at 30000) */
-    timeout?: number;
-    /** Maximum number of retry attempts (internal, fixed at 3) */
-    maxRetries?: number;
     /** Retry delay in milliseconds (internal, fixed at 1000) */
     retryDelay?: number;
-    /** Custom headers to include in all requests (internal) */
-    headers?: Record<string, string>;
 }
 
 /**

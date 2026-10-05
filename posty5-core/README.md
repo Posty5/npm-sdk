@@ -252,6 +252,25 @@ We're here to help you succeed with Posty5!
 
 ---
 
+## 🧭 Client identity, origin label and retries (4.3.0)
+
+```ts
+const http = new HttpClient({
+  apiKey: process.env.POSTY5_API_KEY,
+  createdFrom: "my-integration", // stamped on records you create (default "npmPackage")
+  headers: { "X-Posty5-Client": "my-integration/1.0.0" }, // default: posty5-npm/<version>
+  maxRetries: 3, // 0 disables
+});
+```
+
+- Every request sends `X-Posty5-Client`. `X-API-Key` cannot be overridden through `headers`.
+- **POST and PATCH are never retried once the server has answered** — a retry
+  could publish a post twice or charge twice. They are retried only when the
+  connection was never made. GET, HEAD, OPTIONS, PUT and DELETE are retried on a
+  network error or a 5xx, as before.
+
+---
+
 ## 📄 License
 
 MIT License - see [LICENSE](./LICENSE) file for details.

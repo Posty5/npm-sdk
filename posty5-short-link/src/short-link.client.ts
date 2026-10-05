@@ -61,7 +61,7 @@ export class ShortLinkClient {
         const response = await this.http.post<ICreateShortLinkResponse>(this.basePath, {
             ...data,
             templateType: "user",
-            createdFrom: "npmPackage"
+            createdFrom: this.http.createdFrom
         });
         return response.result!;
     }

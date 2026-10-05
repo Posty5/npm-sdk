@@ -559,6 +559,19 @@ operations are free and unmetered. Importing a supplier product is charged like
 adding a product; connecting, linking, syncing and every supplier-order action
 are free.
 
+## 🏪 Finding your stores (4.4.0)
+
+```ts
+const stores = await store.listStores();        // [{ _id, name: "<slug> - <name>" }]
+const storeId = stores[0]._id;                  // the storeId every other method takes
+```
+
+`store.stores.lookup(term?)` is the same call. A manual order (`orders.create`)
+is tagged with the client's `createdFrom` when the API accepts it for orders
+(`STORE_ORDER_CREATED_FROM_VALUES`), otherwise `"npmPackage"`.
+
+---
+
 ## License
 
 MIT

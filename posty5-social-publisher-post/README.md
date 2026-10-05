@@ -1126,6 +1126,21 @@ We're here to help you succeed with Posty5!
 
 ---
 
+## 📝 Text posts and stories (4.6.0)
+
+```ts
+await posts.createTextPostToWorkspace({ workspaceId, caption: "Launching today!", threads: { topic_tag: "launch" } });
+await posts.createTextPostToAccount({ accountId, caption: "Hello X", twitter: { reply_settings: "following" } });
+
+await posts.createStoryPostToWorkspace({ workspaceId, kind: "image", image: { source: "image-url", externalUrl } });
+await posts.createStoryPostToAccount({ accountId, platform: "instagram", kind: "video", source: "video-url", videoURL });
+```
+
+Each answers `{ _id, refusedTargets?, truncatedTargets?, skippedPlatforms? }`.
+Story media is by URL in this release.
+
+---
+
 ## ðŸ“„ License
 
 MIT License - see [LICENSE](./LICENSE) file for details.
