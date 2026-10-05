@@ -47,3 +47,15 @@ change, `refId` and landing-page filters, server-built QR text) need the API's
 link + QR truth pass deployed on the stack `POSTY5_BASE_URL` points at. Both
 import the packages from their builds.
 
+## Link analytics tests (VA)
+
+`__tests__/link-analytics.test.ts` (offline) pins `toLinkAnalyticsQuery` from
+`@posty5/core`; its `@ts-expect-error` lines make a type check of the file part
+of the test. `short-link.test.ts` and `qr-code.test.ts` pin the
+`getAnalytics()` route and query offline, and their live `VA — getAnalytics`
+blocks need the API's visit-analytics routes on the stack `POSTY5_BASE_URL`
+points at (zeros and `meta.analyticsStartedAt` on a new record, `"all"`, an
+explicit list, 400 on a bad `interval`). The same files pin `statistics()`
+offline (route, `period` / `from` / `to`) and live (`VA — statistics`: visit
+totals, UTC-day `_id`s, top rows with `visitsInRange > 0`). Build core first:
+the packages import it from its `dist`.

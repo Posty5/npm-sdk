@@ -30,6 +30,7 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 - **🎨 Custom Slugs** - Create branded short links with custom aliases
 - **🔄 Editable URLs** - Update destination URLs without changing the short link
 - **📊 Visit Counts** - The number of visits and the last visit date for each link
+- **📈 Visit Analytics** - Visits, unique visitors and bot visits per day, week or month, by channel (click or QR scan), country, device, OS, browser, referrer and language
 - **📱 Free QR Codes** - Automatic QR code generation for each short link
 - **🏷️ Tag & Reference Support** - Organize links with custom tags and reference IDs
 - **🎯 Landing Pages** - Optionally show a page with your title and description before the redirect
@@ -116,6 +117,15 @@ console.log("✓ Destination updated - same short link, new target!");
 ```
 
 ---
+
+## ⬆️ Upgrading to 4.4.0
+
+- **New:** `getAnalytics(id, query?)` — visits, unique visitors and bot visits
+  of a link, per day, week or month, with breakdowns (see
+  [Visit Analytics](#visit-analytics)).
+- **New:** `statistics(query?)` — totals, visits per UTC day and the top links
+  by visits over all your links (see [statistics()](#statistics)).
+- Requires `@posty5/core` 4.4.0. Nothing else changed.
 
 ## ⬆️ Upgrading to 4.3.0
 
@@ -621,6 +631,102 @@ for (const link of oldCampaign.items) {
 }
 
 console.log(`Cleaned up ${oldCampaign.items.length} old links`);
+```
+
+---
+
+### Visit Analytics
+
+#### getAnalytics()
+
+Visits of one short link over a range: totals, a series per day, week or month,
+and breakdowns. Reading analytics costs no credits.
+
+**Parameters:**
+
+- `id` (string): Short link ID
+- `query` (`ILinkAnalyticsQuery`, optional):
+  - `from` / `to` (`string` | `Date`): first and last day, `YYYY-MM-DD` or an ISO date-time. A `Date` is sent as its **UTC** calendar day. Default: the last 30 days.
+  - `interval` (`"day"` | `"week"` | `"month"`): width of one series point. Default `"day"`.
+  - `tz` (string): IANA time zone the days are counted in, e.g. `"Africa/Cairo"`. Default: the owner's time zone, else UTC. Not validated by the SDK; an unknown zone answers 400.
+  - `breakdown` (`LinkAnalyticsBreakdown[]` | `"all"`): any of `country`, `device`, `os`, `browser`, `referrer`, `channel`, `language`, `variant`, `rule`, or `"all"`. Omitted (or an empty list) means every breakdown your plan allows, same as `"all"`.
+  - `limit` (number): rows per breakdown, 1–50. Default 10. The overflow comes back as one row with key `other`; visits with no value (e.g. no referrer) as key `unknown`.
+
+**Returns:** `Promise<ILinkAnalyticsResponse>` — `totals` (`visits`, `uniqueVisitors`, `botVisits`), `series` (`[{ date, visits, uniqueVisitors }]`), `breakdowns` (`{ <name>: [{ key, visits, uniqueVisitors }] }`) and `meta`: `from` / `to` (`YYYY-MM-DD` in `meta.timezone`), `interval`, `timezone`, `source` (`events` | `rollup` | `mixed`), `analyticsStartedAt`, `locked` (`[{ breakdown, requiredPlan }]`, `requiredPlan` a plan key such as `"basic"`) and `maxHistoryDays` (`30` on Free, `null` on Starter and up).
+
+**Example:**
+
+```typescript
+const analytics = await shortLinks.getAnalytics("link-id-123", {
+  from: "2026-10-01",
+  to: "2026-10-31",
+  breakdown: ["device", "country"],
+});
+
+console.log(`Visits: ${analytics.totals.visits} (bots: ${analytics.totals.botVisits})`);
+for (const point of analytics.series) {
+  console.log(point.date, point.visits);
+}
+console.log(analytics.breakdowns.device); // [{ key: "mobile", visits: 12, uniqueVisitors: 9 }, …]
+```
+
+```typescript
+// Every breakdown your plan includes; the others are listed in meta.locked
+const all = await shortLinks.getAnalytics("link-id-123", { breakdown: "all", interval: "week" });
+
+for (const locked of all.meta.locked) {
+  console.log(`${locked.breakdown} needs the ${locked.requiredPlan} plan`);
+}
+```
+
+**What the numbers mean:**
+
+- Bots, crawlers and link-preview fetchers are **not** in `visits`; they are counted in `totals.botVisits` only.
+- `uniqueVisitors` over more than one day is the **sum of each day's uniques** — a visitor is not recognised from one day to the next.
+- There is no data before `meta.analyticsStartedAt`, the day Posty5 started recording visits.
+- `channel` is `qr` for a scan of the link's QR image downloaded after Posty5 started recording visits, `link` for a click (and for a scan of an older image).
+- `meta.timezone` is `"UTC"` when the range reaches further back than raw visits are kept; `meta.source` says whether the answer came from raw visits, daily rollups or both.
+
+**Plan limits:** omitting `breakdown` (or `"all"`) is never refused for a breakdown — it returns what the plan allows and lists the rest in `meta.locked`. Naming a breakdown your plan does not include, or a `from` older than the plan's history (`meta.maxHistoryDays`), throws `AuthorizationError` (403, "This feature is not available on your current plan."). An unknown or deleted id throws `ValidationError` (400, "The Short Link Is Not Found") — not `NotFoundError` — and a link your key may not read throws `AuthorizationError` (403, "You Have Not Permission"):
+
+```typescript
+import { AuthorizationError } from "@posty5/core";
+
+try {
+  await shortLinks.getAnalytics("link-id-123", { breakdown: ["referrer"] });
+} catch (error) {
+  if (error instanceof AuthorizationError) {
+    console.error(error.message); // the API's plan message, unchanged
+  }
+}
+```
+
+#### statistics()
+
+Statistics over all of your links for a range.
+
+**Parameters:**
+
+- `query` (`ILinkStatisticsQuery`, optional):
+  - `period` (`"today"` | `"7d"` | `"30d"` | `"month"` | `"custom"`): preset range. Default `"30d"`. Sending `from` or `to` makes it `"custom"`.
+  - `from` / `to` (`string` | `Date`): range start and end, `YYYY-MM-DD`. A `Date` is sent as its **UTC** calendar day.
+
+**Returns:** `Promise<{ range, data }>` — `range` (`from`, `to`, `period` as resolved) and `data`:
+
+- `totals`: lifetime `totalLinks`, `totalVisitors` (the counter, which includes visits from before visit analytics launched) and `avgVisitorsPerLink`, plus the range's `visitsInRange`, `uniqueVisitorsInRange` (sum of daily uniques) and `botVisitsInRange`.
+- `daily`: one row per **UTC** day, `{ _id: "YYYY-MM-DD", createdCount, visitorsSum }` — `createdCount` is links created that day, `visitorsSum` is visits by people made that day (bots excluded), not visitors of the links created that day.
+- `topLinks`: up to ten links with the most visits in the range, each with `visitsInRange`. Links with no visits in the range are left out.
+
+**Example:**
+
+```typescript
+const stats = await shortLinks.statistics({ period: "7d" });
+
+console.log(`Visits this week: ${stats.data.totals.visitsInRange}`);
+for (const day of stats.data.daily) {
+  console.log(day._id, day.visitorsSum);
+}
+console.log(stats.data.topLinks[0]?.visitsInRange);
 ```
 
 ---

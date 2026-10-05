@@ -1,4 +1,4 @@
-import { IPaginationResponse } from "@posty5/core";
+import { ILinkStatisticsDailyRow, ILinkStatisticsResponse, ILinkStatisticsVisitTotals, IPaginationResponse } from "@posty5/core";
 import { ShortLinkStatusType } from "../../types/type";
 
 /**
@@ -101,3 +101,37 @@ export type IGetShortLinkResponse = IShortLinkFullDetailsResponse;
 export interface IDeleteShortLinkResponse {
   message: string;
 }
+
+/** `totals` of `statistics()`. */
+export interface IShortLinkStatisticsTotals extends ILinkStatisticsVisitTotals {
+  /** Links you own (lifetime, deleted ones excluded) */
+  totalLinks: number;
+  /** Lifetime visit counter summed over your links; includes visits from before visit analytics launched */
+  totalVisitors: number;
+  /** `totalVisitors / totalLinks` (0 with no links) */
+  avgVisitorsPerLink: number;
+}
+
+/** One row of `topLinks`: a link with visits in the range. */
+export interface IShortLinkStatisticsTopLink {
+  _id: string;
+  name?: string;
+  baseUrl: string;
+  shortLinkId: string;
+  /** Lifetime visit counter */
+  numberOfVisitors?: number;
+  createdAt: string;
+  /** Visits by people in the range */
+  visitsInRange: number;
+}
+
+/** `data` of `statistics()`. */
+export interface IShortLinkStatisticsData {
+  totals: IShortLinkStatisticsTotals;
+  /** One row per UTC day that had a link created or a visit */
+  daily: ILinkStatisticsDailyRow[];
+  /** Up to ten links with the most visits in the range; links with none are left out */
+  topLinks: IShortLinkStatisticsTopLink[];
+}
+
+export type IShortLinkStatisticsResponse = ILinkStatisticsResponse<IShortLinkStatisticsData>;

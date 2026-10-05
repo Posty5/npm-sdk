@@ -125,6 +125,61 @@ describe("QR Code SDK — payloads (offline)", () => {
     expect(calls[0]).toEqual({ method: "GET", url: "/api/qr-code", params: { refId: "R1", isEnableLandingPage: true, page: 1, pageSize: 10 } });
   });
 
+  it("getAnalytics calls GET /api/qr-code/:id/analytics with the serialized query (VA)", async () => {
+    const answer = {
+      totals: { visits: 3, uniqueVisitors: 2, botVisits: 1 },
+      series: [{ date: "2026-10-01", visits: 3, uniqueVisitors: 2 }],
+      breakdowns: { device: [{ key: "mobile", visits: 2, uniqueVisitors: 1 }, { key: "unknown", visits: 1, uniqueVisitors: 1 }] },
+      meta: {
+        from: "2026-10-01",
+        to: "2026-10-31",
+        interval: "day",
+        timezone: "UTC",
+        source: "events",
+        analyticsStartedAt: "2026-10-01T00:00:00.000Z",
+        locked: [{ breakdown: "country", requiredPlan: "basic" }],
+        maxHistoryDays: 30,
+      },
+    };
+    const { http, calls } = stubHttp(answer);
+    const client = new QRCodeClient(http);
+
+    const result = await client.getAnalytics("qr1", { breakdown: "all", interval: "month", tz: "Africa/Cairo", limit: 5 });
+    await client.getAnalytics("qr1", { breakdown: [] });
+
+    expect(result).toEqual(answer);
+    expect(calls[0]).toEqual({
+      method: "GET",
+      url: "/api/qr-code/qr1/analytics",
+      params: { breakdown: "all", interval: "month", tz: "Africa/Cairo", limit: 5 },
+    });
+    expect(calls[1]).toEqual({ method: "GET", url: "/api/qr-code/qr1/analytics", params: {} });
+  });
+
+  it("statistics calls GET /api/qr-code/statistics with the serialized range (VA)", async () => {
+    const answer = {
+      range: { from: "2026-09-29T00:00:00.000Z", to: "2026-10-05T23:59:59.999Z", period: "7d" },
+      data: {
+        totals: { totalQRCodes: 2, totalVisitors: 40, avgVisitorsPerQRCode: 20, visitsInRange: 5, uniqueVisitorsInRange: 4, botVisitsInRange: 1 },
+        daily: [{ _id: "2026-10-01", createdCount: 1, visitorsSum: 5 }],
+        topQRCodes: [{ _id: "qr1", name: "Menu", createdAt: "2026-10-01T10:00:00.000Z", visitsInRange: 5 }],
+      },
+    };
+    const { http, calls } = stubHttp(answer);
+    const client = new QRCodeClient(http);
+
+    const result = await client.statistics({ period: "7d" });
+    await client.statistics({ from: new Date("2026-10-01T00:00:00.000Z"), to: "2026-10-05" });
+    await client.statistics();
+
+    expect(result).toEqual(answer);
+    expect(calls.map((call) => [call.method, call.url, call.params])).toEqual([
+      ["GET", "/api/qr-code/statistics", { period: "7d" }],
+      ["GET", "/api/qr-code/statistics", { from: "2026-10-01", to: "2026-10-05" }],
+      ["GET", "/api/qr-code/statistics", {}],
+    ]);
+  });
+
   it("requires templateId at compile time (TP-D7)", () => {
     const { http } = stubHttp();
     const client = new QRCodeClient(http);
@@ -399,6 +454,65 @@ describeLive("QR Code SDK", () => {
       expect(withLanding.items.map((qr) => qr._id)).toEqual([landing._id]);
       expect(withLanding.items[0].isEnableLandingPage).toBe(true);
       expect(withLanding.items[0].status).toBeDefined();
+    });
+  });
+
+  // Needs the API's visit-analytics routes (VA) on the stack POSTY5_BASE_URL points at.
+  describe("VA — getAnalytics", () => {
+    it("answers zeros and meta.analyticsStartedAt for a new code", async () => {
+      const result = await client.getAnalytics(createdId);
+
+      expect(result.totals).toEqual({ visits: 0, uniqueVisitors: 0, botVisits: 0 });
+      expect(Array.isArray(result.series)).toBe(true);
+      expect(result.meta.analyticsStartedAt).toBeDefined();
+      expect(Array.isArray(result.meta.locked)).toBe(true);
+    });
+
+    it('returns every allowed breakdown for breakdown: "all" and lists the rest in meta.locked', async () => {
+      const result = await client.getAnalytics(createdId, { breakdown: "all" });
+      const returned = Object.keys(result.breakdowns);
+      const locked = result.meta.locked.map((entry) => entry.breakdown);
+
+      expect(returned).toEqual(expect.arrayContaining(["channel", "device"]));
+      expect(returned.filter((name) => locked.includes(name as never))).toEqual([]);
+    });
+
+    it("returns the breakdowns named in an explicit list", async () => {
+      const result = await client.getAnalytics(createdId, { breakdown: ["device"] });
+
+      expect(Object.keys(result.breakdowns)).toEqual(["device"]);
+    });
+
+    it("returns the allowed breakdowns when breakdown is omitted, as for \"all\"", async () => {
+      const omitted = await client.getAnalytics(createdId);
+      const all = await client.getAnalytics(createdId, { breakdown: "all" });
+
+      expect(Object.keys(omitted.breakdowns).sort()).toEqual(Object.keys(all.breakdowns).sort());
+      expect([30, null]).toContain(omitted.meta.maxHistoryDays);
+      expect(["events", "rollup", "mixed"]).toContain(omitted.meta.source);
+      expect(omitted.meta.from).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it("answers 400 for an invalid interval or limit", async () => {
+      await expect(client.getAnalytics(createdId, { interval: "year" as never })).rejects.toMatchObject({ statusCode: 400 });
+      await expect(client.getAnalytics(createdId, { limit: 51 })).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it("answers 400, not 404, for an unknown id", async () => {
+      await expect(client.getAnalytics("000000000000000000000000")).rejects.toMatchObject({ statusCode: 400, message: "The QR Code Is Not Found" });
+    });
+  });
+
+  describe("VA — statistics", () => {
+    it("answers the rebuilt shape: visit totals, UTC days, top rows with visitsInRange", async () => {
+      const result = await client.statistics({ period: "7d" });
+
+      expect(result.range.period).toBe("7d");
+      expect(typeof result.data.totals.visitsInRange).toBe("number");
+      expect(typeof result.data.totals.uniqueVisitorsInRange).toBe("number");
+      expect(typeof result.data.totals.botVisitsInRange).toBe("number");
+      result.data.daily.forEach((day) => expect(day._id).toMatch(/^\d{4}-\d{2}-\d{2}$/));
+      result.data.topQRCodes.forEach((row) => expect(row.visitsInRange).toBeGreaterThan(0));
     });
   });
 

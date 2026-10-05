@@ -4,17 +4,17 @@
   "modules": [
     {
       "name": "core",
-      "purpose": "HttpClient, retry/error handling, common types, pagination, and signed uploads.",
+      "purpose": "HttpClient, retry/error handling, common types, pagination, signed uploads, and the link analytics + statistics types and query helpers shared by short-link and qr-code (4.4.0).",
       "primary_path": "posty5-core/src"
     },
     {
       "name": "short-link",
-      "purpose": "Short-link CRUD/list client. templateId required; androidUrl/iosUrl and isEnableLandingPage (S13); isEnableMonetization deprecated and stripped from every request; legacy pageinfo.title filter sent as pageInfo.title (4.3.0).",
+      "purpose": "Short-link CRUD/list client. templateId required; androidUrl/iosUrl and isEnableLandingPage (S13); isEnableMonetization deprecated and stripped from every request; legacy pageinfo.title filter sent as pageInfo.title (4.3.0). getAnalytics(id, query?) and statistics(query?) (4.4.0, VA).",
       "primary_path": "posty5-short-link/src"
     },
     {
       "name": "qr-code",
-      "purpose": "Seven QR types with create/update/get/list/delete. Sends qrCodeTarget only; the API builds options.text (free text still sends it). isEnableMonetization deprecated and stripped; isEnableLandingPage on requests and list (4.3.0).",
+      "purpose": "Seven QR types with create/update/get/list/delete. Sends qrCodeTarget only; the API builds options.text (free text still sends it). isEnableMonetization deprecated and stripped; isEnableLandingPage on requests and list (4.3.0). getAnalytics(id, query?) and statistics(query?) (4.4.0, VA).",
       "primary_path": "posty5-qr-code/src"
     },
     {

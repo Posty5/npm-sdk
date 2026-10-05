@@ -30,6 +30,7 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 - **🎨 Template Support** - Apply your templates for branded QR codes (the template sets colours, logo and size)
 - **✏️ Editable Records** - Change a code's content, name, tag or template; the image is re-rendered with the new content
 - **📊 Landing-Page Visits** - Visit counts and the last visit date for each code's Posty5 page (scans of a downloaded image are not counted)
+- **📈 Visit Analytics** - Those visits per day, week or month, with unique visitors, bot visits and breakdowns by country, device, OS, browser, referrer and language
 - **🏷️ Tag & Reference Support** - Organize QR codes with custom tags and reference IDs
 - **🎯 Landing Pages** - Each QR code gets a Posty5 page URL, optionally with your own title and description
 - **🔍 Filtering** - Search and filter by name, status, tag, reference ID, or landing page on/off
@@ -106,6 +107,14 @@ allQRCodes.items.forEach((qr) => {
 ```
 
 ---
+
+## ⬆️ Upgrading to 4.4.0
+
+- **New:** `getAnalytics(id, query?)` — visits of a code's Posty5 page, per
+  day, week or month, with breakdowns (see [Visit Analytics](#visit-analytics)).
+- **New:** `statistics(query?)` — totals, visits per UTC day and the top codes
+  by visits over all your codes (see [statistics()](#statistics)).
+- Requires `@posty5/core` 4.4.0. Nothing else changed.
 
 ## ⬆️ Upgrading to 4.3.0
 
@@ -969,6 +978,105 @@ for (const qr of oldCampaign.items) {
   await qrCodes.delete(qr._id);
   console.log(`Deleted: ${qr.name}`);
 }
+```
+
+---
+
+### Visit Analytics
+
+#### getAnalytics()
+
+Visits of one QR code over a range: totals, a series per day, week or month,
+and breakdowns. Reading analytics costs no credits.
+
+**Parameters:**
+
+- `id` (string): QR code ID
+- `query` (`ILinkAnalyticsQuery`, optional):
+  - `from` / `to` (`string` | `Date`): first and last day, `YYYY-MM-DD` or an ISO date-time. A `Date` is sent as its **UTC** calendar day. Default: the last 30 days.
+  - `interval` (`"day"` | `"week"` | `"month"`): width of one series point. Default `"day"`.
+  - `tz` (string): IANA time zone the days are counted in, e.g. `"Africa/Cairo"`. Default: the owner's time zone, else UTC. Not validated by the SDK; an unknown zone answers 400.
+  - `breakdown` (`LinkAnalyticsBreakdown[]` | `"all"`): any of `country`, `device`, `os`, `browser`, `referrer`, `channel`, `language`, `variant`, `rule`, or `"all"`. Omitted (or an empty list) means every breakdown your plan allows, same as `"all"`.
+  - `limit` (number): rows per breakdown, 1–50. Default 10. The overflow comes back as one row with key `other`; visits with no value (e.g. no referrer) as key `unknown`.
+
+**Returns:** `Promise<ILinkAnalyticsResponse>` — `totals` (`visits`, `uniqueVisitors`, `botVisits`), `series` (`[{ date, visits, uniqueVisitors }]`), `breakdowns` (`{ <name>: [{ key, visits, uniqueVisitors }] }`) and `meta`: `from` / `to` (`YYYY-MM-DD` in `meta.timezone`), `interval`, `timezone`, `source` (`events` | `rollup` | `mixed`), `analyticsStartedAt`, `locked` (`[{ breakdown, requiredPlan }]`, `requiredPlan` a plan key such as `"basic"`) and `maxHistoryDays` (`30` on Free, `null` on Starter and up).
+
+**Example:**
+
+```typescript
+const analytics = await qrCodes.getAnalytics("qr-code-id-123", {
+  from: "2026-10-01",
+  to: "2026-10-31",
+  breakdown: ["device", "country"],
+});
+
+console.log(`Visits: ${analytics.totals.visits} (bots: ${analytics.totals.botVisits})`);
+for (const point of analytics.series) {
+  console.log(point.date, point.visits);
+}
+console.log(analytics.breakdowns.device); // [{ key: "mobile", visits: 12, uniqueVisitors: 9 }, …]
+```
+
+```typescript
+// Every breakdown your plan includes; the others are listed in meta.locked
+const all = await qrCodes.getAnalytics("qr-code-id-123", { breakdown: "all", interval: "week" });
+
+for (const locked of all.meta.locked) {
+  console.log(`${locked.breakdown} needs the ${locked.requiredPlan} plan`);
+}
+```
+
+**What the numbers mean:**
+
+- Bots, crawlers and link-preview fetchers are **not** in `visits`; they are counted in `totals.botVisits` only.
+- `uniqueVisitors` over more than one day is the **sum of each day's uniques** — a visitor is not recognised from one day to the next.
+- There is no data before `meta.analyticsStartedAt`, the day Posty5 started recording visits.
+- `channel` is always `qr`.
+- **Scans of a static code are not counted.** Its image encodes the content directly, so a scan never reaches Posty5; these are visits of the code's Posty5 page — the same visits `numberOfVisitors` counts (see [What `numberOfVisitors` counts](#-what-numberofvisitors-counts)).
+- `meta.timezone` is `"UTC"` when the range reaches further back than raw visits are kept; `meta.source` says whether the answer came from raw visits, daily rollups or both.
+
+**Plan limits:** omitting `breakdown` (or `"all"`) is never refused for a breakdown — it returns what the plan allows and lists the rest in `meta.locked`. Naming a breakdown your plan does not include, or a `from` older than the plan's history (`meta.maxHistoryDays`), throws `AuthorizationError` (403, "This feature is not available on your current plan."). An unknown or deleted id throws `ValidationError` (400, "The QR Code Is Not Found") — not `NotFoundError` — and a code your key may not read throws `AuthorizationError` (403, "You Have Not Permission"):
+
+```typescript
+import { AuthorizationError } from "@posty5/core";
+
+try {
+  await qrCodes.getAnalytics("qr-code-id-123", { breakdown: ["referrer"] });
+} catch (error) {
+  if (error instanceof AuthorizationError) {
+    console.error(error.message); // the API's plan message, unchanged
+  }
+}
+```
+
+#### statistics()
+
+Statistics over all of your codes for a range.
+
+**Parameters:**
+
+- `query` (`ILinkStatisticsQuery`, optional):
+  - `period` (`"today"` | `"7d"` | `"30d"` | `"month"` | `"custom"`): preset range. Default `"30d"`. Sending `from` or `to` makes it `"custom"`.
+  - `from` / `to` (`string` | `Date`): range start and end, `YYYY-MM-DD`. A `Date` is sent as its **UTC** calendar day.
+
+**Returns:** `Promise<{ range, data }>` — `range` (`from`, `to`, `period` as resolved) and `data`:
+
+- `totals`: lifetime `totalQRCodes`, `totalVisitors` and `avgVisitorsPerQRCode`, plus the range's `visitsInRange`, `uniqueVisitorsInRange` (sum of daily uniques) and `botVisitsInRange`.
+- `daily`: one row per **UTC** day, `{ _id: "YYYY-MM-DD", createdCount, visitorsSum }` — `createdCount` is codes created that day, `visitorsSum` is visits by people made that day (bots excluded), not visitors of the codes created that day.
+- `topQRCodes`: up to ten codes with the most visits in the range, each with `visitsInRange`. Codes with no visits in the range are left out.
+
+These are visits of the codes' Posty5 pages: a scan of a static code opens its content directly and is never seen by Posty5.
+
+**Example:**
+
+```typescript
+const stats = await qrCodes.statistics({ period: "7d" });
+
+console.log(`Visits this week: ${stats.data.totals.visitsInRange}`);
+for (const day of stats.data.daily) {
+  console.log(day._id, day.visitorsSum);
+}
+console.log(stats.data.topQRCodes[0]?.visitsInRange);
 ```
 
 ---

@@ -1,4 +1,15 @@
-import { HttpClient, IPaginationParams, IPaginationResponse } from "@posty5/core";
+import {
+  HttpClient,
+  ILinkAnalyticsQuery,
+  ILinkAnalyticsResponse,
+  ILinkStatisticsQuery,
+  IPaginationParams,
+  IPaginationResponse,
+  toLinkAnalyticsPath,
+  toLinkAnalyticsQuery,
+  toLinkStatisticsPath,
+  toLinkStatisticsQuery,
+} from "@posty5/core";
 import {
   ICreateQRCodeResponse,
   IUpdateQRCodeResponse,
@@ -21,6 +32,7 @@ import {
   IUpdateURLQRCodeRequest,
   IUpdateGeolocationQRCodeRequest,
   QrCodeTargetType,
+  IQRCodeStatisticsResponse,
 } from "./interfaces";
 import { toFreeTextQrCodeBody, toQrCodeListQuery, toStructuredQrCodeBody } from "./helpers/qr-code-request.helper";
 import { QrCodeRequestSourceConst } from "./qr-code.config";
@@ -427,6 +439,80 @@ export class QRCodeClient {
   async list(params?: IListParams, pagination?: IPaginationParams): Promise<IPaginationResponse<IQRCode>> {
     const response = await this.http.get<IPaginationResponse<IQRCode>>(this.basePath, {
       params: toQrCodeListQuery(params, pagination),
+    });
+    return response.result!;
+  }
+
+  /**
+   * Visit analytics of one QR code: totals, a series per day/week/month, and
+   * breakdowns by country, device, OS, browser, referrer and language
+   * (`channel` is always `qr`).
+   *
+   * - A static QR code's image encodes its content directly, so scanning it
+   *   never reaches Posty5: these numbers are visits of the code's Posty5 page
+   *   (`qr_<id>`), the same visits `numberOfVisitors` counts — not scans.
+   * - Bots and link-preview fetchers are excluded from `visits` and counted in
+   *   `totals.botVisits` only.
+   * - `uniqueVisitors` over more than one day is the sum of each day's uniques;
+   *   a visitor is not recognised across days.
+   * - There is no data before `meta.analyticsStartedAt`.
+   * - No `breakdown` (or `"all"`) returns every breakdown the owner's plan
+   *   allows and lists the rest in `meta.locked`; naming a breakdown the plan
+   *   does not include, or a `from` older than the plan's history, throws
+   *   `AuthorizationError` (403, "This feature is not available on your current
+   *   plan."). Reading analytics costs no credits.
+   * - An unknown or deleted id throws `ValidationError` (400, "The QR Code Is
+   *   Not Found"), not `NotFoundError`; a code the caller may not read throws
+   *   `AuthorizationError` (403, "You Have Not Permission").
+   *
+   * @param id - QR code ID
+   * @param query - Range, interval, time zone, breakdowns and rows per breakdown
+   * @returns Totals, series, breakdowns and `meta`
+   *
+   * @example
+   * ```typescript
+   * const analytics = await qrCodeClient.getAnalytics('qr123', {
+   *   from: '2026-10-01',
+   *   to: '2026-10-31',
+   *   breakdown: ['device', 'country'],
+   * });
+   * console.log(analytics.totals.visits, analytics.breakdowns.device);
+   * ```
+   */
+  async getAnalytics(id: string, query?: ILinkAnalyticsQuery): Promise<ILinkAnalyticsResponse> {
+    const response = await this.http.get<ILinkAnalyticsResponse>(toLinkAnalyticsPath(this.basePath, id), {
+      params: toLinkAnalyticsQuery(query),
+    });
+    return response.result!;
+  }
+
+  /**
+   * Statistics over all of the caller's QR codes (an admin key: all codes)
+   * for a range.
+   *
+   * - `daily` has one row per **UTC** day: `createdCount` codes created that
+   *   day and `visitorsSum` visits by people to the codes' Posty5 pages made
+   *   that day (bots excluded). A scan of a static code opens its content
+   *   directly and is never seen by Posty5.
+   * - `totals` holds the lifetime `totalQRCodes` / `totalVisitors` and the
+   *   range's `visitsInRange`, `uniqueVisitorsInRange` (sum of daily uniques)
+   *   and `botVisitsInRange`.
+   * - `topQRCodes` is up to ten codes with the most visits in the range, each
+   *   with `visitsInRange`; codes with no visits in the range are left out.
+   *
+   * @param query - `period` preset, or `from` / `to` (`YYYY-MM-DD`; a `Date` is
+   * sent as its UTC day). Default: the last 30 days.
+   * @returns The resolved `range` and the statistics `data`
+   *
+   * @example
+   * ```typescript
+   * const stats = await qrCodeClient.statistics({ period: '7d' });
+   * console.log(stats.data.totals.visitsInRange, stats.data.daily);
+   * ```
+   */
+  async statistics(query?: ILinkStatisticsQuery): Promise<IQRCodeStatisticsResponse> {
+    const response = await this.http.get<IQRCodeStatisticsResponse>(toLinkStatisticsPath(this.basePath), {
+      params: toLinkStatisticsQuery(query),
     });
     return response.result!;
   }

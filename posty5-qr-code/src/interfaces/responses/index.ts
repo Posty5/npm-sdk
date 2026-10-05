@@ -1,4 +1,4 @@
-import { IPaginationMeta } from "@posty5/core";
+import { ILinkStatisticsDailyRow, ILinkStatisticsResponse, ILinkStatisticsVisitTotals, IPaginationMeta } from "@posty5/core";
 import { QrCodeStatusType } from "../types/type";
 import { IQRCodePageInfo, IQRCodeTarget, IQRCodeOptions } from "../requests";
 
@@ -137,3 +137,35 @@ export interface IQRCodeLookupItem {
  * Response for QR code lookup
  */
 export interface ILookupQRCodesResponse extends Array<IQRCodeLookupItem> {}
+
+/** `totals` of `statistics()`. */
+export interface IQRCodeStatisticsTotals extends ILinkStatisticsVisitTotals {
+  /** QR codes you own (lifetime, deleted ones excluded) */
+  totalQRCodes: number;
+  /** Lifetime visit counter of the codes' Posty5 pages, summed */
+  totalVisitors: number;
+  /** `totalVisitors / totalQRCodes` (0 with no codes) */
+  avgVisitorsPerQRCode: number;
+}
+
+/** One row of `topQRCodes`: a code whose Posty5 page had visits in the range. */
+export interface IQRCodeStatisticsTopCode {
+  _id: string;
+  name?: string;
+  /** Lifetime visit counter */
+  numberOfVisitors?: number;
+  createdAt: string;
+  /** Visits by people in the range */
+  visitsInRange: number;
+}
+
+/** `data` of `statistics()`. */
+export interface IQRCodeStatisticsData {
+  totals: IQRCodeStatisticsTotals;
+  /** One row per UTC day that had a code created or a visit */
+  daily: ILinkStatisticsDailyRow[];
+  /** Up to ten codes with the most visits in the range; codes with none are left out */
+  topQRCodes: IQRCodeStatisticsTopCode[];
+}
+
+export type IQRCodeStatisticsResponse = ILinkStatisticsResponse<IQRCodeStatisticsData>;

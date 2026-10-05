@@ -1,4 +1,14 @@
-import { HttpClient, IPaginationParams } from '@posty5/core';
+import {
+    HttpClient,
+    ILinkAnalyticsQuery,
+    ILinkAnalyticsResponse,
+    ILinkStatisticsQuery,
+    IPaginationParams,
+    toLinkAnalyticsPath,
+    toLinkAnalyticsQuery,
+    toLinkStatisticsPath,
+    toLinkStatisticsQuery
+} from '@posty5/core';
 import {
     ISearchShortLinkResponse,
     IGetShortLinkResponse,
@@ -7,7 +17,8 @@ import {
     IDeleteShortLinkResponse,
     ICreateShortLinkRequest,
     IUpdateShortLinkRequest,
-    IListParams
+    IListParams,
+    IShortLinkStatisticsResponse
 } from './interfaces';
 import { toShortLinkBody, toShortLinkListQuery } from './helpers/short-link-request.helper';
 import { ShortLinkCreateSourceConst } from './short-link.config';
@@ -84,5 +95,61 @@ export class ShortLinkClient {
      */
     async delete(id: string): Promise<void> {
         await this.http.delete<IDeleteShortLinkResponse>(`${this.basePath}/${id}`);
+    }
+
+    /**
+     * Visit analytics of one Short Link: totals, a series per day/week/month,
+     * and breakdowns by country, device, OS, browser, referrer, channel
+     * (`link` click or `qr` scan) and language.
+     *
+     * - Bots and link-preview fetchers are excluded from `visits` and counted
+     *   in `totals.botVisits` only.
+     * - `uniqueVisitors` over more than one day is the sum of each day's
+     *   uniques; a visitor is not recognised across days.
+     * - There is no data before `meta.analyticsStartedAt`. QR images
+     *   downloaded before then count their scans as `link`.
+     * - No `breakdown` (or `"all"`) returns every breakdown the owner's plan
+     *   allows and lists the rest in `meta.locked`; naming a breakdown the plan
+     *   does not include, or a `from` older than the plan's history, throws
+     *   `AuthorizationError` (403, "This feature is not available on your
+     *   current plan."). Reading analytics costs no credits.
+     * - An unknown or deleted id throws `ValidationError` (400, "The Short Link
+     *   Is Not Found"), not `NotFoundError`; a link the caller may not read
+     *   throws `AuthorizationError` (403, "You Have Not Permission").
+     *
+     * @param id - Short Link ID
+     * @param query - Range, interval, time zone, breakdowns and rows per breakdown
+     * @returns Totals, series, breakdowns and `meta`
+     */
+    async getAnalytics(id: string, query?: ILinkAnalyticsQuery): Promise<ILinkAnalyticsResponse> {
+        const response = await this.http.get<ILinkAnalyticsResponse>(toLinkAnalyticsPath(this.basePath, id), {
+            params: toLinkAnalyticsQuery(query)
+        });
+        return response.result!;
+    }
+
+    /**
+     * Statistics over all of the caller's short links (an admin key: all
+     * links) for a range.
+     *
+     * - `daily` has one row per **UTC** day: `createdCount` links created that
+     *   day and `visitorsSum` visits by people made that day (bots excluded) —
+     *   not the visitors of links created that day.
+     * - `totals` holds the lifetime `totalLinks` / `totalVisitors` (the
+     *   counter, which includes visits from before visit analytics launched)
+     *   and the range's `visitsInRange`, `uniqueVisitorsInRange` (sum of daily
+     *   uniques) and `botVisitsInRange`.
+     * - `topLinks` is up to ten links with the most visits in the range, each
+     *   with `visitsInRange`; links with no visits in the range are left out.
+     *
+     * @param query - `period` preset, or `from` / `to` (`YYYY-MM-DD`; a `Date`
+     * is sent as its UTC day). Default: the last 30 days.
+     * @returns The resolved `range` and the statistics `data`
+     */
+    async statistics(query?: ILinkStatisticsQuery): Promise<IShortLinkStatisticsResponse> {
+        const response = await this.http.get<IShortLinkStatisticsResponse>(toLinkStatisticsPath(this.basePath), {
+            params: toLinkStatisticsQuery(query)
+        });
+        return response.result!;
     }
 }
