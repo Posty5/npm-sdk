@@ -118,6 +118,28 @@ console.log("✓ Destination updated - same short link, new target!");
 
 ---
 
+## 📦 Bulk create, bulk jobs and export (4.5.0)
+
+```typescript
+// Up to 100 rows per request, sent one chunk after another; safe to retry.
+const result = await shortLinks.createMany(
+  rows.map((r) => ({ url: r.url, name: r.name, tag: "spring" })),
+  { defaults: { templateId }, onProgress: (done, total) => console.log(done, total) },
+);
+result.items.filter((i) => i.status === "failed"); // row = index in `rows` + 1
+
+// Files of up to 5,000 rows run in the background.
+const job = await shortLinks.createBulkJob({ content: csvText, format: "csv", defaults: { templateId } });
+const done = await shortLinks.waitForBulkJob((job as ILinkBulkJob)._id);
+const { url } = await shortLinks.getBulkJobResultUrl(done._id, "result");
+
+// Export with the list filters.
+const file = await shortLinks.export({ format: "csv", tag: "spring" });
+```
+
+A whole-request failure (plan gate, not enough credits) throws
+`Posty5BulkCreateError`; its `partialResult` holds the rows already created.
+
 ## ⬆️ Upgrading to 4.4.0
 
 - **New:** `getAnalytics(id, query?)` — visits, unique visitors and bot visits

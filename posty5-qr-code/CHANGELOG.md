@@ -1,5 +1,20 @@
 # Changelog
 
+## 4.5.0 — bulk create, bulk jobs, export
+
+Needs `@posty5/core` 4.5.0 and the API release of QR bulk generation.
+
+### Added
+
+- **`createMany(items, options?)`** — `POST /api/qr-code/bulk`; rows are
+  `IQrCodeBulkRow`, a union over the seven types (`{ type, target, mode?, name?,
+  customId?, tag?, refId?, templateId?, fileName? }`). Chunking, keys, retry
+  and `Posty5BulkCreateError` as in `@posty5/short-link`.
+- **`export(params?)`** — `GET /api/qr-code/export`.
+- **Bulk jobs** (kind `qrCodes`): `createBulkJob` (with `image: { format, sizePx }`),
+  `getBulkJob`, `getBulkJobResultUrl(id, "result" | "errors" | "zip")`,
+  `cancelBulkJob`, `waitForBulkJob`.
+
 ## Unreleased — dynamic QR codes
 
 Needs the API release of dynamic QR codes; an older API rejects `mode`.

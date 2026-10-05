@@ -1,5 +1,14 @@
 import {
   HttpClient,
+  IBinaryResponse,
+  IBulkCreateOptions,
+  IBulkCreateResult,
+  IBulkDryRunReport,
+  ILinkBulkJob,
+  ILinkBulkJobResultUrl,
+  IWaitForBulkJobOptions,
+  LinkBulkJobApi,
+  runLinkBulkCreate,
   ILinkAnalyticsQuery,
   ILinkAnalyticsResponse,
   ILinkStatisticsQuery,
@@ -33,9 +42,12 @@ import {
   IUpdateGeolocationQRCodeRequest,
   QrCodeTargetType,
   IQRCodeStatisticsResponse,
+  IQrCodeBulkRow,
+  IQrCodeExportParams,
+  ICreateQrCodeBulkJobInput,
 } from "./interfaces";
 import { toFreeTextQrCodeBody, toQrCodeListQuery, toStructuredQrCodeBody } from "./helpers/qr-code-request.helper";
-import { QrCodeRequestSourceConst } from "./qr-code.config";
+import { QrCodeBulkPathsConst, QrCodeRequestSourceConst } from "./qr-code.config";
 
 /**
  * QR Code Client for managing QR codes via Posty5 API
@@ -70,6 +82,7 @@ import { QrCodeRequestSourceConst } from "./qr-code.config";
 export class QRCodeClient {
   private http: HttpClient;
   private basePath = "/api/qr-code";
+  private bulkJobs: LinkBulkJobApi;
 
   /**
    * Create a new QR Code client
@@ -77,6 +90,7 @@ export class QRCodeClient {
    */
   constructor(http: HttpClient) {
     this.http = http;
+    this.bulkJobs = new LinkBulkJobApi(http, "qrCodes");
   }
 
   /**
@@ -515,6 +529,89 @@ export class QRCodeClient {
       params: toLinkStatisticsQuery(query),
     });
     return response.result!;
+  }
+
+  /**
+   * Create many QR codes in one call.
+   *
+   * Rows are sent in chunks (default and maximum 100) one after another to
+   * `POST /api/qr-code/bulk`, each with `Idempotency-Key: <key>-<chunkIndex>`
+   * (`options.idempotencyKey`, default a fresh UUID per call). A chunk that
+   * fails with a network error or a 5xx is retried with the same key, so it
+   * is created and charged once. A refused row comes back with
+   * `status: "failed"` and its `errors`; created rows carry
+   * `qrCodeDownloadURL`. `row` is the 1-based position in `items`.
+   *
+   * A failure of a whole chunk (plan gate, not enough credits, invalid
+   * request, retries exhausted) stops the run and throws
+   * `Posty5BulkCreateError`, whose `partialResult` holds the rows done so far.
+   *
+   * @param items - The QR codes to create, one per type-tagged row
+   * @param options - Defaults, chunk size, idempotency key, progress callback
+   * @returns Counters and one item per row, in input order
+   */
+  async createMany(items: IQrCodeBulkRow[], options?: IBulkCreateOptions): Promise<IBulkCreateResult> {
+    return runLinkBulkCreate(
+      this.http,
+      {
+        url: `${this.basePath}${QrCodeBulkPathsConst.bulk}`,
+        toBody: (rows, opts) => ({
+          items: rows,
+          defaults: opts.defaults,
+          ...QrCodeRequestSourceConst,
+          createdFrom: this.http.createdFrom,
+        }),
+      },
+      items,
+      options,
+    );
+  }
+
+  /**
+   * Export the caller's QR codes as a CSV or JSON file, with the same filters
+   * as `list`. Every CSV cell is injection-hardened by the API.
+   * @param params - List filters plus `format` (`csv` by default)
+   * @returns The file's bytes, content type and file name
+   */
+  async export(params?: IQrCodeExportParams): Promise<IBinaryResponse> {
+    const { format, ...filters } = params || {};
+    return this.http.getBinary(`${this.basePath}${QrCodeBulkPathsConst.export}`, {
+      params: { ...toQrCodeListQuery(filters), ...(format ? { format } : {}) },
+    });
+  }
+
+  /**
+   * Start a background job from a CSV or JSON file of up to 5,000 rows, or
+   * validate it only with `dryRun: true`. `image` sets the ZIP's image format
+   * (`png` by default; `svg`/`pdf` once vector export is live) and size.
+   * @returns The queued job, or the dry-run report
+   */
+  async createBulkJob(input: ICreateQrCodeBulkJobInput): Promise<ILinkBulkJob | IBulkDryRunReport> {
+    const { image, ...rest } = input;
+    return this.bulkJobs.create(rest, image);
+  }
+
+  /** Get a bulk job with its progress. */
+  async getBulkJob(id: string): Promise<ILinkBulkJob> {
+    return this.bulkJobs.get(id);
+  }
+
+  /** A signed, expiring download link of a finished job's `result` CSV, `errors` CSV or image `zip`. */
+  async getBulkJobResultUrl(id: string, file: "result" | "errors" | "zip"): Promise<ILinkBulkJobResultUrl> {
+    return this.bulkJobs.getResultUrl(id, file);
+  }
+
+  /** Cancel a queued or running job; codes already created stay. */
+  async cancelBulkJob(id: string): Promise<ILinkBulkJob> {
+    return this.bulkJobs.cancel(id);
+  }
+
+  /**
+   * Poll a job until it succeeds, partially succeeds, fails or is cancelled.
+   * Rejects after `timeoutMs` (default 30 minutes) without cancelling the job.
+   */
+  async waitForBulkJob(id: string, options?: IWaitForBulkJobOptions): Promise<ILinkBulkJob> {
+    return this.bulkJobs.wait(id, options);
   }
 
   /** POST `/api/qr-code/:type` with the body and this SDK's source fields. */

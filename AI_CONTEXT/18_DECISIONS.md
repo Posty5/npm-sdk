@@ -104,3 +104,16 @@ Do not invent historical rationale. Record evidence-based current decisions and 
   dependency. 4.2.0 shipped `"dependencies": { "@posty5/core": "file:../posty5-core" }`,
   which cannot install outside this repo. Its version jumps from 4.2.0 to 4.6.0
   because its CHANGELOG already recorded 4.3.0–4.5.0 that never reached npm.
+
+## 2026-10-06 — link bulk + webhooks (link-qr-bulk-and-webhooks)
+
+- **Bulk machinery lives once in `@posty5/core`** (`runLinkBulkCreate`,
+  `LinkBulkJobApi`, the bulk interfaces), as link analytics did in 4.4.0. The
+  plan put copies in each package; the public methods are still on
+  `ShortLinkClient` and `QRCodeClient` (C5), each delegating to core.
+- **`createMany` retries chunks itself**, not through axios-retry: core never
+  retries a POST after an answer, but a bulk chunk carries an
+  `Idempotency-Key` and the API dedupes, so a same-key retry on network
+  error/5xx is safe. Every chunk is sent with `skipRetry: true`.
+- **`verifyWebhookSignature` is Node only** (`node:crypto`, `Buffer`); the
+  clients stay isomorphic. The raw body is required.

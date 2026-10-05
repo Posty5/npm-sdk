@@ -14,3 +14,9 @@ export const QrCodeRequestSourceConst = {
  * every body and query string. Removed from the types in 5.0.0.
  */
 export const QrCodeDeprecatedRequestKeysConst = ["isEnableMonetization"] as const;
+
+/** Sub-paths of the bulk create and export routes under `/api/qr-code`. */
+export const QrCodeBulkPathsConst = {
+  bulk: "/bulk",
+  export: "/export",
+} as const;

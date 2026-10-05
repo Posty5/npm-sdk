@@ -202,6 +202,26 @@
     {
       "path": "__tests__",
       "role": "Live/integration-oriented Jest suite and media fixtures."
+    },
+    {
+      "path": "posty5-core/src/utils/link-bulk.helper.ts",
+      "role": "runLinkBulkCreate: chunked, keyed, retried bulk create shared by short-link and qr-code"
+    },
+    {
+      "path": "posty5-core/src/http/link-bulk-job.api.ts",
+      "role": "LinkBulkJobApi: /api/link-bulk-jobs create/get/result-url/cancel/wait"
+    },
+    {
+      "path": "posty5-core/src/types/link-bulk.interface.ts",
+      "role": "Bulk create, bulk job and export shapes"
+    },
+    {
+      "path": "posty5-webhooks/src/webhook-endpoint.client.ts",
+      "role": "WebhookEndpointClient"
+    },
+    {
+      "path": "posty5-webhooks/src/verify.ts",
+      "role": "verifyWebhookSignature (Standard Webhooks)"
     }
   ]
 }

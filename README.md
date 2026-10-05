@@ -350,6 +350,16 @@ Create publishing posts for creator-owned videos across connected social media a
 
 ---
 
+### [@posty5/webhooks](./posty5-webhooks) - Webhooks
+
+Register HTTPS endpoints for visit, scan and milestone events
+(`WebhookEndpointClient`) and verify each signed delivery in one line
+(`verifyWebhookSignature`, Standard Webhooks, Node only).
+
+```bash
+npm install @posty5/core @posty5/webhooks
+```
+
 ## 🏷️ Tag and RefId Features
 
 All SDK packages support two powerful fields for organizing and tracking your resources:

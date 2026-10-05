@@ -25,6 +25,7 @@
         "posty5-social-publisher-post",
         "posty5-store",
         "posty5-account",
+        "posty5-webhooks",
         "posty5-mcp"
     ],
     "devDependencies": {

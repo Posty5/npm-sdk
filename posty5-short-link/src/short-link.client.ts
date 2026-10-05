@@ -1,5 +1,15 @@
 import {
     HttpClient,
+    IBinaryResponse,
+    IBulkCreateOptions,
+    IBulkCreateResult,
+    IBulkDryRunReport,
+    ICreateLinkBulkJobInput,
+    ILinkBulkJob,
+    ILinkBulkJobResultUrl,
+    IWaitForBulkJobOptions,
+    LinkBulkJobApi,
+    runLinkBulkCreate,
     ILinkAnalyticsQuery,
     ILinkAnalyticsResponse,
     ILinkStatisticsQuery,
@@ -18,10 +28,12 @@ import {
     ICreateShortLinkRequest,
     IUpdateShortLinkRequest,
     IListParams,
-    IShortLinkStatisticsResponse
+    IShortLinkStatisticsResponse,
+    IShortLinkBulkRow,
+    IShortLinkExportParams
 } from './interfaces';
 import { toShortLinkBody, toShortLinkListQuery } from './helpers/short-link-request.helper';
-import { ShortLinkCreateSourceConst } from './short-link.config';
+import { ShortLinkBulkPathsConst, ShortLinkCreateSourceConst } from './short-link.config';
 
 /**
  * Short Link Client for managing Short Links via Posty5 API
@@ -29,6 +41,7 @@ import { ShortLinkCreateSourceConst } from './short-link.config';
 export class ShortLinkClient {
     private http: HttpClient;
     private basePath = '/api/short-link';
+    private bulkJobs: LinkBulkJobApi;
 
     /**
      * Create a new Short Link client
@@ -36,6 +49,7 @@ export class ShortLinkClient {
      */
     constructor(http: HttpClient) {
         this.http = http;
+        this.bulkJobs = new LinkBulkJobApi(http, 'shortLinks');
     }
 
     /**
@@ -152,5 +166,87 @@ export class ShortLinkClient {
             params: toLinkStatisticsQuery(query)
         });
         return response.result!;
+    }
+
+    /**
+     * Create many short links in one call.
+     *
+     * Rows are sent in chunks (default and maximum 100) one after another to
+     * `POST /api/short-link/bulk`, each with `Idempotency-Key: <key>-<chunkIndex>`
+     * (`options.idempotencyKey`, default a fresh UUID per call). A chunk that
+     * fails with a network error or a 5xx is retried with the same key, so it
+     * is created and charged once. A refused row never blocks the others: it
+     * comes back with `status: "failed"` and its `errors`. `row` is the
+     * 1-based position in `rows`.
+     *
+     * A failure of a whole chunk (plan gate, not enough credits, invalid
+     * request, retries exhausted) stops the run and throws
+     * `Posty5BulkCreateError`, whose `partialResult` holds the rows done so far.
+     *
+     * @param rows - The links to create
+     * @param options - Defaults, chunk size, idempotency key, progress callback
+     * @returns Counters and one item per row, in input order
+     */
+    async createMany(rows: IShortLinkBulkRow[], options?: IBulkCreateOptions): Promise<IBulkCreateResult> {
+        return runLinkBulkCreate(
+            this.http,
+            {
+                url: `${this.basePath}${ShortLinkBulkPathsConst.bulk}`,
+                toBody: (links, opts) => ({
+                    links,
+                    defaults: opts.defaults,
+                    fetchMetadata: opts.fetchMetadata,
+                    ...ShortLinkCreateSourceConst,
+                    createdFrom: this.http.createdFrom,
+                }),
+            },
+            rows,
+            options,
+        );
+    }
+
+    /**
+     * Export the caller's short links as a CSV or JSON file, with the same
+     * filters as `list`. Every CSV cell is injection-hardened by the API.
+     * @param params - List filters plus `format` (`csv` by default)
+     * @returns The file's bytes, content type and file name
+     */
+    async export(params?: IShortLinkExportParams): Promise<IBinaryResponse> {
+        const { format, ...filters } = params || {};
+        return this.http.getBinary(`${this.basePath}${ShortLinkBulkPathsConst.export}`, {
+            params: { ...toShortLinkListQuery(filters), ...(format ? { format } : {}) },
+        });
+    }
+
+    /**
+     * Start a background job from a CSV or JSON file of up to 5,000 rows, or
+     * validate it only with `dryRun: true`.
+     * @returns The queued job, or the dry-run report
+     */
+    async createBulkJob(input: ICreateLinkBulkJobInput): Promise<ILinkBulkJob | IBulkDryRunReport> {
+        return this.bulkJobs.create(input);
+    }
+
+    /** Get a bulk job with its progress. */
+    async getBulkJob(id: string): Promise<ILinkBulkJob> {
+        return this.bulkJobs.get(id);
+    }
+
+    /** A signed, expiring download link of a finished job's `result` or `errors` CSV. */
+    async getBulkJobResultUrl(id: string, file: 'result' | 'errors'): Promise<ILinkBulkJobResultUrl> {
+        return this.bulkJobs.getResultUrl(id, file);
+    }
+
+    /** Cancel a queued or running job; rows already created stay. */
+    async cancelBulkJob(id: string): Promise<ILinkBulkJob> {
+        return this.bulkJobs.cancel(id);
+    }
+
+    /**
+     * Poll a job until it succeeds, partially succeeds, fails or is cancelled.
+     * Rejects after `timeoutMs` (default 30 minutes) without cancelling the job.
+     */
+    async waitForBulkJob(id: string, options?: IWaitForBulkJobOptions): Promise<ILinkBulkJob> {
+        return this.bulkJobs.wait(id, options);
     }
 }

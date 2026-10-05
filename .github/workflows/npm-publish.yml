@@ -96,6 +96,13 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      # New in 4.5.0 (link-qr-bulk-and-webhooks): endpoint client + verifyWebhookSignature.
+      - name: Publish posty5-webhooks
+        working-directory: ./posty5-webhooks
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       # New in 1.0.0 (mcp-server feature): every SDK service as MCP tools, plus the stdio binary.
       # After posty5-account: it depends on every package above at the versions just published.
       - name: Publish posty5-mcp

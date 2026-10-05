@@ -1,5 +1,27 @@
 # Changelog
 
+## 4.5.0
+
+Additive. Required by `@posty5/short-link` 4.5.0, `@posty5/qr-code` 4.5.0 and
+`@posty5/webhooks` 4.5.0.
+
+### Added
+
+- **Bulk shapes** shared by both link clients: `IBulkDefaults`,
+  `IBulkRowResult`, `IBulkCreateResult`, `IBulkCreateOptions`, `ILinkBulkJob`,
+  `IBulkDryRunReport`, `ICreateLinkBulkJobInput`, `ILinkBulkJobResultUrl`,
+  `IWaitForBulkJobOptions`, `ILinkExportParams`.
+- **`runLinkBulkCreate`** (sequential chunks of at most 100, `Idempotency-Key:
+  <key>-<chunkIndex>`, same-key retry on network error/5xx, row renumbering)
+  and **`LinkBulkJobApi`** (`/api/link-bulk-jobs`: create, get, result-url,
+  cancel, wait). Constants in `utils/link-bulk.config.ts`.
+- **`Posty5BulkCreateError`** with `partialResult` and `cause`.
+
+### Fixed
+
+- `CORE_VERSION` (sent in `X-Posty5-Client`) said 4.3.0 while the package was
+  4.4.0; both are now 4.5.0.
+
 ## 4.4.0
 
 Additive. Required by `@posty5/short-link` 4.4.0 and `@posty5/qr-code` 4.4.0.

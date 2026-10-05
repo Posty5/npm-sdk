@@ -134,6 +134,21 @@ An update without `mode` keeps the stored mode. Switching `mode` changes the
 image. `list({ mode: 'dynamic' })` filters; responses carry `mode` and
 `dynamicSince`.
 
+## 📦 Bulk create, bulk jobs and export (4.5.0)
+
+```typescript
+const result = await qrCodes.createMany([
+  { type: "url", target: { url: "https://example.com" }, name: "Home" },
+  { type: "freeText", target: { text: "Hello" }, fileName: "hello" },
+], { defaults: { templateId } });
+
+const job = await qrCodes.createBulkJob({ content: csvText, format: "csv", image: { format: "png", sizePx: 512 } });
+const done = await qrCodes.waitForBulkJob((job as ILinkBulkJob)._id);
+const { url } = await qrCodes.getBulkJobResultUrl(done._id, "zip"); // images, named from fileName
+
+const file = await qrCodes.export({ format: "json" });
+```
+
 ## ⬆️ Upgrading to 4.4.0
 
 - **New:** `getAnalytics(id, query?)` — visits of a code's Posty5 page, per

@@ -22,3 +22,9 @@ export const ShortLinkDeprecatedRequestKeysConst = ["isEnableMonetization"] as c
 export const ShortLinkLegacyListKeysConst = {
   "pageinfo.title": "pageInfo.title",
 } as const;
+
+/** Sub-paths of the bulk create and export routes under `/api/short-link`. */
+export const ShortLinkBulkPathsConst = {
+  bulk: "/bulk",
+  export: "/export",
+} as const;

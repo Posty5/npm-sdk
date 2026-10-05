@@ -1,5 +1,21 @@
 # Changelog
 
+## 4.5.0
+
+Needs `@posty5/core` 4.5.0 and the API release of link bulk create, bulk jobs
+and export.
+
+### Added
+
+- **`createMany(rows, options?)`** — `POST /api/short-link/bulk` in sequential
+  chunks of at most 100 with a per-chunk `Idempotency-Key`; a chunk is retried
+  with the same key on a network error or 5xx; `row` is the 1-based index in
+  `rows`. A whole-request failure (gate, credits) throws
+  `Posty5BulkCreateError` with `partialResult`. `createMany([])` sends nothing.
+- **`export(params?)`** — `GET /api/short-link/export`, CSV or JSON, list filters.
+- **`createBulkJob`, `getBulkJob`, `getBulkJobResultUrl(id, "result" | "errors")`,
+  `cancelBulkJob`, `waitForBulkJob`** over `/api/link-bulk-jobs` (kind `shortLinks`).
+
 ## 4.4.0
 
 Needs `@posty5/core` 4.4.0 (the analytics and statistics types and query

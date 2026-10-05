@@ -3,4 +3,4 @@
  * `package.json` sits outside `rootDir`; `__tests__/core-http.test.ts` fails
  * the moment the two disagree, so bump both together.
  */
-export const CORE_VERSION = "4.3.0";
+export const CORE_VERSION = "4.5.0";
