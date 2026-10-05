@@ -1,5 +1,5 @@
 import { IPaginationParams } from "@posty5/core";
-import { QrCodeStatusType, QrCodeTargetType } from "../types/type";
+import { QRCodeMode, QrCodeStatusType, QrCodeTargetType } from "../types/type";
 
 /**
  * Content of the code's Posty5 landing page when `isEnableLandingPage` is true.
@@ -177,7 +177,21 @@ export interface IQRCodeRequest {
   isEnableMonetization?: boolean;
   /** Page information (required when `isEnableLandingPage` is true) */
   pageInfo?: IQRCodePageInfo;
+  /**
+   * `"dynamic"` encodes the code's Posty5 link (`qrCodeLandingPageURL`), so the
+   * target can be changed later without reprinting; `"static"` encodes the
+   * content itself. Wi-Fi codes cannot be dynamic. Omitted on create → the API
+   * makes a static code; omitted on update → the stored mode is kept. Sent only
+   * when defined. Changing the mode changes the image.
+   */
+  mode?: QRCodeMode;
 }
+
+/** Request fields for a Wi-Fi code: Wi-Fi codes are always static. */
+export type IQRCodeStaticOnlyRequest<T extends IQRCodeRequest> = Omit<T, "mode"> & {
+  /** Wi-Fi codes cannot be dynamic; only `"static"` is accepted. */
+  mode?: "static";
+};
 
 export interface ICreateFreeTextQRCodeRequest extends IQRCodeRequest {
   /** QR code text */
@@ -187,7 +201,7 @@ export interface ICreateEmailQRCodeRequest extends IQRCodeRequest {
   /** Email configuration (when type is 'email') */
   email: IQRCodeEmailTarget;
 }
-export interface ICreateWifiQRCodeRequest extends IQRCodeRequest {
+export interface ICreateWifiQRCodeRequest extends IQRCodeStaticOnlyRequest<IQRCodeRequest> {
   /** WiFi configuration (when type is 'wifi') */
   wifi: IQRCodeWifiTarget;
 }
@@ -227,7 +241,7 @@ export interface IUpdateEmailQRCodeRequest extends IUpdateQRCodeRequest {
   /** Email configuration (when type is 'email') */
   email: IQRCodeEmailTarget;
 }
-export interface IUpdateWifiQRCodeRequest extends IUpdateQRCodeRequest {
+export interface IUpdateWifiQRCodeRequest extends IQRCodeStaticOnlyRequest<IUpdateQRCodeRequest> {
   /** WiFi configuration (when type is 'wifi') */
   wifi: IQRCodeWifiTarget;
 }
@@ -272,4 +286,6 @@ export interface IListParams {
   status?: QrCodeStatusType;
   /** Filter by created from source */
   createdFrom?: string;
+  /** Filter by mode (`"static"` or `"dynamic"`) */
+  mode?: QRCodeMode;
 }

@@ -108,6 +108,32 @@ allQRCodes.items.forEach((qr) => {
 
 ---
 
+## 🔁 Dynamic QR codes
+
+A dynamic code's image encodes its Posty5 link (`qrCodeLandingPageURL`), not the
+content, so you can change where it leads after it is printed. Without `mode`
+the API makes a static code. Wi-Fi codes are always static.
+
+```typescript
+const qr = await qrCodeClient.createURL({
+  name: 'Menu',
+  templateId: 'template_123',
+  url: { url: 'https://example.com/menu-v1' },
+  mode: 'dynamic',
+});
+
+// Later: change the target. The image (and qrCodeLandingPageURL) stays the same.
+await qrCodeClient.updateURL(qr._id, {
+  name: 'Menu',
+  templateId: 'template_123',
+  url: { url: 'https://example.com/menu-v2' },
+});
+```
+
+An update without `mode` keeps the stored mode. Switching `mode` changes the
+image. `list({ mode: 'dynamic' })` filters; responses carry `mode` and
+`dynamicSince`.
+
 ## ⬆️ Upgrading to 4.4.0
 
 - **New:** `getAnalytics(id, query?)` — visits of a code's Posty5 page, per

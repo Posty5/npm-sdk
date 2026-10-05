@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased — dynamic QR codes
+
+Needs the API release of dynamic QR codes; an older API rejects `mode`.
+
+### Added
+
+- **`mode?: "static" | "dynamic"`** (`QRCodeMode`) on every create and update
+  request and as a `list()` filter. Sent only when defined, so calls without
+  it send exactly what they sent before. Omitted on create → the API makes a
+  static code; omitted on update → the stored mode is kept.
+- A dynamic code's image encodes its Posty5 link (`qrCodeLandingPageURL`), so
+  the target can change later without reprinting. `createFreeText` /
+  `updateFreeText` send no `options.text` for a dynamic code.
+- Wi-Fi codes cannot be dynamic: `ICreateWifiQRCodeRequest` /
+  `IUpdateWifiQRCodeRequest` accept `mode?: "static"` only (the API's 400
+  "This QR code type cannot be dynamic" is surfaced unchanged).
+- `IQRCode.mode` and `IQRCode.dynamicSince` on responses.
+
 ## 4.4.0
 
 Needs `@posty5/core` 4.4.0 (the analytics and statistics types and query

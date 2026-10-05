@@ -1,5 +1,5 @@
 import { ILinkStatisticsDailyRow, ILinkStatisticsResponse, ILinkStatisticsVisitTotals, IPaginationMeta } from "@posty5/core";
-import { QrCodeStatusType } from "../types/type";
+import { QRCodeMode, QrCodeStatusType } from "../types/type";
 import { IQRCodePageInfo, IQRCodeTarget, IQRCodeOptions } from "../requests";
 
 /**
@@ -73,6 +73,14 @@ export interface IQRCode {
   qrCodeLandingPageURL?: string;
   /** Shorter link URL */
   qrCodeDownloadURL?: string;
+  /**
+   * `"dynamic"`: the image encodes `qrCodeLandingPageURL`, so the target can
+   * change without reprinting. `"static"`: the image encodes the content.
+   * Absent on records from before dynamic codes existed (static).
+   */
+  mode?: QRCodeMode;
+  /** When the code became dynamic (ISO date); `null` or absent when static. */
+  dynamicSince?: string | null;
 }
 
 /**

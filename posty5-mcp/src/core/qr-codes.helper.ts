@@ -1,4 +1,6 @@
-import type { IQRCode, IQRCodeRequest, IUpdateQRCodeRequest, QRCodeClient } from "@posty5/qr-code";
+import type { IQRCode, IQRCodeRequest, IUpdateQRCodeRequest, QRCodeClient, QRCodeMode } from "@posty5/qr-code";
+import { QR_CODE_DEFAULT_MODE, QR_CODE_STATIC_ONLY_TYPES } from "../config/qr-codes-enums.config";
+import { ToolInputError } from "./tool-input.error";
 import type { IQrCodeTargetArgs } from "../interfaces/qr-codes.interface";
 
 /**
@@ -19,6 +21,23 @@ function targetBlocks(target: IQrCodeTargetArgs) {
   };
 }
 
+/**
+ * The mode a QR code tool sends. Wi-Fi is static-only: asking for dynamic is
+ * refused before any request. With `applyDefault` (qr_code_create) an omitted
+ * mode becomes the dynamic default (DQ-D3), or static for Wi-Fi; without it
+ * (qr_code_update) an omitted mode stays omitted so the stored mode is kept.
+ */
+export function resolveQrCodeMode(target: IQrCodeTargetArgs, mode: QRCodeMode | undefined, applyDefault: boolean): QRCodeMode | undefined {
+  const staticOnly = QR_CODE_STATIC_ONLY_TYPES.includes(target.type);
+  if (staticOnly && mode === "dynamic") {
+    throw new ToolInputError(`type "${target.type}" cannot be dynamic; use mode "static" or leave it out.`);
+  }
+  if (mode !== undefined || !applyDefault) {
+    return mode;
+  }
+  return staticOnly ? "static" : QR_CODE_DEFAULT_MODE;
+}
+
 /** Creates a QR code through the SDK method of its `type`. Check the type's fields with `requireFields` first. */
 export function createQrCode(client: QRCodeClient, base: IQRCodeRequest, target: IQrCodeTargetArgs): Promise<IQRCode> {
   const blocks = targetBlocks(target);
@@ -28,7 +47,7 @@ export function createQrCode(client: QRCodeClient, base: IQRCodeRequest, target:
     case "email":
       return client.createEmail({ ...base, email: blocks.email });
     case "wifi":
-      return client.createWifi({ ...base, wifi: blocks.wifi });
+      return client.createWifi({ ...base, mode: base.mode === "dynamic" ? undefined : base.mode, wifi: blocks.wifi });
     case "call":
       return client.createCall({ ...base, call: blocks.call });
     case "sms":
@@ -49,7 +68,7 @@ export function updateQrCode(client: QRCodeClient, id: string, base: IUpdateQRCo
     case "email":
       return client.updateEmail(id, { ...base, email: blocks.email });
     case "wifi":
-      return client.updateWifi(id, { ...base, wifi: blocks.wifi });
+      return client.updateWifi(id, { ...base, mode: base.mode === "dynamic" ? undefined : base.mode, wifi: blocks.wifi });
     case "call":
       return client.updateCall(id, { ...base, call: blocks.call });
     case "sms":

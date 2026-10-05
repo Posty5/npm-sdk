@@ -180,6 +180,44 @@ describe("QR Code SDK — payloads (offline)", () => {
     ]);
   });
 
+  it("sends mode only when defined; a call without mode is unchanged (DQ)", async () => {
+    const { http, calls } = stubHttp({ _id: "qr1" });
+    const client = new QRCodeClient(http);
+
+    await client.createURL({ templateId, url: { url: "https://example.com" } });
+    await client.createURL({ templateId, url: { url: "https://example.com" }, mode: "dynamic" });
+    await client.updateURL("qr1", { name: "N", templateId, url: { url: "https://example.com" }, mode: "static" });
+
+    expect(calls[0].body).toEqual({ templateId, qrCodeTarget: { type: "url", url: { url: "https://example.com" } }, ...source });
+    expect(calls[1].body).toEqual({ templateId, mode: "dynamic", qrCodeTarget: { type: "url", url: { url: "https://example.com" } }, ...source });
+    expect(calls[2].body).toMatchObject({ mode: "static" });
+  });
+
+  it("a dynamic free-text code sends no client-built options.text (DQ)", async () => {
+    const { http, calls } = stubHttp({ _id: "qr1" });
+    await new QRCodeClient(http).createFreeText({ templateId, text: "HELLO", mode: "dynamic" });
+    expect(calls[0].body).toEqual({ templateId, mode: "dynamic", qrCodeTarget: { type: "freeText", freeText: { text: "HELLO" } }, ...source });
+  });
+
+  it("list sends the mode filter (DQ)", async () => {
+    const { http, calls } = stubHttp({ items: [], pagination: {} });
+    await new QRCodeClient(http).list({ mode: "dynamic" });
+    expect(calls[0].params).toEqual({ mode: "dynamic" });
+  });
+
+  it("Wi-Fi codes cannot be dynamic at compile time (DQ)", () => {
+    const { http } = stubHttp();
+    const client = new QRCodeClient(http);
+    const compileOnly = () => {
+      void client.createWifi({ templateId, wifi: { name: "Cafe" }, mode: "static" });
+      // @ts-expect-error Wi-Fi codes are static only
+      void client.createWifi({ templateId, wifi: { name: "Cafe" }, mode: "dynamic" });
+      // @ts-expect-error Wi-Fi codes are static only
+      void client.updateWifi("qr1", { name: "N", templateId, wifi: { name: "Cafe" }, mode: "dynamic" });
+    };
+    expect(typeof compileOnly).toBe("function");
+  });
+
   it("requires templateId at compile time (TP-D7)", () => {
     const { http } = stubHttp();
     const client = new QRCodeClient(http);
@@ -409,6 +447,40 @@ describeLive("QR Code SDK", () => {
       });
 
       expect(result._id).toBe(targetId);
+    });
+  });
+
+  describe("Dynamic QR codes (DQ)", () => {
+    let dynamicId: string;
+
+    it("creates a dynamic URL code that encodes its landing page URL", async () => {
+      const created = await client.createURL({ name: "DQ dynamic - " + Date.now(), templateId, url: { url: "https://example.com/a" }, mode: "dynamic" });
+      dynamicId = created._id;
+      createdResources.qrCodes.push(dynamicId);
+
+      const stored = await client.get(dynamicId);
+      expect(stored.mode).toBe("dynamic");
+      expect(stored.dynamicSince).toBeTruthy();
+      expect(stored.options?.text).toBe(stored.qrCodeLandingPageURL);
+    });
+
+    it("changing the target keeps the landing page URL", async () => {
+      const before = await client.get(dynamicId);
+      await client.updateURL(dynamicId, { name: before.name, templateId, url: { url: "https://example.com/b" } });
+      const after = await client.get(dynamicId);
+      expect(after.qrCodeLandingPageURL).toBe(before.qrCodeLandingPageURL);
+      expect(after.mode).toBe("dynamic");
+    });
+
+    it("creates a static code when mode is omitted", async () => {
+      const created = await client.createURL({ name: "DQ static - " + Date.now(), templateId, url: { url: "https://example.com" } });
+      createdResources.qrCodes.push(created._id);
+      expect((await client.get(created._id)).mode ?? "static").toBe("static");
+    });
+
+    it("list({ mode: 'dynamic' }) includes the dynamic code", async () => {
+      const result = await client.list({ mode: "dynamic" }, { page: 1, pageSize: 50 });
+      expect(result.items.some((item) => item._id === dynamicId)).toBe(true);
     });
   });
 

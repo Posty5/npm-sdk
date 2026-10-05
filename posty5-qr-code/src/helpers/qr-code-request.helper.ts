@@ -33,15 +33,20 @@ export function toStructuredQrCodeBody(type: QrCodeStructuredTargetType, data: I
  * The body for creating or updating a free-text code. The text is both the
  * target (`qrCodeTarget.freeText.text`) and the encoded content
  * (`options.text`); the API derives the stored text from the target.
+ * A dynamic code encodes its Posty5 link instead, so no `options.text` is sent
+ * for `mode: "dynamic"`. `mode` itself is passed through only when defined.
  * The caller's object is left untouched.
  */
 export function toFreeTextQrCodeBody(data: ICreateFreeTextQRCodeRequest): Record<string, unknown> {
   const { text, ...fields } = data;
-  return {
+  const body: Record<string, unknown> = {
     ...withoutDeprecatedKeys(fields),
     qrCodeTarget: { type: "freeText", freeText: { text } },
-    options: { text },
   };
+  if (data.mode !== "dynamic") {
+    body.options = { text };
+  }
+  return body;
 }
 
 /** The query string sent by `list()`: filters plus pagination, deprecated keys removed. */

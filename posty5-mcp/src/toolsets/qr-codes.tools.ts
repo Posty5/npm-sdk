@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { QR_CODE_REQUIRED_FIELDS, QR_CODE_STATUSES, QR_CODE_TYPES, QR_TEMPLATE_SCOPES, WIFI_AUTHENTICATION_TYPES } from "../config/qr-codes-enums.config";
+import { QR_CODE_MODES, QR_CODE_REQUIRED_FIELDS, QR_CODE_STATUSES, QR_CODE_TYPES, QR_TEMPLATE_SCOPES, WIFI_AUTHENTICATION_TYPES } from "../config/qr-codes-enums.config";
 import { defineTool, idField, pageFields, pickPage, requireFields, withoutPaging } from "../core/define-tool.helper";
-import { createQrCode, updateQrCode } from "../core/qr-codes.helper";
+import { createQrCode, resolveQrCodeMode, updateQrCode } from "../core/qr-codes.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
 const QR_CODE_ID = "The QR code's _id, from qr_code_list.";
@@ -39,7 +39,8 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
     toolset: "qr-codes",
     access: "read",
     title: "List QR codes",
-    description: "QR codes, newest first, with their type, landing page URL, image URL and scan count. Filter by name, landing id, template, tag, refId or status.",
+    description:
+      "QR codes, newest first, with their type, mode (static or dynamic), dynamicSince, landing page URL, image URL and scan count. Filter by name, landing id, template, tag, refId, status or mode.",
     input: z.object({
       name: z.string().optional().describe("Part of the QR code's name."),
       qrCodeId: z.string().optional().describe("The QR code's landing id (the last part of its landing page URL)."),
@@ -48,6 +49,7 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
       refId: z.string().optional(),
       status: z.enum(QR_CODE_STATUSES).optional(),
       createdFrom: z.string().optional().describe('Where it was created, e.g. "mcp".'),
+      mode: z.enum(QR_CODE_MODES).optional().describe('Only "static" or only "dynamic" QR codes.'),
       ...pageFields(),
     }),
     run: (args, { clients }) => clients.qrCodes.list(withoutPaging(args), pickPage(args)),
@@ -57,7 +59,8 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
     toolset: "qr-codes",
     access: "read",
     title: "Get a QR code",
-    description: "One QR code with its full details: type and target, template, status, scans, landing page and image URLs.",
+    description:
+      "One QR code with its full details: type and target, mode (a dynamic code's image encodes qrCodeLandingPageURL), dynamicSince, template, status, scans, landing page and image URLs.",
     input: z.object({ id: idField(QR_CODE_ID) }),
     run: ({ id }, { clients }) => clients.qrCodes.get(id),
   }),
@@ -82,17 +85,25 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
     access: "write",
     title: "Create a QR code",
     description:
-      "Creates a QR code of the given type and returns its landing page URL and image URL. It works at once. Needs a templateId from qr_code_list_templates and the fields of its type.",
+      "Creates a QR code of the given type and returns its mode, landing page URL and image URL. It works at once. Needs a templateId from qr_code_list_templates and the fields of its type. " +
+      "Dynamic codes (the default) point to a Posty5 link, so their target can be changed later with qr_code_update. " +
+      "Wi-Fi codes are always static. " +
+      "Switching mode later changes the image.",
     input: z.object({
       ...targetFields,
       templateId: idField("The template that styles the QR code: an _id from qr_code_list_templates."),
       ...labelFields,
       customLandingId: z.string().max(32).optional().describe("A custom landing id (the landing URL's last part, at most 32 characters), when the plan allows it."),
+      mode: z
+        .enum(QR_CODE_MODES)
+        .optional()
+        .describe('"dynamic" (default): the image encodes a Posty5 link, so the target can change later without reprinting. "static": the image encodes the content itself. type "wifi" is always static.'),
     }),
     run: (args, { clients }) => {
       requireFields(args, QR_CODE_REQUIRED_FIELDS[args.type], `type "${args.type}"`);
+      const mode = resolveQrCodeMode(args, args.mode, true);
       const { name, templateId, refId, tag, customLandingId } = args;
-      return createQrCode(clients.qrCodes, { name, templateId, refId, tag, customLandingId }, args);
+      return createQrCode(clients.qrCodes, { name, templateId, refId, tag, customLandingId, mode }, args);
     },
     entity: (result) => ({ entityType: "qrCode", entityId: result?._id }),
   }),
@@ -102,18 +113,21 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
     access: "write",
     title: "Update a QR code",
     description:
-      "Replaces a QR code's target: give its type (the current one is qrCodeTarget.type in qr_code_get, and it may change) and every field of that type. name, templateId, refId and tag left out keep their current value. Its landing page and image URLs never change.",
+      "Replaces a QR code's target: give its type (the current one is qrCodeTarget.type in qr_code_get, and it may change) and every field of that type. name, templateId, refId and tag left out keep their current value. Its landing page and image URLs never change. " +
+      "mode left out keeps the current mode; changing mode changes the printed image (the old printed code still works).",
     input: z.object({
       id: idField(QR_CODE_ID),
       ...targetFields,
       templateId: z.string().optional().describe("A new template, from qr_code_list_templates."),
       ...labelFields,
+      mode: z.enum(QR_CODE_MODES).optional().describe('Leave out to keep the current mode. "dynamic" or "static" switches it, which changes the image. type "wifi" cannot be dynamic.'),
     }),
     annotations: { idempotent: true },
     run: async (args, { clients }) => {
       requireFields(args, QR_CODE_REQUIRED_FIELDS[args.type], `type "${args.type}"`);
+      const mode = resolveQrCodeMode(args, args.mode, false);
       const current = await clients.qrCodes.get(args.id);
-      const base = { name: args.name ?? current.name, templateId: args.templateId ?? current.templateId ?? "", refId: args.refId, tag: args.tag };
+      const base = { name: args.name ?? current.name, templateId: args.templateId ?? current.templateId ?? "", refId: args.refId, tag: args.tag, mode };
       return updateQrCode(clients.qrCodes, args.id, base, args);
     },
     entity: (_result, args) => ({ entityType: "qrCode", entityId: args.id }),

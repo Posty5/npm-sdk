@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- `qr_code_create` takes `mode` (`"static"` | `"dynamic"`), **default
+  `"dynamic"`** so the target can be changed later with `qr_code_update`;
+  Wi-Fi codes are always static (a dynamic Wi-Fi request is refused before
+  any call).
+- `qr_code_update` takes an optional `mode`; left out, the stored mode is kept.
+- `qr_code_list` filters by `mode`; list/get describe `mode`, `dynamicSince`
+  and `qrCodeLandingPageURL`.
+
 ## 1.0.0
 
 First release.

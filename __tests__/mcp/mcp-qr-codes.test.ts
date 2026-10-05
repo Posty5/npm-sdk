@@ -59,6 +59,34 @@ describe("mcp qr-codes toolset", () => {
     expect(findTool("qr_code_create").entity?.(value, {})).toEqual({ entityType: "qrCode", entityId: "qr1" });
   });
 
+  it("qr_code_create makes a dynamic code by default and passes an explicit static through (DQ-D3)", async () => {
+    const dynamic = await runTool("qr_code_create", { type: "url", url: "https://menu.example", templateId: "tpl1" }, QR_CODE);
+    expect(dynamic.calls[0].body.mode).toBe("dynamic");
+
+    const fixed = await runTool("qr_code_create", { type: "url", url: "https://menu.example", templateId: "tpl1", mode: "static" }, QR_CODE);
+    expect(fixed.calls[0].body.mode).toBe("static");
+  });
+
+  it("qr_code_create keeps Wi-Fi static and refuses a dynamic Wi-Fi code before any request", async () => {
+    const { calls } = await runTool("qr_code_create", { type: "wifi", wifiName: "Cafe", wifiAuthenticationType: "nopass", templateId: "tpl1" });
+    expect(calls[0].body.mode).toBe("static");
+    await expect(runTool("qr_code_create", { type: "wifi", wifiName: "Cafe", wifiAuthenticationType: "nopass", templateId: "tpl1", mode: "dynamic" })).rejects.toBeInstanceOf(ToolInputError);
+  });
+
+  it("qr_code_update without mode sends no mode, and passes a given mode", async () => {
+    const kept = await runTool("qr_code_update", { id: "qr1", type: "url", url: "https://new.example" }, undefined, [QR_CODE, QR_CODE]);
+    expect(kept.calls[1].body.mode).toBeUndefined();
+    expect(JSON.stringify(kept.calls[1].body)).not.toContain('"mode"');
+
+    const switched = await runTool("qr_code_update", { id: "qr1", type: "url", url: "https://new.example", mode: "static" }, undefined, [QR_CODE, QR_CODE]);
+    expect(switched.calls[1].body.mode).toBe("static");
+  });
+
+  it("qr_code_list sends the mode filter", async () => {
+    const { calls } = await runTool("qr_code_list", { mode: "dynamic" });
+    expect(calls[0].params).toEqual({ mode: "dynamic" });
+  });
+
   it("qr_code_create sends a missing optional part as empty, never as 'undefined'", async () => {
     const { calls } = await runTool("qr_code_create", { type: "wifi", wifiName: "Cafe", wifiAuthenticationType: "nopass", templateId: "tpl1" });
     expect(route(calls[0])).toBe("POST /api/qr-code/wifi");
