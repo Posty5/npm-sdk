@@ -1,6 +1,6 @@
 # @posty5/short-link
 
-Create and manage branded short links with analytics tracking, custom slugs, and QR code generation. This package provides a complete TypeScript/JavaScript client for building URL shortening solutions with editable destinations, comprehensive tracking, and monetization options.
+Create and manage branded short links with visit counts, custom slugs, and QR code generation. This package provides a complete TypeScript/JavaScript client for building URL shortening solutions with editable destinations, optional landing pages, and Android/iOS deep links.
 
 ---
 
@@ -9,7 +9,7 @@ Create and manage branded short links with analytics tracking, custom slugs, and
 **Posty5** is a comprehensive suite of free online tools designed to enhance your digital marketing and social media presence. With over 4+ powerful tools and counting, Posty5 provides everything you need to:
 
 - 🔗 **Shorten URLs** - Create memorable, trackable short links
-- 📱 **Generate QR Codes** - Transform URLs, WiFi credentials, contact cards, and more into scannable codes
+- 📱 **Generate QR Codes** - Turn URLs, WiFi credentials, email, SMS, phone numbers, locations and free text into scannable codes
 - 🌐 **Host HTML Pages** - Deploy static HTML pages with dynamic variables and form submission handling
 - 📢 **Automate Social Media** - Schedule and manage social media posts across multiple platforms
 - 📊 **Track Performance** - Monitor and analyze your digital marketing efforts
@@ -29,12 +29,12 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 - **🔗 URL Shortening** - Transform long URLs into short, memorable links
 - **🎨 Custom Slugs** - Create branded short links with custom aliases
 - **🔄 Editable URLs** - Update destination URLs without changing the short link
-- **📊 Analytics Tracking** - Monitor clicks, visitor counts, and last visitor dates
+- **📊 Visit Counts** - The number of visits and the last visit date for each link
 - **📱 Free QR Codes** - Automatic QR code generation for each short link
 - **🏷️ Tag & Reference Support** - Organize links with custom tags and reference IDs
-- **🎯 Landing Pages** - Create custom landing pages with titles and descriptions
-- **💰 Monetization** - Enable partner earnings on short links
-- **🔍 Advanced Filtering** - Search by name, URL, status, tag, or reference ID
+- **🎯 Landing Pages** - Optionally show a page with your title and description before the redirect
+- **📲 App Deep Links** - Android and iOS destinations, set by hand or read from the target page's app-link tags
+- **🔍 Filtering** - Search by name, URL, landing-page title, status, tag, or reference ID
 - **📝 CRUD Operations** - Complete create, read, update, delete operations
 - **🔐 API Key Scoping** - Multi-tenant support with API key filtering
 - **📈 Pagination Support** - Efficiently handle large link collections
@@ -46,7 +46,7 @@ This package works seamlessly with other Posty5 SDK modules:
 
 - Combine with `@posty5/qr-code` for enhanced QR code customization
 - Use with `@posty5/html-hosting` to create short links for hosted pages
-- Build comprehensive marketing campaigns with full tracking and analytics
+- Build marketing campaigns with visit counts, tags and reference IDs
 
 Perfect for **marketers**, **social media managers**, **content creators**, **affiliate marketers**, **businesses**, and **developers** who need URL shortening, link tracking, campaign management, social media optimization, analytics, and branded links.
 
@@ -83,7 +83,7 @@ const shortLink = await shortLinks.create({
   name: "Campaign Landing Page",
   baseUrl: "https://example.com/long-url-to-campaign-page",
   customLandingId: "summer-sale", // Optional: Custom slug
-  templateId: "template-123", // Optional: QR code template ID
+  templateId: "template-123", // Required: one of your QR code templates
   tag: "marketing", // Optional: For organization
   refId: "CAMPAIGN-001", // Optional: External reference
 });
@@ -117,28 +117,52 @@ console.log("✓ Destination updated - same short link, new target!");
 
 ---
 
+## ⬆️ Upgrading to 4.3.0
+
+- **`templateId` is required** on `create()` and `update()`. The API has always
+  refused an API-key call without it, so code that omitted it never worked;
+  it now fails to compile instead of failing at run time.
+- **`isEnableMonetization` is deprecated.** The API never accepted it (it
+  answered 400). The SDK now drops it from every request, so old code compiles
+  and stops failing; the property is removed in 5.0.0.
+- **`"pageinfo.title"` is deprecated** in `list()` — use `"pageInfo.title"`. The
+  old key is still accepted and sent as the new one.
+- **New:** `isEnableLandingPage` on `create()`, and `androidUrl` / `iosUrl` on
+  `create()` and `update()` (see below). `get()`, `create()` and `update()`
+  return the full details, deep links included.
+
+---
+
 ## 📚 API Reference & Examples
 
 ### Creating Short Links
 
 #### create()
 
-Create a new short link with optional custom slug, landing page, and tracking parameters.
+Create a new short link with optional custom slug, landing page, deep links, and tracking parameters.
+
+> **`templateId` is required.** Every SDK call uses an API key, and the API
+> refuses an API-key create without a template. Pick one of your templates on
+> the [dashboard templates page](https://studio.posty5.com/qr-code-templates).
 
 **Parameters:**
 
 - `data` (ICreateShortLinkRequest): Short link data
-  - `baseUrl` (string, **required**): Destination URL to redirect to
+  - `baseUrl` (string, **required**): Destination URL to redirect to. Must start with `http://` or `https://`.
+  - `templateId` (string, **required**): QR code template ID
   - `name` (string, optional): Human-readable name for the link
   - `customLandingId` (string, optional): Custom slug for branded short links
-  - `templateId` (string, optional): QR code template ID
   - `tag` (string, optional): Custom tag for grouping/filtering
   - `refId` (string, optional): External reference ID from your system
-  - `isEnableMonetization` (boolean, optional): Enable partner earnings
-  - `pageInfo` (object, optional): Landing page metadata
+  - `isEnableLandingPage` (boolean, optional, default `false`): Show a page with `pageInfo` before the redirect
+  - `pageInfo` (object, required when `isEnableLandingPage` is true): Landing page content
     - `title` (string): Page title
     - `description` (string): Page description
     - `descriptionIsHtmlFile` (boolean): Whether description is HTML
+  - `androidUrl` / `iosUrl` (string, optional): Destination opened on Android / iOS
+    instead of `baseUrl`. `https:`, `http:` or an app scheme such as `myapp://`;
+    never `javascript:`, `data:`, `vbscript:`, `file:`, `about:` or `blob:`. Left
+    empty, the API reads them from the target page's app-link (`al:*`) tags.
 
 **Returns:** `Promise<ICreateShortLinkResponse>` - Created short link including:
 
@@ -159,6 +183,7 @@ Create a new short link with optional custom slug, landing page, and tracking pa
 const shortLink = await shortLinks.create({
   baseUrl: "https://example.com/product/awesome-widget",
   name: "Product Page - Awesome Widget",
+  templateId: "template-123",
 });
 
 console.log("Share this:", shortLink.shorterLink);
@@ -170,6 +195,7 @@ console.log("Share this:", shortLink.shorterLink);
 const brandedLink = await shortLinks.create({
   baseUrl: "https://example.com/summer-sale-2026",
   name: "Summer Sale 2026",
+  templateId: "template-123",
   customLandingId: "summer-sale", // Creates: posty5.com/summer-sale
   tag: "seasonal-campaigns",
   refId: "SUMMER-2026",
@@ -180,12 +206,14 @@ console.log("Branded link:", brandedLink.shorterLink);
 ```
 
 ```typescript
-// Short link with landing page
+// Short link with a landing page: visitors see the title and description
+// first, then continue to baseUrl
 const linkWithLanding = await shortLinks.create({
   baseUrl: "https://example.com/webinar-registration",
   name: "Q1 Webinar Registration",
   customLandingId: "q1-webinar",
   templateId: "template-123",
+  isEnableLandingPage: true,
   pageInfo: {
     title: "Join Our Q1 Marketing Webinar",
     description: "Learn the latest digital marketing strategies from industry experts. Register now for exclusive insights!",
@@ -193,20 +221,20 @@ const linkWithLanding = await shortLinks.create({
   tag: "webinars",
 });
 
-console.log("Landing page:", linkWithLanding.qrCodeLandingPageURL);
+console.log("Short link:", linkWithLanding.shorterLink);
 ```
 
 ```typescript
-// Monetized short link
-const monetizedLink = await shortLinks.create({
-  baseUrl: "https://affiliate-product.com/offer",
-  name: "Affiliate Offer Link",
-  isEnableMonetization: true,
-  tag: "affiliate",
-  refId: "AFF-12345",
+// Short link that opens your app on Android and iOS
+const appLink = await shortLinks.create({
+  baseUrl: "https://example.com/item/42", // everyone else (and desktop) goes here
+  name: "Item 42 - app link",
+  templateId: "template-123",
+  androidUrl: "myapp://item/42",
+  iosUrl: "https://apps.example.com/item/42",
 });
 
-console.log("Earning link:", monetizedLink.shorterLink);
+console.log("Android:", appLink.androidUrl, "iOS:", appLink.iosUrl);
 ```
 
 ```typescript
@@ -236,7 +264,7 @@ Retrieve complete details of a specific short link by ID.
 
 - `id` (string): The unique short link ID
 
-**Returns:** `Promise<IShortLinkResponse>` - Short link details including:
+**Returns:** `Promise<IGetShortLinkResponse>` - Short link details including:
 
 - `_id` (string): Database ID
 - `shortLinkId` (string): Unique identifier
@@ -246,10 +274,13 @@ Retrieve complete details of a specific short link by ID.
 - `numberOfVisitors` (number): Total clicks
 - `lastVisitorDate` (string): Last click timestamp
 - `qrCodeDownloadURL` (string): QR code URL
-- `qrCodeLandingPageURL` (string): Landing page URL
+- `qrCodeLandingPageURL` (string): QR code page URL
 - `status` (string): Link status
 - `tag` (string): Custom tag
 - `refId` (string): External reference
+- `isEnableLandingPage` (boolean) and `pageInfo` (object): Landing page setting and content
+- `androidUrl` / `iosUrl` (string): Deep links (owner only; not in `list()` results)
+- `isSupportAndroidDeepUrl` / `isSupportIOSDeepUrl` (boolean): Always `!!androidUrl` / `!!iosUrl`
 - `createdAt` (string): Creation timestamp
 - `updatedAt` (string): Last update timestamp
 
@@ -318,9 +349,13 @@ Search and filter short links with advanced pagination and filtering options.
   - `refId` (string, optional): Filter by reference ID
   - `status` (string, optional): Filter by status
   - `templateId` (string, optional): Filter by template ID
-  - `apiKeyId` (string, optional): Filter by API key ID
-  - `isEnableMonetization` (boolean, optional): Filter by monetization status
-  - `pageinfo.title` (string, optional): Filter by landing page title
+  - `isEnableLandingPage` (boolean, optional): Filter by landing page on/off
+  - `pageInfo.title` (string, optional): Filter by landing page title (partial match).
+    The old spelling `pageinfo.title` is deprecated and sent as `pageInfo.title`.
+
+  An API-key call only ever lists the links created with that key. Each item
+  carries `numberOfVisitors`, `status`, `isEnableLandingPage` and `pageInfo`;
+  deep links are returned by `get()` only.
 - `pagination` (IPaginationParams, optional): Pagination options
   - `page` (number, optional): Page number (default: 1)
   - `pageSize` (number, optional): Items per page (default: 10)
@@ -398,14 +433,14 @@ console.log(`${approvedLinks.items.length} approved links`);
 ```
 
 ```typescript
-// Find monetized links
-const earningLinks = await shortLinks.list({
-  isEnableMonetization: true,
+// Find links by landing-page title
+const webinarPages = await shortLinks.list({
+  isEnableLandingPage: true,
+  "pageInfo.title": "Webinar",
 });
 
-console.log("Monetized Links:");
-earningLinks.items.forEach((link) => {
-  console.log(`  ${link.shorterLink} - ${link.numberOfVisitors} clicks`);
+webinarPages.items.forEach((link) => {
+  console.log(`  ${link.pageInfo?.title}: ${link.shorterLink} - ${link.numberOfVisitors} clicks`);
 });
 ```
 
@@ -448,13 +483,19 @@ Update an existing short link's destination URL or metadata. The short URL remai
 
 - `id` (string): Short link ID to update
 - `data` (IUpdateShortLinkRequest): Updated data
-  - `baseUrl` (string, **required**): New destination URL
+  - `baseUrl` (string, **required**): New destination URL (`http://` or `https://`)
+  - `templateId` (string, **required**): QR code template ID
   - `name` (string, optional): Updated link name
-  - `templateId` (string, optional): Updated template ID
   - `tag` (string, optional): Updated tag
   - `refId` (string, optional): Updated reference ID
-  - `isEnableMonetization` (boolean, optional): Enable/disable monetization
-  - `pageInfo` (object, optional): Updated landing page metadata
+  - `isEnableLandingPage` (boolean, optional): Turn the landing page on or off. **Omit it to keep the stored value.**
+  - `pageInfo` (object, optional): Updated landing page content (title and description required while the landing page is on)
+  - `androidUrl` / `iosUrl` (string, optional): Deep links.
+    - Key present → that value; `""` or `null` clears it.
+    - Key absent and `baseUrl` changed → re-derived from the new target page's app-link tags.
+    - Key absent and `baseUrl` unchanged → the stored value is kept.
+
+`update()` cannot change `customLandingId`; the slug is fixed at create.
 
 **Returns:** `Promise<IUpdateShortLinkResponse>`
 
@@ -494,14 +535,13 @@ await shortLinks.update("webinar-link-id", {
 ```
 
 ```typescript
-// Enable monetization on existing link
-await shortLinks.update("affiliate-link-id", {
-  baseUrl: "https://affiliate-product.com/offer",
-  isEnableMonetization: true,
+// Set the iOS deep link by hand and clear the Android one
+await shortLinks.update("app-link-id", {
+  baseUrl: "https://example.com/item/42", // unchanged
   templateId: "template-123",
+  iosUrl: "myapp://item/42",
+  androidUrl: "", // clears it
 });
-
-console.log("✓ Monetization enabled");
 ```
 
 ```typescript
@@ -612,6 +652,7 @@ const emailLink = await shortLinks.create({
   templateId: TEMPLATE_ID,
   tag: "email-marketing",
   refId: "EMAIL-JAN-2026",
+  isEnableLandingPage: true,
   pageInfo: {
     title: "Exclusive Email Offer",
     description: "Thank you for being a subscriber! Enjoy this exclusive offer.",
@@ -632,11 +673,10 @@ const socialLink = await shortLinks.create({
 
 console.log("Social link:", socialLink.shorterLink);
 
-// Affiliate link with monetization
+// Affiliate partner link
 const affiliateLink = await shortLinks.create({
   name: "Affiliate Partner Link",
   baseUrl: "https://partner.com/exclusive-offer",
-  isEnableMonetization: true,
   tag: "affiliate",
   refId: "AFF-PARTNER-01",
   templateId: TEMPLATE_ID,
@@ -740,7 +780,8 @@ import { AuthenticationError, NotFoundError, ValidationError, RateLimitError } f
 
 try {
   const shortLink = await shortLinks.create({
-    baseUrl: "invalid-url", // Invalid URL format
+    baseUrl: "invalid-url", // Not http:// or https://
+    templateId: "template-123",
   });
 } catch (error) {
   if (error instanceof AuthenticationError) {
@@ -749,8 +790,9 @@ try {
     console.error("Template not found");
   } else if (error instanceof ValidationError) {
     console.error("Invalid data:", error.errors);
-    // Check if it's a URL validation error
-    if (error.message.includes("baseUrl")) {
+    // The API's messages: "The URL must start with http:// or https://"
+    // (baseUrl) and "The deep link URL is not allowed" (androidUrl / iosUrl)
+    if (error.message.includes("http://")) {
       console.error("Please provide a valid URL with http:// or https://");
     }
   } else if (error instanceof RateLimitError) {

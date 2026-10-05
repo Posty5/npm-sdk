@@ -2,10 +2,10 @@ import { IPaginationParams } from "@posty5/core";
 import { QrCodeStatusType, QrCodeTargetType } from "../types/type";
 
 /**
- * QR Code page information
+ * Content of the code's Posty5 landing page when `isEnableLandingPage` is true.
  */
 export interface IQRCodePageInfo {
-  /** Page title */
+  /** Page title. Required when `isEnableLandingPage` is true. */
   title?: string;
   /** Page description */
   description?: string;
@@ -15,6 +15,10 @@ export interface IQRCodePageInfo {
  * QR Code styling options
  */
 export interface IQRCodeOptions {
+  /**
+   * The content the image encodes. Built by the API from `qrCodeTarget` (for
+   * `freeText`, from `freeText.text`); a value sent by a client is ignored.
+   */
   text?: string;
   width?: number;
   height?: number;
@@ -102,7 +106,10 @@ export interface IQRCodeSmsTarget {
  * URL QR code target
  */
 export interface IQRCodeUrlTarget {
-  /** Target URL */
+  /**
+   * Target URL. Must start with `http://` or `https://`; anything else is
+   * refused with "The URL must start with http:// or https://".
+   */
   url?: string;
 }
 
@@ -134,6 +141,8 @@ export interface IQRCodeTarget {
   call?: IQRCodeCallTarget;
   /** SMS configuration (when type is 'sms') */
   sms?: IQRCodeSmsTarget;
+  /** URL configuration (when type is 'url') */
+  url?: IQRCodeUrlTarget;
   /** Geolocation configuration (when type is 'geolocation') */
   geolocation?: IQRCodeGeolocationTarget;
 }
@@ -144,7 +153,13 @@ export interface IQRCodeTarget {
 export interface IQRCodeRequest {
   /** QR code name (optional) */
   name?: string;
-  /** Template ID */
+  /**
+   * QR code template the image is rendered with.
+   *
+   * Required when calling with an API key — every SDK call does; the API
+   * refuses a create or update without it. Pick one of your templates on the
+   * dashboard templates page (https://studio.posty5.com/qr-code-templates).
+   */
   templateId: string;
   /** Reference ID (optional) - custom identifier from your system */
   refId?: string;
@@ -152,9 +167,15 @@ export interface IQRCodeRequest {
   tag?: string;
   /** Custom landing page ID (optional, max 32 chars) */
   customLandingId?: string;
-  /** Enable monetization (default: false) */
+  /**
+   * Show `pageInfo` on the code's Posty5 landing page. Default `false`.
+   */
+  isEnableLandingPage?: boolean;
+  /**
+   * @deprecated Never accepted by the API; ignored by this SDK and removed in 5.0.0.
+   */
   isEnableMonetization?: boolean;
-  /** Page information (required when monetization is enabled) */
+  /** Page information (required when `isEnableLandingPage` is true) */
   pageInfo?: IQRCodePageInfo;
 }
 
@@ -242,8 +263,10 @@ export interface IListParams {
   /** Filter by reference ID */
   refId?: string;
   /** Filter by landing page enabled */
-  //isEnableLandingPage?: boolean;
-  /** Filter by monetization enabled */
+  isEnableLandingPage?: boolean;
+  /**
+   * @deprecated Never accepted by the API; ignored by this SDK and removed in 5.0.0.
+   */
   isEnableMonetization?: boolean;
   /** Filter by status */
   status?: QrCodeStatusType;

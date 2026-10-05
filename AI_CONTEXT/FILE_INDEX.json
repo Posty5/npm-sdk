@@ -136,6 +136,42 @@
       "role": "store.suppliers route tests (offline stub) and fixture-gated live tests."
     },
     {
+      "path": "__tests__/helpers/stub-http.helper.ts",
+      "role": "stubHttp(): records HttpClient calls for offline payload tests (store, short-link, qr-code)."
+    },
+    {
+      "path": "posty5-short-link/src/helpers/short-link-request.helper.ts",
+      "role": "Builds create/update bodies and list queries: strips deprecated keys, maps pageinfo.title to pageInfo.title."
+    },
+    {
+      "path": "posty5-short-link/src/short-link.config.ts",
+      "role": "Create source fields, deprecated request keys, legacy list-key map."
+    },
+    {
+      "path": "posty5-short-link/CHANGELOG.md",
+      "role": "@posty5/short-link changelog (starts at 4.3.0)."
+    },
+    {
+      "path": "posty5-qr-code/src/helpers/qr-code-request.helper.ts",
+      "role": "Builds QR bodies (qrCodeTarget only; free text keeps options.text) and list queries; strips deprecated keys."
+    },
+    {
+      "path": "posty5-qr-code/src/qr-code.config.ts",
+      "role": "Request source fields and deprecated request keys."
+    },
+    {
+      "path": "posty5-qr-code/CHANGELOG.md",
+      "role": "@posty5/qr-code changelog (starts at 4.3.0)."
+    },
+    {
+      "path": "__tests__/short-link.test.ts",
+      "role": "Short-link payload tests (offline stub) and key-gated live tests incl. S13 deep links."
+    },
+    {
+      "path": "__tests__/qr-code.test.ts",
+      "role": "QR payload tests (offline stub) and key-gated live tests incl. server-built text and refId filter."
+    },
+    {
       "path": "__tests__",
       "role": "Live/integration-oriented Jest suite and media fixtures."
     }

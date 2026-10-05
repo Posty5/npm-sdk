@@ -45,9 +45,11 @@ export interface IShortLinkResponse {
   shortLinkId: string;
   name?: string;
   baseUrl?: string;
+  /** Review status. Included in `list()` results. */
   status: ShortLinkStatusType;
   refId?: string;
   tag?: string;
+  /** Visits to the short link. Included in `list()` results. */
   numberOfVisitors: number;
   numberOfReports?: number;
   lastVisitorDate?: string;
@@ -55,7 +57,11 @@ export interface IShortLinkResponse {
   updatedAt?: string;
   templateId?: string;
   qrCodeTemplateName?: string;
+  /** Whether visitors see the interstitial page first. Included in `list()` results. */
   isEnableLandingPage?: boolean;
+  /**
+   * @deprecated Never returned by the API; removed in 5.0.0.
+   */
   isEnableMonetization?: boolean;
   pageInfo?: IPageInfoResponse;
   qrCodeLandingPageURL: string;
@@ -63,11 +69,18 @@ export interface IShortLinkResponse {
 }
 
 /**
- * Short link full details response (from GET by ID)
+ * Short link full details: what `get()`, `create()` and `update()` return to
+ * the link's owner.
  */
 export interface IShortLinkFullDetailsResponse extends IShortLinkResponse {
+  /** Android destination (deep link); empty when none. Not included in `list()` results. */
   androidUrl?: string;
+  /** iOS destination (deep link); empty when none. Not included in `list()` results. */
   iosUrl?: string;
+  /** Always equals `!!androidUrl`. */
+  isSupportAndroidDeepUrl?: boolean;
+  /** Always equals `!!iosUrl`. */
+  isSupportIOSDeepUrl?: boolean;
   numberOfCreated?: number;
   templateType?: string;
   template?: IQRCodeTemplate;
@@ -82,8 +95,8 @@ export interface IShortLinkLookupItem {
 
 export type ISearchShortLinkResponse = IPaginationResponse<IShortLinkResponse>;
 export type ILookupShortLinkResponse = IShortLinkLookupItem[];
-export type ICreateShortLinkResponse = IShortLinkResponse;
-export type IUpdateShortLinkResponse = IShortLinkResponse;
+export type ICreateShortLinkResponse = IShortLinkFullDetailsResponse;
+export type IUpdateShortLinkResponse = IShortLinkFullDetailsResponse;
 export type IGetShortLinkResponse = IShortLinkFullDetailsResponse;
 export interface IDeleteShortLinkResponse {
   message: string;

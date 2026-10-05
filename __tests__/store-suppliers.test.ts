@@ -1,6 +1,7 @@
 import { HttpClient, ValidationError } from "@posty5/core";
 import { StoreClient, StoreSuppliersClient, isQueuedImport } from "@posty5/store";
 import { STORE_TEST_CONFIG, TEST_CONFIG } from "./setup";
+import { stubHttp } from "./helpers/stub-http.helper";
 
 /**
  * `@posty5/store` — dropshipping (`store.suppliers`).
@@ -20,20 +21,6 @@ import { STORE_TEST_CONFIG, TEST_CONFIG } from "./setup";
  * - cancel and fulfil-manually also need `POSTY5_TEST_ALLOW_PART_TAKEOVER=true`,
  *   because they end the fixture part's supplier flow.
  */
-
-type Call = { method: string; url: string; body?: unknown; params?: Record<string, unknown> };
-
-function stubHttp(result: unknown = {}) {
-  const calls: Call[] = [];
-  const answer = async () => ({ result, message: "" });
-  const http = {
-    get: async (url: string, config?: { params?: Record<string, unknown> }) => (calls.push({ method: "GET", url, params: config?.params }), answer()),
-    post: async (url: string, body?: unknown) => (calls.push({ method: "POST", url, body }), answer()),
-    put: async (url: string, body?: unknown) => (calls.push({ method: "PUT", url, body }), answer()),
-    delete: async (url: string, config?: { params?: Record<string, unknown> }) => (calls.push({ method: "DELETE", url, params: config?.params }), answer()),
-  };
-  return { http: http as unknown as HttpClient, calls };
-}
 
 describe("Store suppliers — routes (offline)", () => {
   const base = "/api/store-suppliers/s1";

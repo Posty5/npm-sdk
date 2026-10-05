@@ -38,22 +38,30 @@ export interface IQRCode {
   qrCodeId: string;
   /** Template ID used */
   templateId?: string;
-  /** Number of visitors */
+  /**
+   * Visits to the code's Posty5 landing page (`qrCodeLandingPageURL`). The
+   * downloaded image encodes the content directly, so scanning it opens the
+   * content without reaching Posty5 and is not counted here.
+   */
   numberOfVisitors?: number;
-  /** Whether landing page is enabled */
+  /** Whether landing page is enabled. Included in `list()` results. */
   isEnableLandingPage?: boolean;
   name: string;
-  /** Last visitor date */
+  /** Last visit to the landing page (not the last scan — see `numberOfVisitors`). */
   lastVisitorDate?: string;
   /** Reference ID */
   refId?: string;
   /** Tag */
   tag?: string;
+  /**
+   * @deprecated Never returned by the API; removed in 5.0.0.
+   */
   isEnableMonetization?: boolean;
   /** Page information */
   pageInfo?: IQRCodePageInfo;
+  /** The code's content; `list()` results include `sms.message`. */
   qrCodeTarget?: IQRCodeTarget;
-  /** QR code status */
+  /** QR code status. Included in `list()` results. */
   status: QrCodeStatusType;
   /** Preview reasons (moderation scores) */
   previewReasons?: IPreviewReason[];
