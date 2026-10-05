@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.6.0
+
+- **Text posts** — `createTextPostToWorkspace`, `createTextPostToAccount` (Facebook, Threads, X overrides; comments, hashtags, tracked links).
+- **Stories** — `createStoryPostToWorkspace`, `createStoryPostToAccount` (media by URL; the account form requires `platform`).
+- Create methods stamp `createdFrom` from `HttpClient.createdFrom` instead of a fixed `"npmPackage"`.
+- **Packaging fix:** `@posty5/core` is now a peer dependency (`^4.3.0`). 4.2.0 was published with `"dependencies": { "@posty5/core": "file:../posty5-core" }`, which cannot resolve outside this repository.
+- `package.json` was left at 4.2.0 through the 4.3.0–4.5.0 entries below (none of them reached npm); this release realigns it.
+
 ## 4.5.0
 
 ### Added

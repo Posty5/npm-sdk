@@ -887,3 +887,5 @@ export interface IReschedulePostRequest {
   /** Optionally replace the caption at the same time. */
   caption?: string;
 }
+
+export * from "./text-and-story";

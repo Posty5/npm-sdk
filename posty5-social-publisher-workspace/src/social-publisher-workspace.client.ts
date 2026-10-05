@@ -90,15 +90,14 @@ export class SocialPublisherWorkspaceClient {
     const response = await this.http.post<ICreateWorkspaceResponse>(this.basePath, {
       ...data,
       hasImage: !!logo,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
 
     // Step 2: Upload image if provided
     if (logo && response.result?.uploadImageConfig) {
-      var res = await uploadToR2(response.result.uploadImageConfig.uploadUrl, logo, {
+      await uploadToR2(response.result.uploadImageConfig.uploadUrl, logo, {
         contentType: /*logo instanceof File ? logo.type : 'image/png'*/ "image/png",
       });
-      console.log(res);
     }
 
     return response.result?.workspaceId!;

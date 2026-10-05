@@ -1,6 +1,6 @@
 {
     "name": "@posty5/sdk",
-    "version": "4.2.0",
+    "version": "4.3.0",
     "description": "Posty5 SDK - TypeScript/JavaScript client libraries for Posty5 API",
     "private": true,
     "repository": {
@@ -23,7 +23,8 @@
         "posty5-html-hosting-form-submission",
         "posty5-social-publisher-workspace",
         "posty5-social-publisher-post",
-        "posty5-store"
+        "posty5-store",
+        "posty5-account"
     ],
     "devDependencies": {
         "@types/jest": "^29.5.11",

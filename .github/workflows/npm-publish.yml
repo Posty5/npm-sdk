@@ -89,6 +89,13 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      # New in 4.3.0 (mcp-server feature): who a key is, credits, prices.
+      - name: Publish posty5-account
+        working-directory: ./posty5-account
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: 📧 Send publish email notification
         if: always() # if the publish succeeds or fails
         uses: dawidd6/action-send-mail@v18

@@ -8,8 +8,10 @@ import {
   IPaginated,
   IStoreOrder,
   IStoreOrderSummary,
+  StoreOrderCreatedFrom,
   StoreOrderStatus,
 } from "../interfaces";
+import { STORE_ORDER_CREATED_FROM_VALUES, STORE_ORDER_DEFAULT_CREATED_FROM } from "../config/orders.config";
 
 /**
  * Merchant order management — `/api/store-orders`.
@@ -62,12 +64,16 @@ export class StoreOrdersClient extends BaseStoreClient {
 
   /**
    * Record an order received off-store. Runs the same pricing, stock, numbering
-   * and tracking machinery as a real checkout, tagged `createdFrom:
-   * "npmPackage"`. Charges the deferred `manualOrder` op. Shipping is resolved
-   * server-side from the destination — never send a fee.
+   * and tracking machinery as a real checkout, tagged with the client's
+   * `createdFrom` when the API accepts it for orders (see
+   * `STORE_ORDER_CREATED_FROM_VALUES`), else `"npmPackage"`. Charges the
+   * deferred `manualOrder` op. Shipping is resolved server-side from the
+   * destination — never send a fee.
    */
   async create(storeId: string, order: ICreateOrderInput): Promise<IStoreOrder> {
-    const res = await this.http.post<IStoreOrder>(`${this.base}/${storeId}`, { ...order, createdFrom: "npmPackage" });
+    const label = this.http.createdFrom as StoreOrderCreatedFrom;
+    const createdFrom = STORE_ORDER_CREATED_FROM_VALUES.includes(label) ? label : STORE_ORDER_DEFAULT_CREATED_FROM;
+    const res = await this.http.post<IStoreOrder>(`${this.base}/${storeId}`, { ...order, createdFrom });
     return res.result!;
   }
 

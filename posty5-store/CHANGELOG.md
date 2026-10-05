@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.4.0
+
+- **`store.stores` / `listStores(term?)`** — the stores the key can manage (owned or staffed), from `GET /api/store/lookup`; each `_id` is the `storeId` every other method takes.
+- `orders.create` tags the order with the client's `createdFrom` when the API accepts it for orders (`STORE_ORDER_CREATED_FROM_VALUES`, now including `"mcp"`), otherwise `"npmPackage"`.
+- Needs `@posty5/core` 4.3.0 or later.
+
 ## 4.3.0
 
 The first version published to npm. Earlier versions (up to 4.2.0) were never

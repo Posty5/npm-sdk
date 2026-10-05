@@ -6,3 +6,4 @@ export * from './requests';
 
 // Responses
 export * from './responses';
+export * from './templates';

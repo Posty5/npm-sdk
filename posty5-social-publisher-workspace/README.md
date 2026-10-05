@@ -598,6 +598,27 @@ We're here to help you succeed with Posty5!
 
 ---
 
+## 👤 Connected social accounts (4.3.0)
+
+```ts
+import { SocialPublisherAccountClient } from "@posty5/social-publisher-workspace";
+
+const accounts = new SocialPublisherAccountClient(http);
+const { items } = await accounts.list({ platform: "instagram" });
+// items[0]._id is the accountId the account-targeted post methods take
+```
+
+| Method | Route |
+| --- | --- |
+| `list(params?, pagination?)` | `GET /api/social-publisher-account` |
+| `lookup(term?, platform?)` | `GET /api/social-publisher-account/lookup` |
+| `get(id)` | `GET /api/social-publisher-account/{id}` |
+
+Read-only: connecting an account is an OAuth flow done in the Posty5 dashboard.
+No response carries a platform token.
+
+---
+
 ## 📄 License
 
 MIT License - see [LICENSE](./LICENSE) file for details.

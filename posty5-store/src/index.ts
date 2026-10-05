@@ -8,6 +8,10 @@ export * from './clients/tags.client';
 export * from './clients/customers.client';
 export * from './clients/shipping.client';
 export * from './clients/suppliers.client';
+export * from './clients/stores.client';
+
+// Config
+export * from './config/orders.config';
 
 // Helpers
 export * from './helpers/supplier-import.helper';
