@@ -40,7 +40,7 @@ export function findTool(name: string): IToolDefinition {
 }
 
 export function fakeCall(tool: IToolDefinition, args: Record<string, unknown> = {}): IToolCallContext {
-  return { tool: tool.name, toolset: tool.toolset, access: "full", client: { name: "jest" }, model: "test-model", modelSource: "agent", args, startedAt: Date.now() };
+  return { tool: tool.name, toolset: tool.toolset, access: "full", toolAccess: tool.access, client: { name: "jest" }, model: "test-model", modelSource: "agent", args, startedAt: Date.now() };
 }
 
 /** Runs a tool's handler (not the confirm gate — see `previewTool`) over a stub and returns the requests it made. */

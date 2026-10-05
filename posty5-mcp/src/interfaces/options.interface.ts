@@ -12,6 +12,12 @@ export interface IPosty5McpOptions {
   toolsets?: readonly (ToolsetName | (string & {}))[];
   /** A model id declared on the connection (`?model=`, `POSTY5_AI_MODEL`); a tool's `aiModel` argument wins over it. */
   connectionModel?: string;
+  /**
+   * The MCP client when the protocol does not name it on this request — a
+   * 2025-era client's identity carried by the HTTP layer between stateless
+   * requests, or its User-Agent. The protocol's own value wins when present.
+   */
+  clientInfo?: { name: string; version?: string };
   /** Stdio path: the API key every call uses. Ignored when `connection` is given. */
   apiKey?: string;
   /** Stdio path: the API base URL. */

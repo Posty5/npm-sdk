@@ -50,7 +50,8 @@
     "author": "Posty5",
     "license": "MIT",
     "dependencies": {
-        "@modelcontextprotocol/server": "2.3.0",
+        "@modelcontextprotocol/node": "2.1.1",
+        "@modelcontextprotocol/server": "2.3.1",
         "@posty5/account": "^4.3.0",
         "@posty5/core": "^4.3.0",
         "@posty5/html-hosting": "^4.3.0",
@@ -64,9 +65,10 @@
         "zod": "^4.2.0"
     },
     "devDependencies": {
+        "@modelcontextprotocol/client": "2.3.1",
         "@types/node": "^20.0.0",
-        "typescript": "^5.3.0",
-        "tsup": "^8.0.0"
+        "tsup": "^8.0.0",
+        "typescript": "^5.3.0"
     },
     "engines": {
         "node": ">=20.0.0"

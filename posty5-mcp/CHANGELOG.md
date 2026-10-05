@@ -13,6 +13,10 @@ First release.
   toolset selection, `confirm` on irreversible and paid tools, `aiModel` and
   `idempotencyKey` on every write, `X-Posty5-Agent` attribution, host hooks.
 - `posty5-mcp` stdio binary (`npx -y @posty5/mcp`), configured by environment.
-- Built on `@modelcontextprotocol/server` 2.3.0; Node.js 20 or later.
+- `createPosty5McpNodeHandler`: Streamable HTTP for both protocol eras,
+  per-request options, 2025-era client identity carried by a signed
+  `Mcp-Session-Id`, body cap. Hosts pass `connection(call)`; the package
+  builds the SDK client.
+- Built on `@modelcontextprotocol/server` 2.3.1 and `/node` 2.1.1; Node.js 20 or later.
 - Agent-origin normalisation matches the API's
   (`api/apps/identity-service/tests/agent-origin.test.ts`) — change both together.

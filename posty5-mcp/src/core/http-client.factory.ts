@@ -17,6 +17,13 @@ export function createToolHttpClient(connection: Partial<IPosty5McpConnection>, 
     ...(connection.timeout !== undefined ? { timeout: connection.timeout } : {}),
     ...(connection.maxRetries !== undefined ? { maxRetries: connection.maxRetries } : {}),
     createdFrom: MCP_CREATED_FROM,
-    headers: { [CLIENT_HEADER]: STDIO_CLIENT_ID, [AGENT_ORIGIN_HEADER]: encodeAgentHeader(call), ...connection.headers },
+    headers: mergeHeaders({ [CLIENT_HEADER]: STDIO_CLIENT_ID, [AGENT_ORIGIN_HEADER]: encodeAgentHeader(call) }, connection.headers),
   });
+}
+
+/** `overrides` replace `defaults` whatever their letter case — one header, never two spellings of it. */
+function mergeHeaders(defaults: Record<string, string>, overrides: Record<string, string> = {}): Record<string, string> {
+  const overridden = new Set(Object.keys(overrides).map((name) => name.toLowerCase()));
+  const kept = Object.entries(defaults).filter(([name]) => !overridden.has(name.toLowerCase()));
+  return { ...Object.fromEntries(kept), ...overrides };
 }

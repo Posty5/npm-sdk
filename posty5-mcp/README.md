@@ -106,6 +106,26 @@ package builds the SDK client) — `hooks` to refuse or log calls
 (`beforeToolCall` may set `call.callId`, which the agent header carries), and
 `idempotencyStore` to share replay protection across processes.
 
+### Over HTTP
+
+```ts
+import http from "node:http";
+import { createPosty5McpNodeHandler } from "@posty5/mcp";
+
+const handler = createPosty5McpNodeHandler({
+  sessionSecret: process.env.SESSION_SECRET!,
+  resolve: async (req) => (await isValid(req)) ? { options: { access: "read", connection: () => ({ apiKey: "…" }) } } : { refusal: { status: 401, message: "Create a new MCP link." } },
+});
+http.createServer((req, res) => void handler(req, res)).listen(3021);
+```
+
+One handler serves the 2026-07-28 protocol and, statelessly, the 2025 era.
+`resolve` runs per request, so each request's server lists exactly what its
+options allow. A 2025-era client names itself only at `initialize`; the
+handler hands that identity back as a signed `Mcp-Session-Id`, which the
+client echoes, so its later tool calls are attributed to it on any process.
+Express: pass `req.body` as the third argument.
+
 Output: CommonJS and ES modules, with type definitions; the binary is CommonJS.
 
 ## 📖 Guide

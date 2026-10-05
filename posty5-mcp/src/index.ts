@@ -1,4 +1,5 @@
 export { createPosty5McpServer } from "./server";
+export { createPosty5McpNodeHandler } from "./http/node-handler";
 export { CATALOGUE, listTools, listToolsets } from "./catalogue";
 export { MemoryIdempotencyStore } from "./core/memory-idempotency.store";
 export { encodeAgentHeader, normaliseAgentText, normaliseModel, resolveModel } from "./core/agent-origin.helper";
@@ -11,6 +12,7 @@ export { PACKAGE_VERSION, SERVER_INSTRUCTIONS } from "./config/instructions.conf
 
 export type { IPosty5McpOptions } from "./interfaces/options.interface";
 export type { IPosty5McpConnection } from "./interfaces/connection.interface";
+export type { IPosty5McpHttpOptions, IPosty5McpHttpRefusal, Posty5McpHttpResolution, Posty5McpNodeHandler } from "./interfaces/http.interface";
 export type { IIdempotencyStore, IPosty5McpHooks, IStoredToolResult, IToolOutcome, IToolRefusal, ToolOutcomeStatus } from "./interfaces/hooks.interface";
 export type { AgentModelSource, IToolCallContext, IToolDescriptor, IToolEntity } from "./interfaces/tool.interface";
 export type { IToolFilter, IToolsetDescriptor } from "./interfaces/toolset.interface";

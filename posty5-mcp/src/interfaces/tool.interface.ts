@@ -10,7 +10,10 @@ export type AgentModelSource = "agent" | "connection" | "unknown";
 export interface IToolCallContext {
   tool: string;
   toolset: ToolsetName;
+  /** The connection's access level. */
   access: AccessLevel;
+  /** The tool's own level: `read` tools change nothing; `write` and `full` tools do. */
+  toolAccess: AccessLevel;
   /** The MCP client, from the protocol (`clientInfo`). */
   client: { name: string; version?: string };
   /** The model id after precedence (argument → connection → "unknown") and normalisation. */

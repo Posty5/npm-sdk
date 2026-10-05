@@ -52,6 +52,7 @@ export async function runTool(
     tool: tool.name,
     toolset: tool.toolset,
     access: deps.access,
+    toolAccess: tool.access,
     client: clientOf(clientInfo),
     ...(isWrite ? resolveModel(aiModel, deps.connectionModel) : resolveModel(undefined, deps.connectionModel)),
     ...(isWrite && idempotencyKey ? { idempotencyKey } : {}),

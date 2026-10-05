@@ -13,13 +13,14 @@ import type { IRawClientInfo, IToolRunnerDeps } from "./interfaces/runner.interf
 
 /**
  * The MCP client making a request: on 2026-07-28 requests it travels in each
- * request's `_meta` envelope; on 2025-era connections it was declared once at
- * `initialize`, which the SDK keeps on the instance.
+ * request's `_meta` envelope; on a 2025-era connection it was declared once at
+ * `initialize`, which the SDK keeps on the instance (stdio) — or, served
+ * statelessly over HTTP, which the HTTP layer hands over as `fallback`.
  */
-function clientInfoOf(server: McpServer, ctx: ServerContext): IRawClientInfo | undefined {
+function clientInfoOf(server: McpServer, ctx: ServerContext, fallback: IRawClientInfo | undefined): IRawClientInfo | undefined {
   const envelope = ctx.mcpReq.envelope as Record<string, unknown> | undefined;
   const fromEnvelope = envelope?.[CLIENT_INFO_META_KEY] as IRawClientInfo | undefined;
-  return fromEnvelope ?? server.server.getClientVersion();
+  return fromEnvelope ?? server.server.getClientVersion() ?? fallback;
 }
 
 /**
@@ -53,7 +54,7 @@ export function createPosty5McpServer(options: IPosty5McpOptions = {}): McpServe
     server.registerTool(
       tool.name,
       { title: tool.title, description: tool.description, inputSchema: buildInputSchema(tool), annotations: { title: tool.title, ...toAnnotations(tool) } },
-      async (args: Record<string, unknown>, ctx: ServerContext) => runTool(tool, args, clientInfoOf(server, ctx), deps) as any,
+      async (args: Record<string, unknown>, ctx: ServerContext) => runTool(tool, args, clientInfoOf(server, ctx, options.clientInfo), deps) as any,
     );
   }
   return server;
