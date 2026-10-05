@@ -38,6 +38,26 @@ export function resolveQrCodeMode(target: IQrCodeTargetArgs, mode: QRCodeMode | 
   return staticOnly ? "static" : QR_CODE_DEFAULT_MODE;
 }
 
+/** `base` without `access`: static-only types (Wi-Fi) take no scan rules. */
+function withoutAccess<T extends object>(base: T): Omit<T, "access"> {
+  const { access: _access, ...rest } = base as T & { access?: unknown };
+  return rest;
+}
+
+/**
+ * Refuses scan rules (`access`, other than leaving it out) on a static-only
+ * type or an explicitly static code, before any request; the API would answer
+ * 400 "Scan rules are only available for dynamic QR codes".
+ */
+export function checkQrCodeAccess(target: IQrCodeTargetArgs, mode: QRCodeMode | undefined, access: unknown): void {
+  if (access === undefined) {
+    return;
+  }
+  if (QR_CODE_STATIC_ONLY_TYPES.includes(target.type) || (mode === "static" && access !== null)) {
+    throw new ToolInputError(`access (scan rules) is only available for dynamic QR codes; type "${target.type}"${mode ? `, mode "${mode}"` : ""} cannot take it.`);
+  }
+}
+
 /** Creates a QR code through the SDK method of its `type`. Check the type's fields with `requireFields` first. */
 export function createQrCode(client: QRCodeClient, base: IQRCodeRequest, target: IQrCodeTargetArgs): Promise<IQRCode> {
   const blocks = targetBlocks(target);
@@ -47,7 +67,7 @@ export function createQrCode(client: QRCodeClient, base: IQRCodeRequest, target:
     case "email":
       return client.createEmail({ ...base, email: blocks.email });
     case "wifi":
-      return client.createWifi({ ...base, mode: base.mode === "dynamic" ? undefined : base.mode, wifi: blocks.wifi });
+      return client.createWifi({ ...withoutAccess(base), mode: base.mode === "dynamic" ? undefined : base.mode, wifi: blocks.wifi });
     case "call":
       return client.createCall({ ...base, call: blocks.call });
     case "sms":
@@ -68,7 +88,7 @@ export function updateQrCode(client: QRCodeClient, id: string, base: IUpdateQRCo
     case "email":
       return client.updateEmail(id, { ...base, email: blocks.email });
     case "wifi":
-      return client.updateWifi(id, { ...base, mode: base.mode === "dynamic" ? undefined : base.mode, wifi: blocks.wifi });
+      return client.updateWifi(id, { ...withoutAccess(base), mode: base.mode === "dynamic" ? undefined : base.mode, wifi: blocks.wifi });
     case "call":
       return client.updateCall(id, { ...base, call: blocks.call });
     case "sms":

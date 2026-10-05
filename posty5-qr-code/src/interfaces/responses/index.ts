@@ -1,5 +1,5 @@
 import { ILinkStatisticsDailyRow, ILinkStatisticsResponse, ILinkStatisticsVisitTotals, IPaginationMeta } from "@posty5/core";
-import { QRCodeMode, QrCodeStatusType } from "../types/type";
+import { IQRCodeAccessResponse, QRCodeMode, QrCodeStatusType } from "../types/type";
 import { IQRCodePageInfo, IQRCodeTarget, IQRCodeOptions } from "../requests";
 
 /**
@@ -81,6 +81,8 @@ export interface IQRCode {
   mode?: QRCodeMode;
   /** When the code became dynamic (ISO date); `null` or absent when static. */
   dynamicSince?: string | null;
+  /** Scan rules of a dynamic code; `null` or absent when it has none. */
+  access?: IQRCodeAccessResponse | null;
 }
 
 /**

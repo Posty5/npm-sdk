@@ -82,6 +82,23 @@ describe("mcp qr-codes toolset", () => {
     expect(switched.calls[1].body.mode).toBe("static");
   });
 
+  it("qr_code_create/update pass access through, null clears, and omitted sends none (DQ Part B)", async () => {
+    const access = { expiresAt: "2026-12-01T00:00:00.000Z", maxVisits: 10, fallbackUrl: "https://example.com/closed" };
+    const created = await runTool("qr_code_create", { type: "url", url: "https://menu.example", templateId: "tpl1", access }, QR_CODE);
+    expect(created.calls[0].body.access).toEqual(access);
+
+    const cleared = await runTool("qr_code_update", { id: "qr1", type: "url", url: "https://new.example", access: null }, undefined, [QR_CODE, QR_CODE]);
+    expect(cleared.calls[1].body.access).toBeNull();
+
+    const kept = await runTool("qr_code_update", { id: "qr1", type: "url", url: "https://new.example" }, undefined, [QR_CODE, QR_CODE]);
+    expect(JSON.stringify(kept.calls[1].body)).not.toContain('"access"');
+  });
+
+  it("access is refused before any request on Wi-Fi or an explicitly static code (DQ Part B)", async () => {
+    await expect(runTool("qr_code_create", { type: "wifi", wifiName: "Cafe", wifiAuthenticationType: "nopass", templateId: "tpl1", access: { maxVisits: 1 } })).rejects.toBeInstanceOf(ToolInputError);
+    await expect(runTool("qr_code_create", { type: "url", url: "https://menu.example", templateId: "tpl1", mode: "static", access: { maxVisits: 1 } })).rejects.toBeInstanceOf(ToolInputError);
+  });
+
   it("qr_code_list sends the mode filter", async () => {
     const { calls } = await runTool("qr_code_list", { mode: "dynamic" });
     expect(calls[0].params).toEqual({ mode: "dynamic" });

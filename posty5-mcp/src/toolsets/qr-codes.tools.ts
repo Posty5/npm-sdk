@@ -4,7 +4,7 @@ import { MCP_BULK_MAX_ROWS } from "../config/limits.config";
 import { CREATE_QR_CODE_FEATURE_PATH } from "../config/link-costs.config";
 import { batchIdempotencyKey, describeBatch, describeQrBulkJob, runQrZipJob, unwrapBulkError } from "../core/link-bulk.helper";
 import { defineTool, idField, pageFields, pickPage, requireFields, withoutPaging } from "../core/define-tool.helper";
-import { createQrCode, resolveQrCodeMode, toQrBulkRow, updateQrCode } from "../core/qr-codes.helper";
+import { checkQrCodeAccess, createQrCode, resolveQrCodeMode, toQrBulkRow, updateQrCode } from "../core/qr-codes.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
 const QR_CODE_ID = "The QR code's _id, from qr_code_list.";
@@ -35,6 +35,19 @@ const labelFields = {
   refId: z.string().optional().describe("Your own reference id."),
   tag: z.string().optional().describe("A tag for grouping QR codes."),
 };
+
+const accessField = z
+  .object({
+    activeFrom: z.string().datetime({ offset: true }).nullable().optional().describe("ISO date-time the code starts working; null for no start."),
+    expiresAt: z.string().datetime({ offset: true }).nullable().optional().describe("ISO date-time the code stops working (after activeFrom); null for no end."),
+    maxVisits: z.number().int().min(1).nullable().optional().describe("The code stops working after this many visits; null for no limit."),
+    fallbackUrl: z.string().url().max(2048).or(z.literal("")).nullable().optional().describe('An http(s) URL a scan goes to while the code is not working; null or "" for none.'),
+  })
+  .nullable()
+  .optional()
+  .describe(
+    "Scan rules, dynamic codes only (not Wi-Fi, not static). The object replaces any stored rules whole; null (or all fields empty) clears them; left out keeps them. May be refused by the user's plan.",
+  );
 
 export const QR_CODE_TOOLS: IToolDefinition[] = [
   defineTool({
@@ -91,7 +104,8 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
       "Creates a QR code of the given type and returns its mode, landing page URL and image URL. It works at once. Needs a templateId from qr_code_list_templates and the fields of its type. " +
       "Dynamic codes (the default) point to a Posty5 link, so their target can be changed later with qr_code_update. " +
       "Wi-Fi codes are always static. " +
-      "Switching mode later changes the image.",
+      "Switching mode later changes the image. " +
+      "Optional access sets scan rules (start, end, visit limit, fallback URL) on a dynamic code; it may be refused by the user's plan.",
     input: z.object({
       ...targetFields,
       templateId: idField("The template that styles the QR code: an _id from qr_code_list_templates."),
@@ -101,12 +115,14 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
         .enum(QR_CODE_MODES)
         .optional()
         .describe('"dynamic" (default): the image encodes a Posty5 link, so the target can change later without reprinting. "static": the image encodes the content itself. type "wifi" is always static.'),
+      access: accessField,
     }),
     run: (args, { clients }) => {
       requireFields(args, QR_CODE_REQUIRED_FIELDS[args.type], `type "${args.type}"`);
       const mode = resolveQrCodeMode(args, args.mode, true);
-      const { name, templateId, refId, tag, customLandingId } = args;
-      return createQrCode(clients.qrCodes, { name, templateId, refId, tag, customLandingId, mode }, args);
+      checkQrCodeAccess(args, mode, args.access);
+      const { name, templateId, refId, tag, customLandingId, access } = args;
+      return createQrCode(clients.qrCodes, { name, templateId, refId, tag, customLandingId, mode, ...(access !== undefined ? { access } : {}) }, args);
     },
     entity: (result) => ({ entityType: "qrCode", entityId: result?._id }),
   }),
@@ -180,20 +196,23 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
     title: "Update a QR code",
     description:
       "Replaces a QR code's target: give its type (the current one is qrCodeTarget.type in qr_code_get, and it may change) and every field of that type. name, templateId, refId and tag left out keep their current value. Its landing page and image URLs never change. " +
-      "mode left out keeps the current mode; changing mode changes the printed image (the old printed code still works).",
+      "mode left out keeps the current mode; changing mode changes the printed image (the old printed code still works). " +
+      "access left out keeps the scan rules; an object replaces them; null clears them. It may be refused by the user's plan.",
     input: z.object({
       id: idField(QR_CODE_ID),
       ...targetFields,
       templateId: z.string().optional().describe("A new template, from qr_code_list_templates."),
       ...labelFields,
       mode: z.enum(QR_CODE_MODES).optional().describe('Leave out to keep the current mode. "dynamic" or "static" switches it, which changes the image. type "wifi" cannot be dynamic.'),
+      access: accessField,
     }),
     annotations: { idempotent: true },
     run: async (args, { clients }) => {
       requireFields(args, QR_CODE_REQUIRED_FIELDS[args.type], `type "${args.type}"`);
       const mode = resolveQrCodeMode(args, args.mode, false);
+      checkQrCodeAccess(args, mode, args.access);
       const current = await clients.qrCodes.get(args.id);
-      const base = { name: args.name ?? current.name, templateId: args.templateId ?? current.templateId ?? "", refId: args.refId, tag: args.tag, mode };
+      const base = { name: args.name ?? current.name, templateId: args.templateId ?? current.templateId ?? "", refId: args.refId, tag: args.tag, mode, ...(args.access !== undefined ? { access: args.access } : {}) };
       return updateQrCode(clients.qrCodes, args.id, base, args);
     },
     entity: (_result, args) => ({ entityType: "qrCode", entityId: args.id }),

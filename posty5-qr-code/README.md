@@ -134,6 +134,29 @@ An update without `mode` keeps the stored mode. Switching `mode` changes the
 image. `list({ mode: 'dynamic' })` filters; responses carry `mode` and
 `dynamicSince`.
 
+### Scan rules (`access`)
+
+A dynamic code can carry scan rules: when it starts and stops working, a visit
+limit, and where a scan goes while it does not work. Starter plan or above; the
+API's 403 is surfaced unchanged. Static and Wi-Fi codes take none.
+
+```typescript
+await qrCodeClient.updateURL(qr._id, {
+  name: 'Menu',
+  templateId: 'template_123',
+  url: { url: 'https://example.com/menu-v2' },
+  access: {
+    activeFrom: new Date('2026-11-01T09:00:00Z'), // Date or ISO string
+    expiresAt: '2026-11-30T23:00:00Z',            // must be after activeFrom
+    maxVisits: 500,
+    fallbackUrl: 'https://example.com/offer-ended',
+  },
+});
+
+// Clear them: access: null (an update without access keeps the stored rules;
+// an access object replaces them whole).
+```
+
 ## 📦 Bulk create, bulk jobs and export (4.5.0)
 
 ```typescript

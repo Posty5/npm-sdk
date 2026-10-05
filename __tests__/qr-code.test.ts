@@ -205,6 +205,30 @@ describe("QR Code SDK — payloads (offline)", () => {
     expect(calls[0].params).toEqual({ mode: "dynamic" });
   });
 
+  it("passes access through only when defined; null clears; Dates serialise to ISO (DQ Part B)", async () => {
+    const { http, calls } = stubHttp({ _id: "qr1" });
+    const client = new QRCodeClient(http);
+    const access = { activeFrom: new Date("2026-11-01T00:00:00.000Z"), expiresAt: "2026-12-01T00:00:00.000Z", maxVisits: 100, fallbackUrl: "https://example.com/closed" };
+
+    await client.createURL({ templateId, url: { url: "https://example.com" }, mode: "dynamic", access });
+    await client.updateURL("qr1", { name: "N", templateId, url: { url: "https://example.com" }, access: null });
+    await client.updateURL("qr1", { name: "N", templateId, url: { url: "https://example.com" } });
+
+    expect(JSON.parse(JSON.stringify(calls[0].body)).access).toEqual({ ...access, activeFrom: "2026-11-01T00:00:00.000Z" });
+    expect((calls[1].body as any).access).toBeNull();
+    expect("access" in (calls[2].body as object)).toBe(false);
+  });
+
+  it("Wi-Fi codes take no access at compile time (DQ Part B)", () => {
+    const { http } = stubHttp();
+    const client = new QRCodeClient(http);
+    const compileOnly = () => {
+      // @ts-expect-error Wi-Fi codes are static, so they take no scan rules
+      void client.createWifi({ templateId, wifi: { name: "Cafe" }, access: { maxVisits: 1 } });
+    };
+    expect(typeof compileOnly).toBe("function");
+  });
+
   it("Wi-Fi codes cannot be dynamic at compile time (DQ)", () => {
     const { http } = stubHttp();
     const client = new QRCodeClient(http);
@@ -481,6 +505,25 @@ describeLive("QR Code SDK", () => {
     it("list({ mode: 'dynamic' }) includes the dynamic code", async () => {
       const result = await client.list({ mode: "dynamic" }, { page: 1, pageSize: 50 });
       expect(result.items.some((item) => item._id === dynamicId)).toBe(true);
+    });
+
+    it("sets and clears access (scan rules), or surfaces the plan 403", async () => {
+      const before = await client.get(dynamicId);
+      const access = { expiresAt: new Date(Date.now() + 86_400_000).toISOString(), maxVisits: 5, fallbackUrl: "https://example.com/closed" };
+      try {
+        await client.updateURL(dynamicId, { name: before.name, templateId, url: { url: "https://example.com/b" }, access });
+      } catch (error: any) {
+        // A Free test account: the plan gate surfaces through the core error unchanged
+        expect(String(error?.message)).toContain("not available on your current plan");
+        return;
+      }
+      const set = await client.get(dynamicId);
+      expect(set.access?.maxVisits).toBe(5);
+      expect(set.access?.fallbackUrl).toBe("https://example.com/closed");
+      expect(set.access?.activeFrom ?? null).toBeNull();
+
+      await client.updateURL(dynamicId, { name: before.name, templateId, url: { url: "https://example.com/b" }, access: null });
+      expect((await client.get(dynamicId)).access ?? null).toBeNull();
     });
   });
 

@@ -1,5 +1,5 @@
 import { IPaginationParams } from "@posty5/core";
-import { QRCodeMode, QrCodeStatusType, QrCodeTargetType } from "../types/type";
+import { IQRCodeAccess, QRCodeMode, QrCodeStatusType, QrCodeTargetType } from "../types/type";
 
 /**
  * Content of the code's Posty5 landing page when `isEnableLandingPage` is true.
@@ -185,10 +185,16 @@ export interface IQRCodeRequest {
    * when defined. Changing the mode changes the image.
    */
   mode?: QRCodeMode;
+  /**
+   * Scan rules (dynamic codes only; Starter plan or above). Sent only when
+   * defined. On update: omitted keeps the stored rules, an object replaces
+   * them whole, `null` (or an all-empty object) clears them.
+   */
+  access?: IQRCodeAccess | null;
 }
 
-/** Request fields for a Wi-Fi code: Wi-Fi codes are always static. */
-export type IQRCodeStaticOnlyRequest<T extends IQRCodeRequest> = Omit<T, "mode"> & {
+/** Request fields for a Wi-Fi code: Wi-Fi codes are always static, so they take no scan rules either. */
+export type IQRCodeStaticOnlyRequest<T extends IQRCodeRequest> = Omit<T, "mode" | "access"> & {
   /** Wi-Fi codes cannot be dynamic; only `"static"` is accepted. */
   mode?: "static";
 };

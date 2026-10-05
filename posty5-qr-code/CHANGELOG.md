@@ -32,6 +32,13 @@ Needs the API release of dynamic QR codes; an older API rejects `mode`.
   `IUpdateWifiQRCodeRequest` accept `mode?: "static"` only (the API's 400
   "This QR code type cannot be dynamic" is surfaced unchanged).
 - `IQRCode.mode` and `IQRCode.dynamicSince` on responses.
+- **`access?: IQRCodeAccess | null`** — scan rules for dynamic codes
+  (`activeFrom`, `expiresAt` as ISO string or `Date`, `maxVisits`,
+  `fallbackUrl`) on create/update requests, sent only when defined. On update,
+  omitted keeps the rules, an object replaces them whole, `null` (or an
+  all-empty object) clears them. Starter plan or above (403 surfaced unchanged);
+  static codes get the API's 400. Wi-Fi request types take no `access`.
+  `IQRCode.access` (`IQRCodeAccessResponse`, each value or `null`) on responses.
 
 ## 4.4.0
 

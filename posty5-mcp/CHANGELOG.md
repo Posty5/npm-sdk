@@ -14,6 +14,10 @@
   Wi-Fi codes are always static (a dynamic Wi-Fi request is refused before
   any call).
 - `qr_code_update` takes an optional `mode`; left out, the stored mode is kept.
+- `qr_code_create` / `qr_code_update` take an optional `access` (scan rules:
+  `activeFrom`, `expiresAt`, `maxVisits`, `fallbackUrl`); `null` clears, left
+  out keeps. Refused before any request on Wi-Fi or an explicitly static code;
+  the API's plan 403 is returned as is.
 - `qr_code_list` filters by `mode`; list/get describe `mode`, `dynamicSince`
   and `qrCodeLandingPageURL`.
 
