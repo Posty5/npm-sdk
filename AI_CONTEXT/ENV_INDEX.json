@@ -18,6 +18,27 @@
       "sensitive": true
     },
     {
+      "name": "POSTY5_MCP_TOOLSETS",
+      "purpose": "posty5-mcp stdio binary: comma list of toolsets; default the five default toolsets.",
+      "source": "posty5-mcp/src/config/stdio-env.config.ts",
+      "category": "environment",
+      "sensitive": false
+    },
+    {
+      "name": "POSTY5_MCP_ACCESS",
+      "purpose": "posty5-mcp stdio binary: read, write (default) or full.",
+      "source": "posty5-mcp/src/config/stdio-env.config.ts",
+      "category": "environment",
+      "sensitive": false
+    },
+    {
+      "name": "POSTY5_AI_MODEL",
+      "purpose": "posty5-mcp stdio binary: model recorded when a call's aiModel is absent.",
+      "source": "posty5-mcp/src/config/stdio-env.config.ts",
+      "category": "environment",
+      "sensitive": false
+    },
+    {
       "name": "IPosty5Config.baseUrl",
       "purpose": "Per-client API origin.",
       "source": "posty5-core/src/types/config.ts",

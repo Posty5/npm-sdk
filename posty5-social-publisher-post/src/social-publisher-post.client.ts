@@ -773,8 +773,12 @@ export class SocialPublisherPostClient {
     if (!id) {
       throw new Error("id is required");
     }
+    // The edit route takes the schedule flat (`scheduleType` + `scheduledAt`), not
+    // the `schedule` object the create routes take, and refuses `scheduledAt` with "now".
     await this.http.put(`${this.basePath}/${id}`, {
-      schedule: this.buildSchedule(data.schedule),
+      ...(data.schedule === "now"
+        ? { scheduleType: "now" }
+        : { scheduleType: "schedule", scheduledAt: data.schedule.toISOString() }),
       ...(data.caption !== undefined ? { caption: data.caption } : {}),
     });
   }
