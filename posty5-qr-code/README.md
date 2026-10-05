@@ -1,6 +1,6 @@
 # @posty5/qr-code
 
-Generate and manage customizable QR codes for multiple use cases including URLs, WiFi credentials, email, SMS, phone calls, geolocation, and free text. This package provides a complete TypeScript/JavaScript client for creating professional QR codes with template support, analytics tracking, and dynamic content management.
+Generate and manage customizable QR codes for multiple use cases including URLs, WiFi credentials, email, SMS, phone calls, geolocation, and free text. This package provides a complete TypeScript/JavaScript client for creating professional QR codes with template support, optional landing pages, and landing-page visit counts.
 
 ---
 
@@ -9,7 +9,7 @@ Generate and manage customizable QR codes for multiple use cases including URLs,
 **Posty5** is a comprehensive suite of free online tools designed to enhance your digital marketing and social media presence. With over 4+ powerful tools and counting, Posty5 provides everything you need to:
 
 - 🔗 **Shorten URLs** - Create memorable, trackable short links
-- 📱 **Generate QR Codes** - Transform URLs, WiFi credentials, contact cards, and more into scannable codes
+- 📱 **Generate QR Codes** - Turn URLs, WiFi credentials, email, SMS, phone numbers, locations and free text into scannable codes
 - 🌐 **Host HTML Pages** - Deploy static HTML pages with dynamic variables and form submission handling
 - 📢 **Automate Social Media** - Schedule and manage social media posts across multiple platforms
 - 📊 **Track Performance** - Monitor and analyze your digital marketing efforts
@@ -27,13 +27,13 @@ Posty5 empowers businesses, marketers, and developers to streamline their online
 ### Key Capabilities
 
 - **📱 7 QR Code Types** - URL, Free Text, Email, WiFi, SMS, Phone Call, and Geolocation
-- **🎨 Template Support** - Apply professional templates for branded QR codes
-- **🔄 Dynamic QR Codes** - Update QR code content without changing the code itself
-- **📊 Analytics Tracking** - Monitor scans, visitor counts, and last visitor dates
+- **🎨 Template Support** - Apply your templates for branded QR codes (the template sets colours, logo and size)
+- **✏️ Editable Records** - Change a code's content, name, tag or template; the image is re-rendered with the new content
+- **📊 Landing-Page Visits** - Visit counts and the last visit date for each code's Posty5 page (scans of a downloaded image are not counted)
+- **📈 Visit Analytics** - Those visits per day, week or month, with unique visitors, bot visits and breakdowns by country, device, OS, browser, referrer and language
 - **🏷️ Tag & Reference Support** - Organize QR codes with custom tags and reference IDs
-- **🎯 Landing Pages** - Each QR code gets a custom landing page URL
-- **🔗 Short Links** - Automatic short URL generation for easy sharing
-- **🔍 Advanced Filtering** - Search and filter by name, status, tag, or reference ID
+- **🎯 Landing Pages** - Each QR code gets a Posty5 page URL, optionally with your own title and description
+- **🔍 Filtering** - Search and filter by name, status, tag, reference ID, or landing page on/off
 - **📝 CRUD Operations** - Complete create, read, update, delete operations
 - **🔐 API Key Scoping** - Multi-tenant support with API key filtering
 - **📈 Pagination Support** - Efficiently handle large QR code collections
@@ -44,9 +44,9 @@ This package works seamlessly with other Posty5 SDK modules:
 
 - Generate QR codes that link to `@posty5/short-link` shortened URLs
 - Create QR codes pointing to `@posty5/html-hosting` hosted pages
-- Build comprehensive marketing campaigns with tracking and analytics
+- Build marketing campaigns organised by tag and reference ID
 
-Perfect for **businesses**, **event organizers**, **restaurants**, **retail stores**, **marketers**, and **developers** who need contactless solutions, marketing campaigns, product packaging, digital menus, WiFi sharing, contact sharing, and location-based services.
+Perfect for **businesses**, **event organizers**, **restaurants**, **retail stores**, **marketers**, and **developers** who need contactless solutions, marketing campaigns, product packaging, digital menus, WiFi sharing, and location-based services.
 
 ---
 
@@ -79,7 +79,7 @@ const qrCodes = new QRCodeClient(httpClient);
 // Create a URL QR code
 const qrCode = await qrCodes.createURL({
   name: "Website QR Code",
-  templateId: "template-123", // Optional: Use a template for branding
+  templateId: "template-123", // Required: one of your QR code templates
   url: {
     url: "https://posty5.com",
   },
@@ -88,7 +88,7 @@ const qrCode = await qrCodes.createURL({
 });
 
 console.log("QR Code Landing Page:", qrCode.qrCodeLandingPageURL);
-console.log("Short Link:", qrCode.shorterLink);
+console.log("QR Code Image:", qrCode.qrCodeDownloadURL);
 console.log("QR Code ID:", qrCode._id);
 
 // List all QR codes
@@ -102,9 +102,44 @@ const allQRCodes = await qrCodes.list(
 
 console.log(`Total QR codes: ${allQRCodes.pagination.totalCount}`);
 allQRCodes.items.forEach((qr) => {
-  console.log(`${qr.name}: ${qr.numberOfVisitors} scans`);
+  console.log(`${qr.name}: ${qr.numberOfVisitors} landing-page visits`);
 });
 ```
+
+---
+
+## ⬆️ Upgrading to 4.4.0
+
+- **New:** `getAnalytics(id, query?)` — visits of a code's Posty5 page, per
+  day, week or month, with breakdowns (see [Visit Analytics](#visit-analytics)).
+- **New:** `statistics(query?)` — totals, visits per UTC day and the top codes
+  by visits over all your codes (see [statistics()](#statistics)).
+- Requires `@posty5/core` 4.4.0. Nothing else changed.
+
+## ⬆️ Upgrading to 4.3.0
+
+- **The API builds the encoded text.** For `email`, `wifi`, `call`, `sms`, `url`
+  and `geolocation` the SDK now sends the code's content (`qrCodeTarget`) only;
+  the API builds and escapes the text the image encodes. A subject with `&`, a
+  Wi-Fi password with `;` or an SMS without a message no longer produces a
+  code that opens the wrong thing. Free text still sends its text.
+- **`isEnableMonetization` is deprecated.** The API never accepted it (it
+  answered 400). The SDK now drops it from every request, so old code compiles
+  and stops failing; the property is removed in 5.0.0.
+- **New:** `isEnableLandingPage` on every create and update, and the
+  `isEnableLandingPage` list filter.
+- **Requests are no longer mutated.** The SDK used to clear the content key
+  (`email`, `wifi`, …) on the object you passed in; it now leaves it as it was.
+
+## 🔢 What `numberOfVisitors` counts
+
+`numberOfVisitors` and `lastVisitorDate` count visits to the code's Posty5 page
+(`qrCodeLandingPageURL`). The image you download (`qrCodeDownloadURL`) encodes
+the content directly — the URL, the Wi-Fi network, the phone number — so
+scanning a printed copy opens that content without reaching Posty5 and is
+**not** counted. For the same reason, changing a code's content changes the
+image: re-download it after an update; a copy printed earlier keeps the old
+content.
 
 ---
 
@@ -114,11 +149,24 @@ allQRCodes.items.forEach((qr) => {
 
 The SDK supports 7 different QR code types. Each type has its own creation method with type-specific parameters.
 
+> **`templateId` is required** on every create and update. Every SDK call uses
+> an API key, and the API refuses an API-key call without a template. Pick one
+> of your templates on the
+> [dashboard templates page](https://studio.posty5.com/qr-code-templates).
+
+Every create and update method also takes these optional fields:
+
+- `tag` (string): Custom tag for grouping/filtering
+- `refId` (string): External reference ID from your system
+- `customLandingId` (string, max 32 chars): Custom ID for the code's Posty5 page
+- `isEnableLandingPage` (boolean, default `false`): Show `pageInfo` on the code's Posty5 page
+- `pageInfo` (object, `title` required when `isEnableLandingPage` is true): `title`, `description`
+
 ---
 
 #### createURL()
 
-Create a URL QR code that redirects users to a website when scanned.
+Create a URL QR code that opens a website when scanned.
 
 **Parameters:**
 
@@ -126,7 +174,7 @@ Create a URL QR code that redirects users to a website when scanned.
   - `name` (string, **required**): Human-readable name for the QR code
   - `templateId` (string, **required**): Template ID for styling
   - `url` (object, **required**): URL configuration
-    - `url` (string): Target website URL
+    - `url` (string): Target website URL. Must start with `http://` or `https://`.
   - `tag` (string, optional): Custom tag for grouping/filtering
   - `refId` (string, optional): External reference ID from your system
 
@@ -134,9 +182,9 @@ Create a URL QR code that redirects users to a website when scanned.
 
 - `_id` (string): QR code database ID
 - `qrCodeId` (string): Unique QR code identifier
-- `qrCodeLandingPageURL` (string): Landing page URL
-- `shorterLink` (string): Short URL
-- `numberOfVisitors` (number): Scan count
+- `qrCodeLandingPageURL` (string): The code's Posty5 page URL
+- `qrCodeDownloadURL` (string): The QR image
+- `numberOfVisitors` (number): Visits to the Posty5 page (not scans)
 - `status` (string): QR code status
 
 **Example:**
@@ -151,7 +199,7 @@ const qrCode = await qrCodes.createURL({
   },
 });
 
-console.log("Scan this:", qrCode.qrCodeLandingPageURL);
+console.log("Print this:", qrCode.qrCodeDownloadURL);
 ```
 
 ```typescript
@@ -166,7 +214,7 @@ const campaignQR = await qrCodes.createURL({
   refId: "SUMMER-2026-001",
 });
 
-console.log("Campaign QR:", campaignQR.shorterLink);
+console.log("Campaign QR image:", campaignQR.qrCodeDownloadURL);
 ```
 
 ---
@@ -399,7 +447,7 @@ Create an SMS QR code that opens the messaging app with a pre-filled phone numbe
   - `templateId` (string, **required**): Template ID
   - `sms` (object, **required**): SMS configuration
     - `phoneNumber` (string): Recipient phone number
-    - `message` (string): Pre-filled message text
+    - `message` (string, optional): Pre-filled message text
   - `tag` (string, optional): Custom tag
   - `refId` (string, optional): External reference ID
 
@@ -512,7 +560,7 @@ const restaurantQR = await qrCodes.createGeolocation({
   tag: "locations",
 });
 
-console.log("Visit us:", restaurantQR.shorterLink);
+console.log("Visit us:", restaurantQR.qrCodeLandingPageURL);
 ```
 
 ---
@@ -533,12 +581,13 @@ Retrieve complete details of a specific QR code by ID.
 - `qrCodeId` (string): Unique identifier
 - `name` (string): QR code name
 - `templateId` (string): Template ID used
-- `numberOfVisitors` (number): Total scan count
-- `lastVisitorDate` (string): Last scan timestamp
-- `qrCodeLandingPageURL` (string): Landing page URL
-- `shorterLink` (string): Short URL
+- `numberOfVisitors` (number): Visits to the code's Posty5 page (not scans)
+- `lastVisitorDate` (string): Last visit to that page
+- `qrCodeLandingPageURL` (string): The code's Posty5 page URL
+- `qrCodeDownloadURL` (string): The QR image
 - `status` (string): Current status
 - `qrCodeTarget` (object): Target configuration
+- `options.text` (string): The text the image encodes, built by the API from `qrCodeTarget`
 - `createdAt` (string): Creation timestamp
 - `updatedAt` (string): Last update timestamp
 
@@ -549,23 +598,25 @@ const qrCode = await qrCodes.get("qr-code-id-123");
 
 console.log("QR Code Details:");
 console.log("  Name:", qrCode.name);
-console.log("  Scans:", qrCode.numberOfVisitors);
+console.log("  Landing-page visits:", qrCode.numberOfVisitors);
 console.log("  Landing Page:", qrCode.qrCodeLandingPageURL);
+console.log("  Encoded text:", qrCode.options?.text);
 console.log("  Status:", qrCode.status);
 
 if (qrCode.lastVisitorDate) {
-  console.log("  Last Scan:", new Date(qrCode.lastVisitorDate).toLocaleString());
+  console.log("  Last visit:", new Date(qrCode.lastVisitorDate).toLocaleString());
 }
 ```
 
 ```typescript
-// Check QR code performance
+// Check landing-page traffic
 const campaignQR = await qrCodes.get("campaign-qr-id");
+const visits = campaignQR.numberOfVisitors ?? 0;
 
-if (campaignQR.numberOfVisitors > 1000) {
-  console.log("🎉 Campaign successful! Over 1000 scans!");
+if (visits > 1000) {
+  console.log("🎉 Over 1000 landing-page visits!");
 } else {
-  console.log(`Current scans: ${campaignQR.numberOfVisitors}`);
+  console.log(`Current landing-page visits: ${visits}`);
 }
 ```
 
@@ -579,10 +630,17 @@ Search and filter QR codes with advanced pagination and filtering options.
 
 - `params` (IListParams, optional): Filter criteria
   - `name` (string, optional): Filter by QR code name
+  - `qrCodeId` (string, optional): Filter by QR code identifier
+  - `templateId` (string, optional): Filter by template ID
   - `status` (string, optional): Filter by status
   - `tag` (string, optional): Filter by tag
   - `refId` (string, optional): Filter by reference ID
-  - `apiKeyId` (string, optional): Filter by API key ID
+  - `isEnableLandingPage` (boolean, optional): Filter by landing page on/off
+  - `createdFrom` (string, optional): Filter by creation source
+
+  An API-key call only ever lists the codes created with that key. Each item
+  carries `numberOfVisitors`, `status`, `isEnableLandingPage`, `pageInfo` and
+  `qrCodeTarget` (SMS message included).
 - `pagination` (IPaginationParams, optional): Pagination options
   - `page` (number, optional): Page number (default: 1)
   - `pageSize` (number, optional): Items per page (default: 10)
@@ -610,7 +668,7 @@ const allQRCodes = await qrCodes.list(
 
 console.log(`Total: ${allQRCodes.pagination.totalCount}`);
 allQRCodes.items.forEach((qr) => {
-  console.log(`${qr.name}: ${qr.numberOfVisitors} scans`);
+  console.log(`${qr.name}: ${qr.numberOfVisitors} landing-page visits`);
 });
 ```
 
@@ -622,7 +680,14 @@ const marketingQRs = await qrCodes.list({
 
 console.log("Marketing QR Codes:");
 marketingQRs.items.forEach((qr) => {
-  console.log(`  ${qr.name} - ${qr.shorterLink}`);
+  console.log(`  ${qr.name} - ${qr.qrCodeLandingPageURL}`);
+});
+```
+
+```typescript
+// Only the codes whose landing page is on
+const withLanding = await qrCodes.list({
+  isEnableLandingPage: true,
 });
 ```
 
@@ -653,12 +718,12 @@ const campaignQRs = await qrCodes.list({
   refId: "SUMMER-2026",
 });
 
-let totalScans = 0;
+let totalVisits = 0;
 campaignQRs.items.forEach((qr) => {
-  totalScans += qr.numberOfVisitors || 0;
+  totalVisits += qr.numberOfVisitors || 0;
 });
 
-console.log(`Campaign total scans: ${totalScans}`);
+console.log(`Campaign landing-page visits: ${totalVisits}`);
 ```
 
 ```typescript
@@ -680,7 +745,7 @@ console.log(`Page ${page2.pagination.page} of ${page2.pagination.totalPages}`);
 
 ### Updating QR Codes
 
-The SDK provides separate update methods for each QR code type. Update methods allow you to modify QR code content while keeping the same landing page and short URL.
+The SDK provides separate update methods for each QR code type. An update keeps the same record, ID and Posty5 page URL. A static code's image encodes its content, so after changing the content re-download `qrCodeDownloadURL`: a copy printed earlier keeps opening the old content.
 
 #### updateURL()
 
@@ -707,7 +772,7 @@ await qrCodes.updateURL("qr-code-id-123", {
   refId: "SUMMER-2026-001",
 });
 
-console.log("QR code updated - same code, new destination!");
+console.log("QR code updated - re-download the image for the new destination");
 ```
 
 ---
@@ -895,7 +960,7 @@ async function deleteQRCode(id: string) {
   const qr = await qrCodes.get(id);
 
   console.log(`Are you sure you want to delete "${qr.name}"?`);
-  console.log(`Scans: ${qr.numberOfVisitors}`);
+  console.log(`Landing-page visits: ${qr.numberOfVisitors}`);
 
   // After user confirmation
   await qrCodes.delete(id);
@@ -913,6 +978,105 @@ for (const qr of oldCampaign.items) {
   await qrCodes.delete(qr._id);
   console.log(`Deleted: ${qr.name}`);
 }
+```
+
+---
+
+### Visit Analytics
+
+#### getAnalytics()
+
+Visits of one QR code over a range: totals, a series per day, week or month,
+and breakdowns. Reading analytics costs no credits.
+
+**Parameters:**
+
+- `id` (string): QR code ID
+- `query` (`ILinkAnalyticsQuery`, optional):
+  - `from` / `to` (`string` | `Date`): first and last day, `YYYY-MM-DD` or an ISO date-time. A `Date` is sent as its **UTC** calendar day. Default: the last 30 days.
+  - `interval` (`"day"` | `"week"` | `"month"`): width of one series point. Default `"day"`.
+  - `tz` (string): IANA time zone the days are counted in, e.g. `"Africa/Cairo"`. Default: the owner's time zone, else UTC. Not validated by the SDK; an unknown zone answers 400.
+  - `breakdown` (`LinkAnalyticsBreakdown[]` | `"all"`): any of `country`, `device`, `os`, `browser`, `referrer`, `channel`, `language`, `variant`, `rule`, or `"all"`. Omitted (or an empty list) means every breakdown your plan allows, same as `"all"`.
+  - `limit` (number): rows per breakdown, 1–50. Default 10. The overflow comes back as one row with key `other`; visits with no value (e.g. no referrer) as key `unknown`.
+
+**Returns:** `Promise<ILinkAnalyticsResponse>` — `totals` (`visits`, `uniqueVisitors`, `botVisits`), `series` (`[{ date, visits, uniqueVisitors }]`), `breakdowns` (`{ <name>: [{ key, visits, uniqueVisitors }] }`) and `meta`: `from` / `to` (`YYYY-MM-DD` in `meta.timezone`), `interval`, `timezone`, `source` (`events` | `rollup` | `mixed`), `analyticsStartedAt`, `locked` (`[{ breakdown, requiredPlan }]`, `requiredPlan` a plan key such as `"basic"`) and `maxHistoryDays` (`30` on Free, `null` on Starter and up).
+
+**Example:**
+
+```typescript
+const analytics = await qrCodes.getAnalytics("qr-code-id-123", {
+  from: "2026-10-01",
+  to: "2026-10-31",
+  breakdown: ["device", "country"],
+});
+
+console.log(`Visits: ${analytics.totals.visits} (bots: ${analytics.totals.botVisits})`);
+for (const point of analytics.series) {
+  console.log(point.date, point.visits);
+}
+console.log(analytics.breakdowns.device); // [{ key: "mobile", visits: 12, uniqueVisitors: 9 }, …]
+```
+
+```typescript
+// Every breakdown your plan includes; the others are listed in meta.locked
+const all = await qrCodes.getAnalytics("qr-code-id-123", { breakdown: "all", interval: "week" });
+
+for (const locked of all.meta.locked) {
+  console.log(`${locked.breakdown} needs the ${locked.requiredPlan} plan`);
+}
+```
+
+**What the numbers mean:**
+
+- Bots, crawlers and link-preview fetchers are **not** in `visits`; they are counted in `totals.botVisits` only.
+- `uniqueVisitors` over more than one day is the **sum of each day's uniques** — a visitor is not recognised from one day to the next.
+- There is no data before `meta.analyticsStartedAt`, the day Posty5 started recording visits.
+- `channel` is always `qr`.
+- **Scans of a static code are not counted.** Its image encodes the content directly, so a scan never reaches Posty5; these are visits of the code's Posty5 page — the same visits `numberOfVisitors` counts (see [What `numberOfVisitors` counts](#-what-numberofvisitors-counts)).
+- `meta.timezone` is `"UTC"` when the range reaches further back than raw visits are kept; `meta.source` says whether the answer came from raw visits, daily rollups or both.
+
+**Plan limits:** omitting `breakdown` (or `"all"`) is never refused for a breakdown — it returns what the plan allows and lists the rest in `meta.locked`. Naming a breakdown your plan does not include, or a `from` older than the plan's history (`meta.maxHistoryDays`), throws `AuthorizationError` (403, "This feature is not available on your current plan."). An unknown or deleted id throws `ValidationError` (400, "The QR Code Is Not Found") — not `NotFoundError` — and a code your key may not read throws `AuthorizationError` (403, "You Have Not Permission"):
+
+```typescript
+import { AuthorizationError } from "@posty5/core";
+
+try {
+  await qrCodes.getAnalytics("qr-code-id-123", { breakdown: ["referrer"] });
+} catch (error) {
+  if (error instanceof AuthorizationError) {
+    console.error(error.message); // the API's plan message, unchanged
+  }
+}
+```
+
+#### statistics()
+
+Statistics over all of your codes for a range.
+
+**Parameters:**
+
+- `query` (`ILinkStatisticsQuery`, optional):
+  - `period` (`"today"` | `"7d"` | `"30d"` | `"month"` | `"custom"`): preset range. Default `"30d"`. Sending `from` or `to` makes it `"custom"`.
+  - `from` / `to` (`string` | `Date`): range start and end, `YYYY-MM-DD`. A `Date` is sent as its **UTC** calendar day.
+
+**Returns:** `Promise<{ range, data }>` — `range` (`from`, `to`, `period` as resolved) and `data`:
+
+- `totals`: lifetime `totalQRCodes`, `totalVisitors` and `avgVisitorsPerQRCode`, plus the range's `visitsInRange`, `uniqueVisitorsInRange` (sum of daily uniques) and `botVisitsInRange`.
+- `daily`: one row per **UTC** day, `{ _id: "YYYY-MM-DD", createdCount, visitorsSum }` — `createdCount` is codes created that day, `visitorsSum` is visits by people made that day (bots excluded), not visitors of the codes created that day.
+- `topQRCodes`: up to ten codes with the most visits in the range, each with `visitsInRange`. Codes with no visits in the range are left out.
+
+These are visits of the codes' Posty5 pages: a scan of a static code opens its content directly and is never seen by Posty5.
+
+**Example:**
+
+```typescript
+const stats = await qrCodes.statistics({ period: "7d" });
+
+console.log(`Visits this week: ${stats.data.totals.visitsInRange}`);
+for (const day of stats.data.daily) {
+  console.log(day._id, day.visitorsSum);
+}
+console.log(stats.data.topQRCodes[0]?.visitsInRange);
 ```
 
 ---
@@ -947,7 +1111,7 @@ const menuQR = await qrCodes.createURL({
   refId: "MENU-001",
 });
 
-console.log("Menu QR:", menuQR.shorterLink);
+console.log("Menu QR image:", menuQR.qrCodeDownloadURL);
 
 // WiFi QR code
 const wifiQR = await qrCodes.createWifi({
@@ -998,14 +1162,14 @@ const restaurantQRs = await qrCodes.list({
   tag: "restaurant",
 });
 
-let totalScans = 0;
+let totalVisits = 0;
 restaurantQRs.items.forEach((qr) => {
-  const scans = qr.numberOfVisitors || 0;
-  totalScans += scans;
-  console.log(`  ${qr.name}: ${scans} scans`);
+  const visits = qr.numberOfVisitors || 0;
+  totalVisits += visits;
+  console.log(`  ${qr.name}: ${visits} landing-page visits`);
 });
 
-console.log(`\nTotal scans across all QR codes: ${totalScans}`);
+console.log(`\nLanding-page visits across all QR codes: ${totalVisits}`);
 
 // 3. Update menu QR code for seasonal menu
 console.log("\n🔄 Updating menu for winter season...");
@@ -1019,22 +1183,22 @@ await qrCodes.updateURL(menuQR._id, {
   refId: "MENU-WINTER-2026",
 });
 
-console.log("✓ Menu QR updated - same code, new menu!");
+console.log("✓ Menu QR updated - print the new image from qrCodeDownloadURL");
 
-// 4. Analytics report
-console.log("\n📊 Performance Report:");
+// 4. Landing-page report
+console.log("\n📊 Landing-page Report:");
 for (const qr of restaurantQRs.items) {
   const details = await qrCodes.get(qr._id);
 
   console.log(`\n${details.name}:`);
-  console.log(`  Total Scans: ${details.numberOfVisitors || 0}`);
+  console.log(`  Landing-page visits: ${details.numberOfVisitors || 0}`);
 
   if (details.lastVisitorDate) {
-    console.log(`  Last Scan: ${new Date(details.lastVisitorDate).toLocaleString()}`);
+    console.log(`  Last visit: ${new Date(details.lastVisitorDate).toLocaleString()}`);
   }
 
   console.log(`  Landing Page: ${details.qrCodeLandingPageURL}`);
-  console.log(`  Short Link: ${details.shorterLink}`);
+  console.log(`  QR Image: ${details.qrCodeDownloadURL}`);
 }
 
 console.log("\n✓ QR code management complete!");

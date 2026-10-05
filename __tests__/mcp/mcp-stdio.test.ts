@@ -91,7 +91,7 @@ describe("@posty5/mcp — the stdio binary", () => {
     const names = list.result.tools.map((tool: { name: string }) => tool.name);
     expect(names).toEqual(["account_get_current", "account_get_credits", "account_get_credit_usage", "account_get_operation_costs", "short_link_list", "short_link_get", "short_link_create", "short_link_update"]);
 
-    const call = await client.request("tools/call", { name: "short_link_create", arguments: { baseUrl: "https://example.com", aiModel: "claude-opus-5-5" } });
+    const call = await client.request("tools/call", { name: "short_link_create", arguments: { baseUrl: "https://example.com", templateId: "t1", aiModel: "claude-opus-5-5" } });
     expect(call.result.isError).toBeFalsy();
 
     const create = api.requests.find((request) => request.method === "POST")!;

@@ -12,6 +12,8 @@ First release.
 - `createPosty5McpServer(options)`: access levels `read` / `write` / `full`,
   toolset selection, `confirm` on irreversible and paid tools, `aiModel` and
   `idempotencyKey` on every write, `X-Posty5-Agent` attribution, host hooks.
+- `short_link_create` takes a required `templateId`, as `qr_code_create` does:
+  the API refuses an API-key short-link create without one.
 - `posty5-mcp` stdio binary (`npx -y @posty5/mcp`), configured by environment.
 - `createPosty5McpNodeHandler`: Streamable HTTP for both protocol eras,
   per-request options, 2025-era client identity carried by a signed

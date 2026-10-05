@@ -20,6 +20,68 @@
 
 **Status:** observed in current source. Revisit only with compatibility, migration, and verification impact documented.
 
+## D06 - A request key the API never accepted is deprecated and stripped, not deleted, in a minor.
+
+**Status:** decided 2026-10-05 (link + QR truth pass, owner decision TP-D5 default).
+`isEnableMonetization` on `@posty5/short-link` and `@posty5/qr-code` was typed,
+documented and sent, but every API Joi schema rejects it, so any request that
+carried it answered 400. In 4.3.0 it stays in the types as `@deprecated` and the
+clients delete it from every body and query (`ShortLinkDeprecatedRequestKeysConst`,
+`QrCodeDeprecatedRequestKeysConst`), so old code compiles and stops failing. It
+is deleted in 5.0.0. Deleting it in the minor would break compilation for code
+that only ever named it. The legacy list key `"pageinfo.title"` follows the same
+rule: deprecated, sent as `"pageInfo.title"`.
+
+## D07 - The server, not the SDK, builds the text a QR code encodes.
+
+**Status:** decided 2026-10-05 (link + QR truth pass, feature contract "API
+changes (QR code)"). The API builds `options.text` for all seven types from
+`qrCodeTarget` with one escaping encoder and ignores a client-sent value, so its
+URL safety checks inspect exactly what the image encodes. `QRCodeClient` sends
+`qrCodeTarget` only for `email`, `wifi`, `call`, `sms`, `url`, `geolocation`; free
+text keeps `options.text = text` (the same value as `freeText.text`). The SDK's
+old encoders were unescaped and sent `undefined` for omitted fields. Never add a
+client-side encoder back as the source of the stored text.
+
+## D08 - `statistics()` waited for C2 (added in 4.4.0).
+
+**Status:** deferred 2026-10-05 (owner decision TP-D6 default). The statistics
+route groups links by **creation** date, and contract C2 of the link + QR
+roadmap redefines `daily`. Publishing today's meaning in a typed client would
+freeze a meaning the visitor-analytics feature (VA) changes; VA's SDK task adds
+the method after C2.
+
+**Update 2026-10-05 (VA):** VA's npm-sdk task
+(`.agent/tasks/link-qr-visit-analytics/npm-sdk/link-qr-analytics-methods`)
+first shipped `getAnalytics()` only. The owner then decided to add
+`statistics()` in the same 4.4.0 release, now that `daily` means visits per
+UTC day (C2): `ShortLinkClient.statistics()` / `QRCodeClient.statistics()`,
+`GET /api/{short-link,qr-code}/statistics` with `period` / `from` / `to`. Top
+rows carry `visitsInRange`; records with no visits in the range are left out
+of the top list. D08 is resolved.
+
+## D09 - Link analytics types and query serialization live in `@posty5/core`.
+
+**Status:** decided 2026-10-05 (VA npm-sdk task). The short-link and QR-code
+analytics answers are the same shape (C2), so `ILinkAnalyticsQuery`,
+`ILinkAnalyticsResponse` and the unions are declared once in
+`posty5-core/src/types/link-analytics.interface.ts` (the task plan named
+`src/interfaces/`; core keeps its interfaces under `src/types/`) and
+re-exported as types by both packages. `toLinkAnalyticsQuery` joins a breakdown
+list with `,` (axios would send `breakdown[]=…`), passes `"all"` through, omits
+an empty list (an omitted `breakdown` means every breakdown the plan allows), and sends a `Date` as its **UTC** calendar day via
+`toIsoDateString` — a `Date` is an instant, and the API reads `from`/`to` as days
+in `tz`, so callers who care pass `YYYY-MM-DD` strings. The 403 of a gated
+breakdown is the core `AuthorizationError` with the API's message; the SDK names
+no plan (C4). A missing record answers 400 (`ValidationError`, "The Short Link
+Is Not Found" / "The QR Code Is Not Found"), not 404. The statistics envelope, range, visit totals and daily row are declared in
+`posty5-core/src/types/link-statistics.interface.ts`; each package declares
+its own `totals` and top row. Consequence: `@posty5/core`, `@posty5/short-link`
+and `@posty5/qr-code` all go to 4.4.0 with a `^4.4.0` core peer — core skips
+nothing: 4.3.0 is the MCP release (`mcp-wave-2`), which merges first. The packages were
+already out of lockstep after the truth pass (core 4.2.0, short-link/qr-code/
+store 4.3.0).
+
 Do not invent historical rationale. Record evidence-based current decisions and label unknown rationale explicitly.
 
 ## 2026-10-05 — agent gaps (mcp-server feature, wave 2)

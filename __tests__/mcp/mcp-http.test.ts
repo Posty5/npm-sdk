@@ -81,7 +81,7 @@ describe("@posty5/mcp — HTTP handler", () => {
     const tools = (await client.listTools()).tools.map((tool) => tool.name);
     expect(tools).toEqual(["account_get_current", "account_get_credits", "account_get_credit_usage", "account_get_operation_costs", "short_link_list", "short_link_get", "short_link_create", "short_link_update"]);
 
-    const result = await client.callTool({ name: "short_link_create", arguments: { baseUrl: "https://example.com", aiModel: "claude-opus-5-5" } });
+    const result = await client.callTool({ name: "short_link_create", arguments: { baseUrl: "https://example.com", templateId: "t1", aiModel: "claude-opus-5-5" } });
     expect(result.isError).toBeFalsy();
     const post = apiRequests.find((request) => request.method === "POST");
     expect(post?.headers["x-posty5-client"]).toBe("mcp-hosted/test");
@@ -94,7 +94,7 @@ describe("@posty5/mcp — HTTP handler", () => {
   it("serves a 2026-07-28 client and reads its identity from the request envelope", async () => {
     apiRequests.length = 0;
     const client = await connect("write-token", "modern-client", true);
-    await client.callTool({ name: "short_link_create", arguments: { baseUrl: "https://example.com", aiModel: "gpt-5" } });
+    await client.callTool({ name: "short_link_create", arguments: { baseUrl: "https://example.com", templateId: "t1", aiModel: "gpt-5" } });
     expect(agentOf(apiRequests.find((request) => request.method === "POST"))).toMatchObject({ client: { name: "modern-client" }, model: "gpt-5" });
     await client.close();
   });
@@ -103,7 +103,7 @@ describe("@posty5/mcp — HTTP handler", () => {
     const client = await connect("read-token", "reader", true);
     const tools = (await client.listTools()).tools.map((tool) => tool.name);
     expect(tools).not.toContain("short_link_create");
-    await expect(client.callTool({ name: "short_link_create", arguments: { baseUrl: "https://example.com", aiModel: "m" } })).rejects.toThrow();
+    await expect(client.callTool({ name: "short_link_create", arguments: { baseUrl: "https://example.com", templateId: "t1", aiModel: "m" } })).rejects.toThrow();
     await client.close();
   });
 

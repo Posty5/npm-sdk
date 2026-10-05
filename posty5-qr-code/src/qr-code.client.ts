@@ -1,11 +1,21 @@
-import { HttpClient, IPaginationParams, IPaginationResponse } from "@posty5/core";
+import {
+  HttpClient,
+  ILinkAnalyticsQuery,
+  ILinkAnalyticsResponse,
+  ILinkStatisticsQuery,
+  IPaginationParams,
+  IPaginationResponse,
+  toLinkAnalyticsPath,
+  toLinkAnalyticsQuery,
+  toLinkStatisticsPath,
+  toLinkStatisticsQuery,
+} from "@posty5/core";
 import {
   ICreateQRCodeResponse,
   IUpdateQRCodeResponse,
   IGetQRCodeResponse,
   IDeleteQRCodeResponse,
   // ISearchQRCodesResponse,
-  ILookupQRCodesResponse,
   IListParams,
   ICreateFreeTextQRCodeRequest,
   ICreateEmailQRCodeRequest,
@@ -21,10 +31,19 @@ import {
   IUpdateSMSQRCodeRequest,
   IUpdateURLQRCodeRequest,
   IUpdateGeolocationQRCodeRequest,
+  QrCodeTargetType,
+  IQRCodeStatisticsResponse,
 } from "./interfaces";
+import { toFreeTextQrCodeBody, toQrCodeListQuery, toStructuredQrCodeBody } from "./helpers/qr-code-request.helper";
+import { QrCodeRequestSourceConst } from "./qr-code.config";
 
 /**
  * QR Code Client for managing QR codes via Posty5 API
+ *
+ * The text a code's image encodes is built by the API from `qrCodeTarget`
+ * (escaped per type); this client sends the target only. A downloaded image
+ * encodes the content directly, so scanning it does not reach Posty5 and is
+ * not counted in `numberOfVisitors`.
  *
  * @example
  * ```typescript
@@ -39,13 +58,11 @@ import {
  * const qrCodeClient = new QRCodeClient(http);
  *
  * // Create a URL QR code
- * const qrCode = await qrCodeClient.create({
+ * const qrCode = await qrCodeClient.createURL({
  *   name: 'My Website',
- *   qrCodeTarget: {
- *     type: 'url',
- *     url: {
- *       url: 'https://example.com'
- *     }
+ *   templateId: 'template_123',
+ *   url: {
+ *     url: 'https://example.com'
  *   }
  * });
  * ```
@@ -73,38 +90,13 @@ export class QRCodeClient {
    * const qrCode = await qrCodeClient.createFreeText({
    *   name: 'Custom Text QR',
    *   templateId: 'template_123',
-   *   qrCodeTarget: {
-   *     text: 'Any custom text you want to encode'
-   *   }
+   *   text: 'Any custom text you want to encode'
    * });
    * console.log('QR Code URL:', qrCode.qrCodeLandingPageURL);
    * ```
    */
   async createFreeText(data: ICreateFreeTextQRCodeRequest): Promise<ICreateQRCodeResponse> {
-    const payload = {
-      name: data.name,
-      templateId: data.templateId,
-      refId: data.refId,
-      tag: data.tag,
-      customLandingId: data.customLandingId,
-      isEnableMonetization: data.isEnableMonetization,
-      pageInfo: data.pageInfo,
-
-      qrCodeTarget: {
-        freeText: {
-          text: data.text,
-        },
-        type: "freeText",
-      },
-      options: {
-        text: data.text,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    };
-    // console.log("createFreeText payload:", JSON.stringify(payload, null, 2));
-    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/freeText`, payload);
-    return response.result!;
+    return this.createOfType("freeText", toFreeTextQrCodeBody(data));
   }
 
   /**
@@ -127,21 +119,7 @@ export class QRCodeClient {
    * ```
    */
   async createEmail(data: ICreateEmailQRCodeRequest): Promise<ICreateQRCodeResponse> {
-    let qrCodeTarget = {
-      email: data.email,
-      type: "email",
-    };
-    data.email = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/email`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: `mailto:${qrCodeTarget.email.email}?subject=${qrCodeTarget.email.subject}&body=${qrCodeTarget.email.body}`,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.createOfType("email", toStructuredQrCodeBody("email", data));
   }
 
   /**
@@ -164,21 +142,7 @@ export class QRCodeClient {
    * ```
    */
   async createWifi(data: ICreateWifiQRCodeRequest): Promise<ICreateQRCodeResponse> {
-    let qrCodeTarget = {
-      wifi: data.wifi,
-      type: "wifi",
-    };
-    data.wifi = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/wifi`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: `WIFI:T:${qrCodeTarget.wifi.authenticationType};S:${qrCodeTarget.wifi.name};P:${qrCodeTarget.wifi.password};`,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.createOfType("wifi", toStructuredQrCodeBody("wifi", data));
   }
 
   /**
@@ -199,21 +163,7 @@ export class QRCodeClient {
    * ```
    */
   async createCall(data: ICreateCallQRCodeRequest): Promise<ICreateQRCodeResponse> {
-    let qrCodeTarget = {
-      call: data.call,
-      type: "call",
-    };
-    data.call = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/call`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: `tel:${qrCodeTarget.call.phoneNumber}`,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.createOfType("call", toStructuredQrCodeBody("call", data));
   }
 
   /**
@@ -235,21 +185,7 @@ export class QRCodeClient {
    * ```
    */
   async createSMS(data: ICreateSMSQRCodeRequest): Promise<ICreateQRCodeResponse> {
-    let qrCodeTarget = {
-      sms: data.sms,
-      type: "sms",
-    };
-    data.sms = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/sms`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: `sms:${qrCodeTarget.sms.phoneNumber}?body=${qrCodeTarget.sms.message}`,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.createOfType("sms", toStructuredQrCodeBody("sms", data));
   }
   /**
    * Create a URL QR code that opens a website
@@ -271,21 +207,7 @@ export class QRCodeClient {
    * ```
    */
   async createURL(data: ICreateURLQRCodeRequest): Promise<ICreateQRCodeResponse> {
-    let qrCodeTarget = {
-      url: data.url,
-      type: "url",
-    };
-    data.url = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/url`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: qrCodeTarget.url.url,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.createOfType("url", toStructuredQrCodeBody("url", data));
   }
   /**
    * Create a geolocation QR code that opens map coordinates
@@ -306,66 +228,27 @@ export class QRCodeClient {
    * ```
    */
   async createGeolocation(data: ICreateGeolocationQRCodeRequest): Promise<ICreateQRCodeResponse> {
-    let qrCodeTarget = {
-      geolocation: data.geolocation,
-      type: "geolocation",
-    };
-    data.geolocation = undefined as unknown as any;
-    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/geolocation`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: `geo:${qrCodeTarget.geolocation.latitude},${qrCodeTarget.geolocation.longitude}`,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.createOfType("geolocation", toStructuredQrCodeBody("geolocation", data));
   }
 
   /**
    * Update a free text QR code with custom text content
    *
-   * @param data - Free text QR code creation data
-   * @returns Created QR code with ID and landing page URL
+   * @param data - Free text QR code update data
+   * @returns Updated QR code with ID and landing page URL
    *
    * @example
    * ```typescript
    * const qrCode = await qrCodeClient.updateFreeText("qr_code_id",{
    *   name: 'Custom Text QR',
    *   templateId: 'template_123',
-   *   qrCodeTarget: {
-   *     text: 'Any custom text you want to encode'
-   *   }
+   *   text: 'Any custom text you want to encode'
    * });
    * console.log('QR Code URL:', qrCode.qrCodeLandingPageURL);
    * ```
    */
   async updateFreeText(id: string, data: ICreateFreeTextQRCodeRequest): Promise<ICreateQRCodeResponse> {
-    const payload = {
-      name: data.name,
-      templateId: data.templateId,
-      refId: data.refId,
-      tag: data.tag,
-      customLandingId: data.customLandingId,
-      isEnableMonetization: data.isEnableMonetization,
-      pageInfo: data.pageInfo,
-
-      qrCodeTarget: {
-        freeText: {
-          text: data.text,
-        },
-        type: "freeText",
-      },
-      options: {
-        text: data.text,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    };
-
-    const response = await this.http.put<ICreateQRCodeResponse>(`${this.basePath}/freeText/${id}`, payload);
-    return response.result!;
+    return this.updateOfType("freeText", id, toFreeTextQrCodeBody(data));
   }
 
   /**
@@ -388,21 +271,7 @@ export class QRCodeClient {
    * ```
    */
   async updateEmail(id: string, data: IUpdateEmailQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    let qrCodeTarget = {
-      email: data.email,
-      type: "email",
-    };
-    data.email = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/email/${id}`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: `mailto:${qrCodeTarget.email.email}?subject=${qrCodeTarget.email.subject}&body=${qrCodeTarget.email.body}`,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.updateOfType("email", id, toStructuredQrCodeBody("email", data));
   }
 
   /**
@@ -425,21 +294,7 @@ export class QRCodeClient {
    * ```
    */
   async updateWifi(id: string, data: IUpdateWifiQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    let qrCodeTarget = {
-      wifi: data.wifi,
-      type: "wifi",
-    };
-    data.wifi = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/wifi/${id}`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: `WIFI:S:${qrCodeTarget.wifi.name};T:${qrCodeTarget.wifi.authenticationType};P:${qrCodeTarget.wifi.password};;`,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.updateOfType("wifi", id, toStructuredQrCodeBody("wifi", data));
   }
 
   /**
@@ -460,21 +315,7 @@ export class QRCodeClient {
    * ```
    */
   async updateCall(id: string, data: IUpdateCallQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    let qrCodeTarget = {
-      call: data.call,
-      type: "call",
-    };
-    data.call = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/call/${id}`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: `tel:${qrCodeTarget.call.phoneNumber}`,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.updateOfType("call", id, toStructuredQrCodeBody("call", data));
   }
 
   /**
@@ -496,21 +337,7 @@ export class QRCodeClient {
    * ```
    */
   async updateSMS(id: string, data: IUpdateSMSQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    let qrCodeTarget = {
-      sms: data.sms,
-      type: "sms",
-    };
-    data.sms = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/sms/${id}`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: `sms:${qrCodeTarget.sms.phoneNumber}?body=${qrCodeTarget.sms.message}`,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.updateOfType("sms", id, toStructuredQrCodeBody("sms", data));
   }
   /**
    * Update a URL QR code that opens a website
@@ -532,21 +359,7 @@ export class QRCodeClient {
    * ```
    */
   async updateURL(id: string, data: IUpdateURLQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    let qrCodeTarget = {
-      url: data.url,
-      type: "url",
-    };
-    data.url = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/url/${id}`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: qrCodeTarget.url.url,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.updateOfType("url", id, toStructuredQrCodeBody("url", data));
   }
   /**
    * Update a geolocation QR code that opens map coordinates
@@ -567,21 +380,7 @@ export class QRCodeClient {
    * ```
    */
   async updateGeolocation(id: string, data: IUpdateGeolocationQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    let qrCodeTarget = {
-      geolocation: data.geolocation,
-      type: "geolocation",
-    };
-    data.geolocation = undefined as unknown as any;
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/geolocation/${id}`, {
-      ...data,
-      qrCodeTarget,
-      options: {
-        text: `geo:${qrCodeTarget.geolocation.latitude},${qrCodeTarget.geolocation.longitude}`,
-      },
-      templateType: "user",
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+    return this.updateOfType("geolocation", id, toStructuredQrCodeBody("geolocation", data));
   }
 
   /**
@@ -594,7 +393,7 @@ export class QRCodeClient {
    * ```typescript
    * const qrCode = await qrCodeClient.get('qr123');
    * console.log(qrCode.name);
-   * console.log(qrCode.numberOfVisitors);
+   * console.log(qrCode.numberOfVisitors); // landing-page visits, not scans
    * ```
    */
   async get(id: string): Promise<IGetQRCodeResponse> {
@@ -619,7 +418,7 @@ export class QRCodeClient {
   /**
    * List QR codes with pagination and optional filters
    *
-   * @param params - Filter parameters (optional)
+   * @param params - Filter parameters (optional); `isEnableMonetization` is never sent
    * @param pagination - Pagination parameters (optional)
    * @returns Paginated list of QR codes
    *
@@ -639,10 +438,101 @@ export class QRCodeClient {
    */
   async list(params?: IListParams, pagination?: IPaginationParams): Promise<IPaginationResponse<IQRCode>> {
     const response = await this.http.get<IPaginationResponse<IQRCode>>(this.basePath, {
-      params: {
-        ...params,
-        ...pagination,
-      },
+      params: toQrCodeListQuery(params, pagination),
+    });
+    return response.result!;
+  }
+
+  /**
+   * Visit analytics of one QR code: totals, a series per day/week/month, and
+   * breakdowns by country, device, OS, browser, referrer and language
+   * (`channel` is always `qr`).
+   *
+   * - A static QR code's image encodes its content directly, so scanning it
+   *   never reaches Posty5: these numbers are visits of the code's Posty5 page
+   *   (`qr_<id>`), the same visits `numberOfVisitors` counts — not scans.
+   * - Bots and link-preview fetchers are excluded from `visits` and counted in
+   *   `totals.botVisits` only.
+   * - `uniqueVisitors` over more than one day is the sum of each day's uniques;
+   *   a visitor is not recognised across days.
+   * - There is no data before `meta.analyticsStartedAt`.
+   * - No `breakdown` (or `"all"`) returns every breakdown the owner's plan
+   *   allows and lists the rest in `meta.locked`; naming a breakdown the plan
+   *   does not include, or a `from` older than the plan's history, throws
+   *   `AuthorizationError` (403, "This feature is not available on your current
+   *   plan."). Reading analytics costs no credits.
+   * - An unknown or deleted id throws `ValidationError` (400, "The QR Code Is
+   *   Not Found"), not `NotFoundError`; a code the caller may not read throws
+   *   `AuthorizationError` (403, "You Have Not Permission").
+   *
+   * @param id - QR code ID
+   * @param query - Range, interval, time zone, breakdowns and rows per breakdown
+   * @returns Totals, series, breakdowns and `meta`
+   *
+   * @example
+   * ```typescript
+   * const analytics = await qrCodeClient.getAnalytics('qr123', {
+   *   from: '2026-10-01',
+   *   to: '2026-10-31',
+   *   breakdown: ['device', 'country'],
+   * });
+   * console.log(analytics.totals.visits, analytics.breakdowns.device);
+   * ```
+   */
+  async getAnalytics(id: string, query?: ILinkAnalyticsQuery): Promise<ILinkAnalyticsResponse> {
+    const response = await this.http.get<ILinkAnalyticsResponse>(toLinkAnalyticsPath(this.basePath, id), {
+      params: toLinkAnalyticsQuery(query),
+    });
+    return response.result!;
+  }
+
+  /**
+   * Statistics over all of the caller's QR codes (an admin key: all codes)
+   * for a range.
+   *
+   * - `daily` has one row per **UTC** day: `createdCount` codes created that
+   *   day and `visitorsSum` visits by people to the codes' Posty5 pages made
+   *   that day (bots excluded). A scan of a static code opens its content
+   *   directly and is never seen by Posty5.
+   * - `totals` holds the lifetime `totalQRCodes` / `totalVisitors` and the
+   *   range's `visitsInRange`, `uniqueVisitorsInRange` (sum of daily uniques)
+   *   and `botVisitsInRange`.
+   * - `topQRCodes` is up to ten codes with the most visits in the range, each
+   *   with `visitsInRange`; codes with no visits in the range are left out.
+   *
+   * @param query - `period` preset, or `from` / `to` (`YYYY-MM-DD`; a `Date` is
+   * sent as its UTC day). Default: the last 30 days.
+   * @returns The resolved `range` and the statistics `data`
+   *
+   * @example
+   * ```typescript
+   * const stats = await qrCodeClient.statistics({ period: '7d' });
+   * console.log(stats.data.totals.visitsInRange, stats.data.daily);
+   * ```
+   */
+  async statistics(query?: ILinkStatisticsQuery): Promise<IQRCodeStatisticsResponse> {
+    const response = await this.http.get<IQRCodeStatisticsResponse>(toLinkStatisticsPath(this.basePath), {
+      params: toLinkStatisticsQuery(query),
+    });
+    return response.result!;
+  }
+
+  /** POST `/api/qr-code/:type` with the body and this SDK's source fields. */
+  private async createOfType(type: QrCodeTargetType, body: Record<string, unknown>): Promise<ICreateQRCodeResponse> {
+    const response = await this.http.post<ICreateQRCodeResponse>(`${this.basePath}/${type}`, {
+      ...body,
+      ...QrCodeRequestSourceConst,
+      createdFrom: this.http.createdFrom,
+    });
+    return response.result!;
+  }
+
+  /** PUT `/api/qr-code/:type/:id` with the body and this SDK's source fields. */
+  private async updateOfType(type: QrCodeTargetType, id: string, body: Record<string, unknown>): Promise<IUpdateQRCodeResponse> {
+    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/${type}/${id}`, {
+      ...body,
+      ...QrCodeRequestSourceConst,
+      createdFrom: this.http.createdFrom,
     });
     return response.result!;
   }

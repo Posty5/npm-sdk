@@ -1,4 +1,4 @@
-import { IPaginationMeta } from "@posty5/core";
+import { ILinkStatisticsDailyRow, ILinkStatisticsResponse, ILinkStatisticsVisitTotals, IPaginationMeta } from "@posty5/core";
 import { QrCodeStatusType } from "../types/type";
 import { IQRCodePageInfo, IQRCodeTarget, IQRCodeOptions } from "../requests";
 
@@ -38,22 +38,30 @@ export interface IQRCode {
   qrCodeId: string;
   /** Template ID used */
   templateId?: string;
-  /** Number of visitors */
+  /**
+   * Visits to the code's Posty5 landing page (`qrCodeLandingPageURL`). The
+   * downloaded image encodes the content directly, so scanning it opens the
+   * content without reaching Posty5 and is not counted here.
+   */
   numberOfVisitors?: number;
-  /** Whether landing page is enabled */
+  /** Whether landing page is enabled. Included in `list()` results. */
   isEnableLandingPage?: boolean;
   name: string;
-  /** Last visitor date */
+  /** Last visit to the landing page (not the last scan — see `numberOfVisitors`). */
   lastVisitorDate?: string;
   /** Reference ID */
   refId?: string;
   /** Tag */
   tag?: string;
+  /**
+   * @deprecated Never returned by the API; removed in 5.0.0.
+   */
   isEnableMonetization?: boolean;
   /** Page information */
   pageInfo?: IQRCodePageInfo;
+  /** The code's content; `list()` results include `sms.message`. */
   qrCodeTarget?: IQRCodeTarget;
-  /** QR code status */
+  /** QR code status. Included in `list()` results. */
   status: QrCodeStatusType;
   /** Preview reasons (moderation scores) */
   previewReasons?: IPreviewReason[];
@@ -129,3 +137,35 @@ export interface IQRCodeLookupItem {
  * Response for QR code lookup
  */
 export interface ILookupQRCodesResponse extends Array<IQRCodeLookupItem> {}
+
+/** `totals` of `statistics()`. */
+export interface IQRCodeStatisticsTotals extends ILinkStatisticsVisitTotals {
+  /** QR codes you own (lifetime, deleted ones excluded) */
+  totalQRCodes: number;
+  /** Lifetime visit counter of the codes' Posty5 pages, summed */
+  totalVisitors: number;
+  /** `totalVisitors / totalQRCodes` (0 with no codes) */
+  avgVisitorsPerQRCode: number;
+}
+
+/** One row of `topQRCodes`: a code whose Posty5 page had visits in the range. */
+export interface IQRCodeStatisticsTopCode {
+  _id: string;
+  name?: string;
+  /** Lifetime visit counter */
+  numberOfVisitors?: number;
+  createdAt: string;
+  /** Visits by people in the range */
+  visitsInRange: number;
+}
+
+/** `data` of `statistics()`. */
+export interface IQRCodeStatisticsData {
+  totals: IQRCodeStatisticsTotals;
+  /** One row per UTC day that had a code created or a visit */
+  daily: ILinkStatisticsDailyRow[];
+  /** Up to ten codes with the most visits in the range; codes with none are left out */
+  topQRCodes: IQRCodeStatisticsTopCode[];
+}
+
+export type IQRCodeStatisticsResponse = ILinkStatisticsResponse<IQRCodeStatisticsData>;

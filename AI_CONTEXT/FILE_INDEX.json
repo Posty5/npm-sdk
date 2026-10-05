@@ -136,6 +136,70 @@
       "role": "store.suppliers route tests (offline stub) and fixture-gated live tests."
     },
     {
+      "path": "__tests__/helpers/stub-http.helper.ts",
+      "role": "stubHttp(): records HttpClient calls for offline payload tests (store, short-link, qr-code)."
+    },
+    {
+      "path": "posty5-short-link/src/helpers/short-link-request.helper.ts",
+      "role": "Builds create/update bodies and list queries: strips deprecated keys, maps pageinfo.title to pageInfo.title."
+    },
+    {
+      "path": "posty5-short-link/src/short-link.config.ts",
+      "role": "Create source fields, deprecated request keys, legacy list-key map."
+    },
+    {
+      "path": "posty5-short-link/CHANGELOG.md",
+      "role": "@posty5/short-link changelog (starts at 4.3.0; 4.4.0 adds getAnalytics)."
+    },
+    {
+      "path": "posty5-qr-code/src/helpers/qr-code-request.helper.ts",
+      "role": "Builds QR bodies (qrCodeTarget only; free text keeps options.text) and list queries; strips deprecated keys."
+    },
+    {
+      "path": "posty5-qr-code/src/qr-code.config.ts",
+      "role": "Request source fields and deprecated request keys."
+    },
+    {
+      "path": "posty5-qr-code/CHANGELOG.md",
+      "role": "@posty5/qr-code changelog (starts at 4.3.0; 4.4.0 adds getAnalytics)."
+    },
+    {
+      "path": "__tests__/short-link.test.ts",
+      "role": "Short-link payload tests (offline stub) and key-gated live tests incl. S13 deep links and VA getAnalytics."
+    },
+    {
+      "path": "__tests__/qr-code.test.ts",
+      "role": "QR payload tests (offline stub) and key-gated live tests incl. server-built text, refId filter and VA getAnalytics."
+    },
+    {
+      "path": "posty5-core/src/types/link-analytics.interface.ts",
+      "role": "Link analytics types shared by short-link and qr-code getAnalytics (C2): ILinkAnalyticsQuery, ILinkAnalyticsResponse, meta, breakdown/interval/source unions."
+    },
+    {
+      "path": "posty5-core/src/utils/link-analytics-query.helper.ts",
+      "role": "toLinkAnalyticsQuery (dates as YYYY-MM-DD, breakdown list joined with ',', 'all' as is, empty list omitted), toLinkAnalyticsPath, toLinkStatisticsQuery (period, from, to), toLinkStatisticsPath."
+    },
+    {
+      "path": "posty5-core/src/types/link-statistics.interface.ts",
+      "role": "Statistics envelope, range, visit totals, UTC daily row and query shared by short-link and qr-code statistics(); per-package totals/top rows live in each package's responses."
+    },
+    {
+      "path": "posty5-core/src/utils/link-analytics.config.ts",
+      "role": "Analytics path segment, 'all' token, breakdown separator; breakdown and interval lists."
+    },
+    {
+      "path": "posty5-core/src/utils/date.helper.ts",
+      "role": "toIsoDateString: a Date as its UTC calendar day; strings unchanged. The core date helper (AI_RULES 3)."
+    },
+    {
+      "path": "posty5-core/CHANGELOG.md",
+      "role": "@posty5/core changelog (starts at 4.4.0: link analytics + statistics types and query helpers; 4.3.0 is the MCP release)."
+    },
+    {
+      "path": "__tests__/link-analytics.test.ts",
+      "role": "Offline tests of the core analytics and statistics query serialization; compile-time checks on the breakdown/interval/period unions."
+    },
+    {
       "path": "__tests__",
       "role": "Live/integration-oriented Jest suite and media fixtures."
     }

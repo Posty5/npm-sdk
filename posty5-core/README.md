@@ -199,6 +199,16 @@ interface ApiResponse<T> {
 }
 ```
 
+### Link Analytics Types
+
+`ILinkAnalyticsQuery`, `ILinkAnalyticsResponse` and the `LinkAnalyticsBreakdown`
+/ `LinkAnalyticsInterval` unions (4.4.0) describe the answer of
+`getAnalytics()` in `@posty5/short-link` and `@posty5/qr-code`, which re-export
+them; `ILinkStatisticsQuery`, `ILinkStatisticsResponse<TData>` and
+`ILinkStatisticsDailyRow` do the same for their `statistics()`.
+`toLinkAnalyticsQuery(query)` and `toLinkStatisticsQuery(query)` are the query
+serializations both use.
+
 ---
 
 ## 📦 Packages

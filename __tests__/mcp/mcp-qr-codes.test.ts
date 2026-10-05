@@ -52,17 +52,18 @@ describe("mcp qr-codes toolset", () => {
       templateId: "tpl1",
       tag: "food",
       qrCodeTarget: { type: "url", url: { url: "https://menu.example" } },
-      options: { text: "https://menu.example" },
       createdFrom: "mcp",
     });
+    // The API builds the encoded text from qrCodeTarget (D07): structured types send no options.text.
+    expect(calls[0].body.options).toBeUndefined();
     expect(findTool("qr_code_create").entity?.(value, {})).toEqual({ entityType: "qrCode", entityId: "qr1" });
   });
 
-  it("qr_code_create encodes a missing optional part as empty, never as 'undefined'", async () => {
+  it("qr_code_create sends a missing optional part as empty, never as 'undefined'", async () => {
     const { calls } = await runTool("qr_code_create", { type: "wifi", wifiName: "Cafe", wifiAuthenticationType: "nopass", templateId: "tpl1" });
     expect(route(calls[0])).toBe("POST /api/qr-code/wifi");
     expect(calls[0].body.qrCodeTarget).toEqual({ type: "wifi", wifi: { name: "Cafe", authenticationType: "nopass", password: "" } });
-    expect(calls[0].body.options.text).not.toContain("undefined");
+    expect(JSON.stringify(calls[0].body)).not.toContain("undefined");
   });
 
   it("qr_code_create refuses a type whose required field is missing, before any request", async () => {

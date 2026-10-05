@@ -127,7 +127,7 @@ describe("@posty5/mcp — the runner", () => {
 
   it("replays a write retried with the same idempotencyKey instead of repeating it", async () => {
     const { deps, calls, outcomes } = depsWith(LINK);
-    const args = { baseUrl: "https://example.com", aiModel: "m", idempotencyKey: "retry-key-1" };
+    const args = { baseUrl: "https://example.com", templateId: "t1", aiModel: "m", idempotencyKey: "retry-key-1" };
     const first = await runCall(findTool("short_link_create"), args, undefined, deps);
     const second = await runCall(findTool("short_link_create"), args, undefined, deps);
     expect(calls).toHaveLength(1);
