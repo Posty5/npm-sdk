@@ -222,6 +222,10 @@
     {
       "path": "posty5-webhooks/src/verify.ts",
       "role": "verifyWebhookSignature (Standard Webhooks)"
+    },
+    {
+      "path": "posty5-webhooks/src",
+      "role": "@posty5/webhooks: endpoint client, signature verifier, event envelope types."
     }
   ]
 }
