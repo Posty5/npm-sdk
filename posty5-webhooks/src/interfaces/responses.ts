@@ -14,8 +14,10 @@ export interface IWebhookEndpoint {
   milestones?: number[];
   delivery: IWebhookDeliveryOptions;
   enabled: boolean;
-  disabledReason?: "consecutiveFailures" | "gone" | "user" | "planDowngrade";
+  disabledReason?: "consecutiveFailures" | "gone" | "user" | "planDowngrade" | null;
   failureCount: number;
+  /** Events dropped by the daily or pending caps. */
+  droppedEvents?: number;
   lastDeliveryAt?: string;
   lastSuccessAt?: string;
   /** `whsec_` + the secret's last characters, to tell secrets apart. */
@@ -43,6 +45,8 @@ export interface IWebhookDelivery {
   userId?: string;
   eventId: string;
   eventType: string;
+  /** The `webhook-id` header; stable across retries and redeliveries. */
+  messageId?: string;
   payload?: unknown;
   attempt: number;
   status: "pending" | "succeeded" | "failed" | "abandoned";
@@ -51,7 +55,9 @@ export interface IWebhookDelivery {
   responseSnippet?: string;
   durationMs?: number;
   error?: string;
-  nextAttemptAt?: string;
+  nextAttemptAt?: string | null;
+  /** Set on a redelivery: the delivery it repeats. */
+  redeliveryOf?: string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -60,6 +66,10 @@ export interface IWebhookDelivery {
 export interface IWebhookEventTypeInfo {
   type: WebhookEventType | string;
   description?: string;
+  /** i18n key of `description`. */
+  descriptionKey?: string;
+  /** True for the `*_milestone` events (they need `milestones` on the endpoint). */
+  isMilestone?: boolean;
   /** Plan feature gating the event, if any. */
   gate?: string | null;
   /** Whether the caller's plan allows subscribing. */

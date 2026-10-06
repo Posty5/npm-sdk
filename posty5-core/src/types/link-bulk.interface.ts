@@ -78,7 +78,11 @@ export interface ILinkBulkJob {
     filesExpireAt?: string;
     createdFrom?: string;
     createdAt: string;
+    updatedAt?: string;
+    startedAt?: string;
     finishedAt?: string;
+    /** Why a `failed` job stopped. */
+    failureReason?: string;
 }
 
 /** The answer of a bulk job submitted with `dryRun: true`: nothing is stored. */
@@ -87,6 +91,8 @@ export interface IBulkDryRunReport {
     valid: number;
     /** Refused rows (the first 200). */
     errors: IBulkRowResult[];
+    /** Non-fatal notes, e.g. ignored unknown columns. */
+    warnings?: string[];
 }
 
 /** Input of `createBulkJob`. */
@@ -122,6 +128,8 @@ export interface IWaitForBulkJobOptions {
 /** Export query additions on top of the list filters. */
 export interface ILinkExportParams {
     format?: LinkBulkFileFormat;
+    /** Comma list of column keys to keep (unknown keys ignored); empty or omitted means every column. */
+    columns?: string;
 }
 
 /** Image options of a QR bulk job (`svg`/`pdf` once vector export is live). */
