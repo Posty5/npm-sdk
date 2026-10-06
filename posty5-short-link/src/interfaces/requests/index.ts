@@ -1,3 +1,8 @@
+import { ILinkAccessInput, ILinkHealthInput, ILinkPixel, ILinkRoutingRule, ILinkUtm, ILinkVariant } from './link-rules';
+
+export * from './link-rules';
+export * from './link-campaign';
+
 /**
  * Content of the interstitial page a visitor sees when `isEnableLandingPage`
  * is true (instead of being redirected straight to `baseUrl`).
@@ -18,7 +23,29 @@ export interface ICreateShortLinkRequest {
      */
     baseUrl: string;
     refId?: string | null;
+    /**
+     * @deprecated Use `tags`. The API treats it as `tags[0]`; when both are
+     * sent, `tags` wins.
+     */
     tag?: string | null;
+    /** ≤ 10 tags, each 1 – 40 chars, unique case-insensitively. `null` / `[]` removes them. */
+    tags?: string[] | null;
+    /** Campaign (24-hex id) the link belongs to; `""` / `null` detaches. Feature key `urlShortener.campaigns`. */
+    campaignId?: string | null;
+    /** Start / stop / visit limit / password. On update merged field by field. */
+    access?: ILinkAccessInput | null;
+    /** ≤ 20 ordered routing rules; omitted keeps, `null` / `[]` clears. */
+    routing?: ILinkRoutingRule[] | null;
+    /** 0 or 2 – 5 A/B variants; omitted keeps, `null` / `[]` clears. */
+    variants?: ILinkVariant[] | null;
+    /** UTM parameters. Feature key `urlShortener.utmBuilder`. */
+    utm?: ILinkUtm | null;
+    /** ≤ 5 retargeting pixels, one per provider. Feature key `urlShortener.retargetingPixels`. */
+    pixels?: ILinkPixel[] | null;
+    /** Must be `true` when pixels are first set (lawful-basis attestation). */
+    pixelsConsentAcknowledged?: boolean;
+    /** Destination health monitoring. Feature key `healthMonitor`. */
+    health?: ILinkHealthInput;
     /**
      * QR code template the link's QR image is rendered with.
      *
@@ -75,7 +102,29 @@ export interface IUpdateShortLinkRequest {
      */
     baseUrl: string;
     refId?: string | null;
+    /**
+     * @deprecated Use `tags`. The API treats it as `tags[0]`; when both are
+     * sent, `tags` wins.
+     */
     tag?: string | null;
+    /** ≤ 10 tags, each 1 – 40 chars, unique case-insensitively. `null` / `[]` removes them. */
+    tags?: string[] | null;
+    /** Campaign (24-hex id) the link belongs to; `""` / `null` detaches. Feature key `urlShortener.campaigns`. */
+    campaignId?: string | null;
+    /** Start / stop / visit limit / password. On update merged field by field. */
+    access?: ILinkAccessInput | null;
+    /** ≤ 20 ordered routing rules; omitted keeps, `null` / `[]` clears. */
+    routing?: ILinkRoutingRule[] | null;
+    /** 0 or 2 – 5 A/B variants; omitted keeps, `null` / `[]` clears. */
+    variants?: ILinkVariant[] | null;
+    /** UTM parameters. Feature key `urlShortener.utmBuilder`. */
+    utm?: ILinkUtm | null;
+    /** ≤ 5 retargeting pixels, one per provider. Feature key `urlShortener.retargetingPixels`. */
+    pixels?: ILinkPixel[] | null;
+    /** Must be `true` when pixels are first set (lawful-basis attestation). */
+    pixelsConsentAcknowledged?: boolean;
+    /** Destination health monitoring. Feature key `healthMonitor`. */
+    health?: ILinkHealthInput;
     /**
      * QR code template the link's QR image is rendered with.
      *
@@ -146,7 +195,12 @@ export interface IListParams {
     createdFrom?: string;
     shortLinkId?: string;
     refId?: string;
+    /** @deprecated Use `tags`. */
     tag?: string;
+    /** Links carrying every one of these tags (sent comma-joined). */
+    tags?: string[];
+    /** Links of this campaign (24-hex id). */
+    campaignId?: string;
     templateId?: string;
     status?: string;
     isForDeepLink?: boolean;

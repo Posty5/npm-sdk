@@ -37,3 +37,9 @@ export const MCP_BULK_JOB_WAIT_MS = 45 * 1000;
 
 /** How often that wait polls the job, in milliseconds. */
 export const MCP_BULK_JOB_POLL_MS = 2 * 1000;
+
+/** Largest decoded `fileBase64` a `file` QR code accepts through MCP (QT-D11), in bytes; bigger files are a dashboard upload. */
+export const QR_MCP_FILE_MAX_BYTES = 5 * 1024 * 1024;
+
+/** Most profiles one `social` QR code lists (a static code takes one). */
+export const QR_SOCIAL_MAX_PROFILES = 12;

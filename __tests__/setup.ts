@@ -76,12 +76,14 @@ export const createdResources: {
   htmlHostings: string[];
   workspaces: string[];
   posts: string[];
+  linkCampaigns: string[];
 } = {
   shortLinks: [],
   qrCodes: [],
   htmlHostings: [],
   workspaces: [],
   posts: [],
+  linkCampaigns: [],
 };
 
 // Cleanup function (optional - uncomment if you want auto-cleanup)

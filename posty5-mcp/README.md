@@ -56,7 +56,7 @@ The server writes the protocol to stdout and everything else to stderr.
 | Toolset | On by default | What it covers |
 | --- | --- | --- |
 | `account` | always | Who the connection is, credits, live operation prices |
-| `short-links` | ✅ | Short links |
+| `short-links` | ✅ | Short links, their controls (availability, password, routing, A/B split, UTM, pixels, health checks), tags and link campaigns |
 | `qr-codes` | ✅ | QR codes of every type, and QR templates |
 | `html-hosting` | ✅ | Hosted pages, their variables, form submissions |
 | `social-publisher` | ✅ | Workspaces, connected accounts, posts to every platform |
@@ -66,7 +66,7 @@ The server writes the protocol to stdout and everything else to stderr.
 | `store-shipping` | — | Countries, routes, profiles, assignments |
 | `store-dropshipping` | — | Supplier catalogue, imports, product links, supplier orders |
 
-138 tools in all; `listToolsets()` and `listTools()` describe them.
+146 tools in all; `listToolsets()` and `listTools()` describe them.
 
 ## 🔐 Access levels and confirmation
 
@@ -88,6 +88,28 @@ runs a bulk job and answers a **signed link to a ZIP of the images** that
 expires within minutes; `qr_code_get_bulk_job` reports a job still running and
 hands out fresh links. Webhook endpoints are not exposed through MCP.
 
+### Short link controls
+
+`short_link_create` / `short_link_update` take `tags`, `campaignId`, `health`
+and the controls `access` (start, end, visit limit, fallback URL, password),
+`routing` (up to 20 ordered rules), `variants` (0 or 2–5), `utm`, `pixels`
+and `pixelsConsentAcknowledged`. Per visit: access, then routing (first match),
+then variants, else the target.
+
+| Tool | Access | What it does |
+| --- | --- | --- |
+| `short_link_set_rules` | write | Changes only the control sections given |
+| `short_link_list_tags` | read | The account's distinct tags |
+| `short_link_check_health` | write | Queues a destination check; the result shows later in `short_link_get` |
+| `short_link_campaign_list` / `_get` | read | Campaigns, with link count and visits |
+| `short_link_campaign_create` / `_update` | write | Name, description, colour, default UTM, archive |
+| `short_link_campaign_delete` | full, `confirm` | `detach: true` removes the campaign from its links first |
+
+A link password is write-only: no result ever carries it (only
+`access.hasPassword`), and the hosted activity log drops it from the stored
+arguments. `pixelsConsentAcknowledged` is for the user to confirm, not the
+assistant.
+
 ### Dynamic QR codes
 
 `qr_code_create` makes **dynamic** codes by default (`mode: "dynamic"`): the
@@ -97,6 +119,24 @@ target later without reprinting. Wi-Fi codes are always static. Left out on
 scan rules in `access` (`activeFrom`, `expiresAt`, `maxVisits`,
 `fallbackUrl`; `null` clears them, Starter plan or above). `qr_code_list`
 filters by `mode`.
+
+### QR content types
+
+`qr_code_create` / `qr_code_update` take every QR type through `type` — no
+extra tool:
+
+| `type` | Fields | Mode |
+| --- | --- | --- |
+| `freeText`, `email`, `wifi`, `call`, `sms`, `url`, `geolocation` | flat fields (`text`, `email`, `wifiName`, …) | dynamic by default; Wi-Fi static |
+| `vcard` | `vcard` object: `firstName` or `organization`, phones, emails, … | **static by default** (a dynamic card is a public page) |
+| `event` | `event` object: `title`, `startsAt` (ISO 8601), `timezone` (IANA), `allDay` | dynamic by default |
+| `whatsapp` | `whatsapp` object: `phoneNumber`, `message` | dynamic by default |
+| `review` | `review` object: `platform`, Google `placeId` or `url` | dynamic by default |
+| `social` | `social.profiles`: 1–12 (`handle` or `url`); static takes one | dynamic by default |
+| `appStore` | `appStore` object: `androidUrl`, `iosUrl`, `fallbackUrl` | always dynamic |
+| `file` | `fileBase64` (≤ 5 MB decoded, `data:` prefix accepted), `fileName`, `mimeType` (PDF, JPEG, PNG, WebP) | always dynamic |
+
+`qr_code_create_many` rows keep the first seven types.
 
 ## 🏷️ What gets recorded
 

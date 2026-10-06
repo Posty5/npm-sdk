@@ -4,7 +4,7 @@ import { HtmlHostingClient } from "@posty5/html-hosting";
 import { HtmlHostingFormSubmissionClient } from "@posty5/html-hosting-form-submission";
 import { HtmlHostingVariablesClient } from "@posty5/html-hosting-variables";
 import { QRCodeClient, QRCodeTemplateClient } from "@posty5/qr-code";
-import { ShortLinkClient } from "@posty5/short-link";
+import { LinkCampaignClient, ShortLinkClient } from "@posty5/short-link";
 import { SocialPublisherPostClient } from "@posty5/social-publisher-post";
 import { SocialPublisherAccountClient, SocialPublisherWorkspaceClient } from "@posty5/social-publisher-workspace";
 import { StoreClient } from "@posty5/store";
@@ -24,6 +24,7 @@ export function createClients(http: HttpClient): IPosty5Clients {
   return {
     get account() { return lazy("account", () => new AccountClient(http)); },
     get shortLinks() { return lazy("shortLinks", () => new ShortLinkClient(http)); },
+    get linkCampaigns() { return lazy("linkCampaigns", () => new LinkCampaignClient(http)); },
     get qrCodes() { return lazy("qrCodes", () => new QRCodeClient(http)); },
     get qrTemplates() { return lazy("qrTemplates", () => new QRCodeTemplateClient(http)); },
     get htmlPages() { return lazy("htmlPages", () => new HtmlHostingClient(http)); },

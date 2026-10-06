@@ -30,10 +30,11 @@ import {
     IListParams,
     IShortLinkStatisticsResponse,
     IShortLinkBulkRow,
-    IShortLinkExportParams
+    IShortLinkExportParams,
+    IShortLinkRulesInput
 } from './interfaces';
 import { toShortLinkBody, toShortLinkListQuery } from './helpers/short-link-request.helper';
-import { ShortLinkBulkPathsConst, ShortLinkCreateSourceConst } from './short-link.config';
+import { ShortLinkBulkPathsConst, ShortLinkControlsPathsConst, ShortLinkCreateSourceConst } from './short-link.config';
 
 /**
  * Short Link Client for managing Short Links via Posty5 API
@@ -110,6 +111,48 @@ export class ShortLinkClient {
      */
     async delete(id: string): Promise<void> {
         await this.http.delete<IDeleteShortLinkResponse>(`${this.basePath}/${id}`);
+    }
+
+    /**
+     * The caller's distinct tags (an API key: its own links' tags), sorted.
+     * @param term - Optional case-insensitive prefix
+     * @returns Up to 200 tags
+     */
+    async listTags(term?: string): Promise<string[]> {
+        const response = await this.http.get<string[]>(`${this.basePath}${ShortLinkControlsPathsConst.tags}`, {
+            params: term ? { term } : undefined
+        });
+        return response.result || [];
+    }
+
+    /**
+     * Queue one destination health check of a link (202). Limited to one per
+     * link per 10 minutes. Feature key `healthMonitor`.
+     * @param id - Short Link ID
+     */
+    async checkHealth(id: string): Promise<void> {
+        await this.http.post(`${this.basePath}/${id}${ShortLinkControlsPathsConst.healthCheck}`, {});
+    }
+
+    /**
+     * Set a link's rules (access, routing, variants, UTM, pixels) through
+     * `update`. Partial: omitted sections are untouched; `null` / `[]` clears
+     * a section. The link is read first only when `baseUrl` or `templateId`
+     * is not passed, since the update requires them.
+     * @param id - Short Link ID
+     * @param rules - The sections to set
+     * @returns Updated short link details
+     */
+    async setRules(id: string, rules: IShortLinkRulesInput): Promise<IUpdateShortLinkResponse> {
+        const { baseUrl, templateId, ...sections } = rules;
+        let resolvedBaseUrl = baseUrl;
+        let resolvedTemplateId = templateId;
+        if (!resolvedBaseUrl || !resolvedTemplateId) {
+            const stored = await this.get(id);
+            resolvedBaseUrl = resolvedBaseUrl || stored.baseUrl || '';
+            resolvedTemplateId = resolvedTemplateId || stored.templateId || stored.template?._id || '';
+        }
+        return this.update(id, { ...sections, baseUrl: resolvedBaseUrl, templateId: resolvedTemplateId });
     }
 
     /**

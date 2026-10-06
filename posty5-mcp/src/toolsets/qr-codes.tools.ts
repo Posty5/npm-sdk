@@ -1,18 +1,33 @@
 import { z } from "zod";
-import { QR_CODE_MODES, QR_CODE_REQUIRED_FIELDS, QR_CODE_STATUSES, QR_CODE_TYPES, QR_TEMPLATE_SCOPES, WIFI_AUTHENTICATION_TYPES } from "../config/qr-codes-enums.config";
-import { MCP_BULK_MAX_ROWS } from "../config/limits.config";
+import {
+  QR_CODE_BULK_TYPES,
+  QR_CODE_MODES,
+  QR_CODE_REQUIRED_FIELDS,
+  QR_CODE_STATUSES,
+  QR_CODE_TYPES,
+  QR_CODE_UPDATE_REQUIRED_FIELDS,
+  QR_FILE_MIME_TYPES,
+  QR_REVIEW_PLATFORMS,
+  QR_SOCIAL_PLATFORMS,
+  QR_TEMPLATE_SCOPES,
+  QR_VCARD_PHONE_KINDS,
+  WIFI_AUTHENTICATION_TYPES,
+} from "../config/qr-codes-enums.config";
+import { MCP_BULK_MAX_ROWS, QR_MCP_FILE_MAX_BYTES, QR_SOCIAL_MAX_PROFILES } from "../config/limits.config";
 import { CREATE_QR_CODE_FEATURE_PATH } from "../config/link-costs.config";
 import { batchIdempotencyKey, describeBatch, describeQrBulkJob, runQrZipJob, unwrapBulkError } from "../core/link-bulk.helper";
 import { defineTool, idField, pageFields, pickPage, requireFields, withoutPaging } from "../core/define-tool.helper";
-import { checkQrCodeAccess, createQrCode, resolveQrCodeMode, toQrBulkRow, updateQrCode } from "../core/qr-codes.helper";
+import { checkQrCodeAccess, checkQrSocialProfiles, createQrCode, resolveQrCodeMode, toQrBulkRow, updateQrCode } from "../core/qr-codes.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
 const QR_CODE_ID = "The QR code's _id, from qr_code_list.";
 
-/** The flat target fields; `type` says which apply (`QR_CODE_REQUIRED_FIELDS` lists the required ones). */
-const targetFields = {
+const FILE_MAX_MB = QR_MCP_FILE_MAX_BYTES / (1024 * 1024);
+
+/** The flat target fields of the bulk route's types; `type` says which apply (`QR_CODE_REQUIRED_FIELDS` lists the required ones). */
+const bulkTargetFields = {
   type: z
-    .enum(QR_CODE_TYPES)
+    .enum(QR_CODE_BULK_TYPES)
     .describe(
       'What scanning the QR code does: "freeText" shows text, "email" opens a new email, "wifi" joins a network, "call" dials a number, "sms" opens a text message, "url" opens a website, "geolocation" opens a map point. Fill the fields for that type.',
     ),
@@ -28,6 +43,95 @@ const targetFields = {
   url: z.string().url().optional().describe('type "url" (required): the website the QR code opens.'),
   latitude: z.number().min(-90).max(90).optional().describe('type "geolocation" (required): latitude in degrees.'),
   longitude: z.number().min(-180).max(180).optional().describe('type "geolocation" (required): longitude in degrees.'),
+};
+
+/** The content-type branches only `qr_code_create` / `qr_code_update` take: one object per type, named after it. */
+const contentTypeFields = {
+  vcard: z
+    .object({
+      firstName: z.string().optional(),
+      lastName: z.string().optional(),
+      organization: z.string().optional(),
+      jobTitle: z.string().optional(),
+      phones: z.array(z.object({ kind: z.enum(QR_VCARD_PHONE_KINDS).optional().describe('Default "mobile".'), number: z.string().min(1).describe("With country code.") })).optional(),
+      emails: z.array(z.string().email()).optional(),
+      website: z.string().url().optional(),
+      address: z.object({ street: z.string().optional(), city: z.string().optional(), region: z.string().optional(), postalCode: z.string().optional(), country: z.string().optional() }).optional(),
+      note: z.string().optional(),
+    })
+    .refine((card) => Boolean(card.firstName || card.organization), { message: "vcard needs firstName or organization." })
+    .optional()
+    .describe(
+      'type "vcard" (required): a contact card the phone saves to its contacts; use it for "a QR business card". Needs firstName or organization. Defaults to mode "static": a dynamic business card puts the contact on a public page.',
+    ),
+  event: z
+    .object({
+      title: z.string().min(1),
+      startsAt: z.string().min(1).describe('ISO 8601 start, e.g. "2026-11-01T18:00:00"; a time without offset is read in timezone.'),
+      endsAt: z.string().nullable().optional().describe("ISO 8601 end, after startsAt."),
+      allDay: z.boolean().optional().describe("true for an all-day event."),
+      timezone: z.string().optional().describe('IANA time zone, e.g. "Africa/Cairo".'),
+      location: z.string().optional(),
+      description: z.string().optional(),
+      url: z.string().url().optional(),
+    })
+    .optional()
+    .describe('type "event" (required): a calendar event the phone adds to its calendar. Needs title and startsAt; times are ISO 8601 with an IANA timezone; all-day events set allDay.'),
+  whatsapp: z
+    .object({ phoneNumber: z.string().min(1).describe("International format, e.g. +201001234567."), message: z.string().optional().describe("Prefilled message.") })
+    .optional()
+    .describe('type "whatsapp" (required): opens a WhatsApp chat with the number. Needs phoneNumber.'),
+  review: z
+    .object({
+      platform: z.enum(QR_REVIEW_PLATFORMS),
+      placeId: z.string().optional().describe("Google only: the business's Place ID."),
+      url: z.string().url().optional().describe("The review page URL, on the platform's own site."),
+    })
+    .refine((review) => Boolean(review.url || (review.platform === "google" && review.placeId)), { message: "review needs url (or placeId for google)." })
+    .optional()
+    .describe("type \"review\" (required): opens the page where customers leave a review. A Google review link needs the business's Place ID or its review URL; other platforms need the review url."),
+  social: z
+    .object({
+      profiles: z
+        .array(
+          z
+            .object({ platform: z.enum(QR_SOCIAL_PLATFORMS), handle: z.string().optional(), url: z.string().url().optional() })
+            .refine((profile) => Boolean(profile.handle || profile.url), { message: "Each profile needs handle or url." }),
+        )
+        .min(1)
+        .max(QR_SOCIAL_MAX_PROFILES),
+      title: z.string().optional().describe("Heading of the profile list page."),
+    })
+    .optional()
+    .describe(`type "social" (required): social profiles, each a handle or url. A dynamic code (the default) lists up to ${QR_SOCIAL_MAX_PROFILES} profiles on its Posty5 page; a static code takes one.`),
+  appStore: z
+    .object({
+      androidUrl: z.string().url().optional().describe("Google Play URL."),
+      iosUrl: z.string().url().optional().describe("App Store URL."),
+      fallbackUrl: z.string().url().describe("Where any other device goes (required)."),
+    })
+    .optional()
+    .describe('type "appStore" (required): one QR for both app stores; Android opens Google Play, iOS the App Store, others fallbackUrl. Always dynamic; mode "static" is refused.'),
+  fileBase64: z
+    .string()
+    .optional()
+    .describe(
+      `type "file": the PDF or image, base64-encoded (a data: URL prefix is accepted), at most ${FILE_MAX_MB} MB decoded; larger files are uploaded in the Posty5 dashboard. Required on create; on update, leave out to keep the stored file. Always dynamic.`,
+    ),
+  fileName: z.string().optional().describe('type "file": the file\'s display name, e.g. "menu.pdf".'),
+  mimeType: z.enum(QR_FILE_MIME_TYPES).optional().describe('type "file" (required with fileBase64): application/pdf, image/jpeg, image/png or image/webp.'),
+};
+
+/** The flat target fields of `qr_code_create` / `qr_code_update`: every type. */
+const targetFields = {
+  ...bulkTargetFields,
+  type: z
+    .enum(QR_CODE_TYPES)
+    .describe(
+      'What scanning the QR code does: "freeText" shows text, "email" opens a new email, "wifi" joins a network, "call" dials a number, "sms" opens a text message, "url" opens a website, "geolocation" opens a map point, ' +
+        '"vcard" saves a contact (business card), "event" adds a calendar event, "whatsapp" opens a WhatsApp chat, "review" opens a review page, "social" opens social profiles, "appStore" opens the right app store, "file" opens a hosted PDF or image. Fill the fields (or the object) for that type.',
+    ),
+  ...contentTypeFields,
 };
 
 const labelFields = {
@@ -103,7 +207,7 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
     description:
       "Creates a QR code of the given type and returns its mode, landing page URL and image URL. It works at once. Needs a templateId from qr_code_list_templates and the fields of its type. " +
       "Dynamic codes (the default) point to a Posty5 link, so their target can be changed later with qr_code_update. " +
-      "Wi-Fi codes are always static. " +
+      "Wi-Fi codes are always static; vcard defaults to static; appStore and file are always dynamic. " +
       "Switching mode later changes the image. " +
       "Optional access sets scan rules (start, end, visit limit, fallback URL) on a dynamic code; it may be refused by the user's plan.",
     input: z.object({
@@ -114,13 +218,14 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
       mode: z
         .enum(QR_CODE_MODES)
         .optional()
-        .describe('"dynamic" (default): the image encodes a Posty5 link, so the target can change later without reprinting. "static": the image encodes the content itself. type "wifi" is always static.'),
+        .describe('"dynamic" (default): the image encodes a Posty5 link, so the target can change later without reprinting. "static": the image encodes the content itself. type "wifi" is always static, "vcard" defaults to static, "appStore" and "file" are always dynamic.'),
       access: accessField,
     }),
     run: (args, { clients }) => {
       requireFields(args, QR_CODE_REQUIRED_FIELDS[args.type], `type "${args.type}"`);
       const mode = resolveQrCodeMode(args, args.mode, true);
       checkQrCodeAccess(args, mode, args.access);
+      checkQrSocialProfiles(args, mode);
       const { name, templateId, refId, tag, customLandingId, access } = args;
       return createQrCode(clients.qrCodes, { name, templateId, refId, tag, customLandingId, mode, ...(access !== undefined ? { access } : {}) }, args);
     },
@@ -139,7 +244,7 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
       rows: z
         .array(
           z.object({
-            ...targetFields,
+            ...bulkTargetFields,
             templateId: z.string().optional().describe("The template that styles the QR code, from qr_code_list_templates; overrides defaults.templateId."),
             ...labelFields,
             customId: z.string().max(32).optional().describe("A custom landing id, when the plan allows it."),
@@ -203,14 +308,16 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
       ...targetFields,
       templateId: z.string().optional().describe("A new template, from qr_code_list_templates."),
       ...labelFields,
-      mode: z.enum(QR_CODE_MODES).optional().describe('Leave out to keep the current mode. "dynamic" or "static" switches it, which changes the image. type "wifi" cannot be dynamic.'),
+      mode: z.enum(QR_CODE_MODES).optional().describe('Leave out to keep the current mode. "dynamic" or "static" switches it, which changes the image. type "wifi" cannot be dynamic; "appStore" and "file" cannot be static.'),
       access: accessField,
     }),
     annotations: { idempotent: true },
     run: async (args, { clients }) => {
-      requireFields(args, QR_CODE_REQUIRED_FIELDS[args.type], `type "${args.type}"`);
+      requireFields(args, QR_CODE_UPDATE_REQUIRED_FIELDS[args.type], `type "${args.type}"`);
+      if (args.type === "file" && args.fileBase64) requireFields(args, ["mimeType"], 'type "file" with fileBase64');
       const mode = resolveQrCodeMode(args, args.mode, false);
       checkQrCodeAccess(args, mode, args.access);
+      checkQrSocialProfiles(args, mode);
       const current = await clients.qrCodes.get(args.id);
       const base = { name: args.name ?? current.name, templateId: args.templateId ?? current.templateId ?? "", refId: args.refId, tag: args.tag, mode, ...(args.access !== undefined ? { access: args.access } : {}) };
       return updateQrCode(clients.qrCodes, args.id, base, args);

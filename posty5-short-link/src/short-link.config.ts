@@ -28,3 +28,15 @@ export const ShortLinkBulkPathsConst = {
   bulk: "/bulk",
   export: "/export",
 } as const;
+
+/** Sub-paths of the short link controls routes under `/api/short-link`. */
+export const ShortLinkControlsPathsConst = {
+  tags: "/tags",
+  healthCheck: "/health-check",
+} as const;
+
+/** Separator of `?tags=a,b` on `list()` / `export()`. */
+export const ShortLinkTagsQuerySeparatorConst = ",";
+
+/** Base path of the link campaign routes. */
+export const LinkCampaignBasePathConst = "/api/link-campaign";

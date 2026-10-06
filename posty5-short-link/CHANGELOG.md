@@ -1,5 +1,33 @@
 # Changelog
 
+## 4.6.0
+
+Short link controls. A minor: `@posty5/core` is unchanged (peer `^4.5.0`) and
+the optimistic-concurrency 5.0.0 release is not in progress, so `update` /
+`setRules` / campaign `update` / `delete` take no version argument. Needs the
+API release of short link controls; `checkHealth` needs the health-monitor
+route (`POST /api/short-link/:id/health-check`).
+
+### Added
+
+- Create / update fields: `access` (`activeFrom`, `expiresAt`, `maxVisits`,
+  `fallbackUrl`, write-only `password`), `routing`, `variants`, `utm`,
+  `pixels`, `pixelsConsentAcknowledged`, `tags`, `campaignId`,
+  `health: { enabled }`. Types in `interfaces/requests/link-rules.ts`.
+- Responses: `access.hasPassword` (the password is never returned), `routing`,
+  `variants`, `utm`, `pixels`, `tags`, `campaignId`, `hasRules`,
+  `hasPassword`, `expiresAt`, `health`.
+- `list()` / `export()` filters `tags: string[]` (sent comma-joined) and `campaignId`.
+- `listTags(term?)`, `checkHealth(id)`, `setRules(id, rules)` (partial; reads
+  the link only when `baseUrl` / `templateId` are not passed).
+- `LinkCampaignClient` — `list`, `get` (with `linkCount`, `totalVisits`),
+  `create`, `update`, `delete(id, { detach })` over `/api/link-campaign`.
+
+### Deprecated
+
+- `tag` on requests, responses and list filters — use `tags`. Still sent; when
+  both are sent the API applies `tags`.
+
 ## 4.5.0
 
 Needs `@posty5/core` 4.5.0 and the API release of link bulk create, bulk jobs

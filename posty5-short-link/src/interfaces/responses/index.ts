@@ -1,5 +1,9 @@
 import { ILinkStatisticsDailyRow, ILinkStatisticsResponse, ILinkStatisticsVisitTotals, IPaginationResponse } from "@posty5/core";
 import { ShortLinkStatusType } from "../../types/type";
+import { ILinkHealth, ILinkHealthSummary, IShortLinkRulesResponse } from "./link-rules";
+
+export * from "./link-rules";
+export * from "./link-campaign";
 
 /**
  * Preview reason (moderation score)
@@ -48,7 +52,18 @@ export interface IShortLinkResponse {
   /** Review status. Included in `list()` results. */
   status: ShortLinkStatusType;
   refId?: string;
+  /** @deprecated Use `tags`; always `tags[0]`. */
   tag?: string;
+  tags?: string[];
+  campaignId?: string | null;
+  /** True when any access / routing / variant / pixel rule is set. */
+  hasRules?: boolean;
+  /** Whether the link is password-protected (the password is never returned). */
+  hasPassword?: boolean;
+  /** `access.expiresAt`, when set. */
+  expiresAt?: string | null;
+  /** Health summary (list rows carry `status` only). */
+  health?: ILinkHealthSummary | ILinkHealth | null;
   /** Visits to the short link. Included in `list()` results. */
   numberOfVisitors: number;
   numberOfReports?: number;
@@ -72,7 +87,9 @@ export interface IShortLinkResponse {
  * Short link full details: what `get()`, `create()` and `update()` return to
  * the link's owner.
  */
-export interface IShortLinkFullDetailsResponse extends IShortLinkResponse {
+export interface IShortLinkFullDetailsResponse extends IShortLinkResponse, IShortLinkRulesResponse {
+  /** Full health state when the monitor is available. */
+  health?: ILinkHealth | null;
   /** Android destination (deep link); empty when none. Not included in `list()` results. */
   androidUrl?: string;
   /** iOS destination (deep link); empty when none. Not included in `list()` results. */

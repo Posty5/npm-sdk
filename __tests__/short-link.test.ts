@@ -168,6 +168,87 @@ describe("Short Link SDK — payloads (offline)", () => {
   });
 });
 
+describe("Short Link SDK — short link controls payloads (offline)", () => {
+  it("sends every control field as given, keeps the deprecated tag, and joins list tags", async () => {
+    const { http, calls } = stubHttp();
+    const client = new ShortLinkClient(http);
+
+    await client.create({
+      baseUrl: "https://example.com",
+      templateId,
+      tag: "old",
+      tags: ["spring", "promo"],
+      campaignId: "a".repeat(24),
+      access: { password: "secret1", maxVisits: 100, fallbackUrl: "https://example.com/gone" },
+      routing: [{ conditions: { countries: ["DE"], devices: ["mobile"] }, targetUrl: "https://example.de" }],
+      variants: [{ url: "https://a.example.com", weight: 50 }, { url: "https://b.example.com", weight: 50 }],
+      utm: { source: "news", medium: "email" },
+      pixels: [{ provider: "meta", id: "1234567890" }],
+      pixelsConsentAcknowledged: true,
+      health: { enabled: true },
+    });
+    expect(calls[0].body).toMatchObject({ tag: "old", tags: ["spring", "promo"], health: { enabled: true }, access: { password: "secret1" } });
+
+    await client.list({ tags: ["spring", "promo"], campaignId: "c".repeat(24) });
+    expect(calls[1].params).toMatchObject({ tags: "spring,promo", campaignId: "c".repeat(24) });
+
+    await client.list({ tags: [] });
+    expect(calls[2].params).not.toHaveProperty("tags");
+  });
+
+  it("listTags, checkHealth and setRules hit the documented routes", async () => {
+    const { http, calls } = stubHttp({ baseUrl: "https://stored.example.com", templateId });
+    const client = new ShortLinkClient(http);
+
+    await client.listTags("spr");
+    await client.checkHealth("sl1");
+    await client.setRules("sl1", { utm: { source: "x" } });
+    await client.setRules("sl2", { routing: null, baseUrl: "https://given.example.com", templateId });
+
+    expect(calls[0]).toEqual({ method: "GET", url: "/api/short-link/tags", params: { term: "spr" } });
+    expect(calls[1]).toEqual({ method: "POST", url: "/api/short-link/sl1/health-check", body: {} });
+    expect(calls[2]).toMatchObject({ method: "GET", url: "/api/short-link/sl1" });
+    expect(calls[3]).toEqual({ method: "PUT", url: "/api/short-link/sl1", body: { utm: { source: "x" }, baseUrl: "https://stored.example.com", templateId } });
+    expect(calls[4]).toEqual({ method: "PUT", url: "/api/short-link/sl2", body: { routing: null, baseUrl: "https://given.example.com", templateId } });
+  });
+});
+
+describe("Short Link SDK — controls (live)", () => {
+  const live = TEST_CONFIG.apiKey ? it : it.skip;
+  const client = new ShortLinkClient(new HttpClient({ apiKey: TEST_CONFIG.apiKey, baseUrl: TEST_CONFIG.baseUrl }));
+
+  live("creates with controls, never returns the password, and setRules leaves other sections", async () => {
+    const created = await client.create({
+      baseUrl: "https://example.com/controls",
+      templateId,
+      tags: ["sdk-controls"],
+      access: { password: "secret1" },
+      routing: [{ conditions: { countries: ["DE"] }, targetUrl: "https://example.de" }],
+      variants: [{ url: "https://a.example.com", weight: 1 }, { url: "https://b.example.com", weight: 1 }],
+      utm: { source: "sdk" },
+    });
+    createdResources.shortLinks.push(created._id);
+
+    const details = await client.get(created._id);
+    expect(details.access?.hasPassword).toBe(true);
+    expect(details.access).not.toHaveProperty("password");
+    expect(details.tags).toEqual(["sdk-controls"]);
+    expect(details.routing).toHaveLength(1);
+
+    const after = await client.setRules(created._id, { utm: { source: "changed" } });
+    expect(after.utm?.source).toBe("changed");
+    expect(after.routing).toHaveLength(1);
+    expect(after.variants).toHaveLength(2);
+
+    expect(await client.listTags("sdk-")).toContain("sdk-controls");
+  });
+
+  live("queues a health check", async () => {
+    const id = createdResources.shortLinks[createdResources.shortLinks.length - 1];
+    await expect(client.checkHealth(id)).resolves.toBeUndefined();
+  });
+});
+
 const describeLive = TEST_CONFIG.apiKey ? describe : describe.skip;
 
 describeLive("Short Link SDK", () => {

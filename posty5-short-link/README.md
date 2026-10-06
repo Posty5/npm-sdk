@@ -118,6 +118,69 @@ console.log("✓ Destination updated - same short link, new target!");
 
 ---
 
+## 🎛️ Short link controls (4.6.0)
+
+### Access rules
+
+```typescript
+await client.create({
+  baseUrl: 'https://example.com', templateId,
+  access: { activeFrom: '2026-11-01T00:00:00Z', expiresAt: '2026-12-01T00:00:00Z',
+            maxVisits: 1000, fallbackUrl: 'https://example.com/ended', password: 'secret1' },
+});
+// Responses carry access.hasPassword, never the password. access.password: null removes it.
+```
+
+### Routing and A/B
+
+```typescript
+await client.setRules(id, {
+  routing: [{ conditions: { countries: ['DE', 'AT'], devices: ['mobile'] }, targetUrl: 'https://example.de' }],
+  variants: [{ url: 'https://a.example.com', weight: 50 }, { url: 'https://b.example.com', weight: 50 }],
+});
+// Partial: omitted sections are untouched; null / [] clears one.
+```
+
+Rules: AND across condition kinds, OR within a list, ≤ 20 rules, first match wins.
+Variants: 0 or 2–5, relative weights 1–100.
+
+### UTM and pixels
+
+```typescript
+await client.setRules(id, {
+  utm: { source: 'newsletter', medium: 'email', campaign: 'spring' },
+  pixels: [{ provider: 'meta', id: '1234567890' }],
+  pixelsConsentAcknowledged: true,
+});
+```
+
+Plan-gated fields (`urlShortener.utmBuilder`, `urlShortener.retargetingPixels`,
+`urlShortener.campaigns`, `healthMonitor`, …) answer 403 as `AuthorizationError`
+on a plan without them.
+
+### Tags and campaigns
+
+```typescript
+import { LinkCampaignClient } from '@posty5/short-link';
+const campaigns = new LinkCampaignClient(http);
+const campaign = await campaigns.create({ name: 'Spring', color: 'green', utm: { source: 'spring' } });
+await client.update(id, { baseUrl, templateId, tags: ['spring', 'promo'], campaignId: campaign._id });
+await client.list({ tags: ['spring'], campaignId: campaign._id });
+await client.listTags('spr');
+await campaigns.delete(campaign._id, { detach: true });
+```
+
+**Migrating from `tag`:** `tag` still works and equals `tags[0]`; send `tags`
+instead. When both are sent, `tags` wins.
+
+### Health
+
+```typescript
+await client.update(id, { baseUrl, templateId, health: { enabled: true } });
+await client.checkHealth(id); // queues one check (202); 1 per link per 10 minutes
+const { health } = await client.get(id); // status: unknown | healthy | unhealthy
+```
+
 ## 📦 Bulk create, bulk jobs and export (4.5.0)
 
 ```typescript

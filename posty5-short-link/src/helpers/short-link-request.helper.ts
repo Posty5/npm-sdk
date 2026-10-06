@@ -1,6 +1,6 @@
 import { IPaginationParams } from "@posty5/core";
 import { ICreateShortLinkRequest, IListParams, IUpdateShortLinkRequest } from "../interfaces";
-import { ShortLinkDeprecatedRequestKeysConst, ShortLinkLegacyListKeysConst } from "../short-link.config";
+import { ShortLinkDeprecatedRequestKeysConst, ShortLinkLegacyListKeysConst, ShortLinkTagsQuerySeparatorConst } from "../short-link.config";
 import { ShortLinkDeprecatedRequestKeyType as DeprecatedKey } from "../types/type";
 
 /** A shallow copy of `source` without the keys the API rejects. Never mutates `source`. */
@@ -35,6 +35,11 @@ export function toShortLinkListQuery(params?: IListParams, pagination?: IPaginat
       query[key] = query[legacyKey];
     }
     delete query[legacyKey];
+  }
+  // `?tags=a,b` — the API splits on `ShortLinkTagsQuerySeparatorConst`.
+  if (Array.isArray(query.tags)) {
+    if (query.tags.length) query.tags = query.tags.join(ShortLinkTagsQuerySeparatorConst);
+    else delete query.tags;
   }
   return query;
 }

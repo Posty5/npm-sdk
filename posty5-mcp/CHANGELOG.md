@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased
+
+Needs `@posty5/short-link` 4.6.0.
+
+- Short link controls: `short_link_create` / `short_link_update` take `tags`,
+  `campaignId`, `health`, `access` (with a write-only `password`), `routing`,
+  `variants`, `utm`, `pixels` and `pixelsConsentAcknowledged`; `short_link_list`
+  filters by `tags` and `campaignId`. `short_link_update` no longer resends the
+  deprecated `tag`. New tools: `short_link_set_rules`, `short_link_list_tags`,
+  `short_link_check_health`, `short_link_campaign_list` / `_get` / `_create` /
+  `_update` and `short_link_campaign_delete` (full, `confirm`, `detach`).
+  Short link results never carry `access.password`. 146 tools.
+
+Needs `@posty5/qr-code` 4.7.0.
+
+- `qr_code_create` / `qr_code_update` take the QR content types `vcard`,
+  `event`, `whatsapp`, `review`, `social` (up to 12 profiles), `appStore` and
+  `file` — no new tool; the tool count is unchanged. `vcard` defaults to
+  static (QT-D12); `appStore` and `file` are always dynamic (`mode: "static"`
+  is refused before any call). `file` takes `fileBase64` (a `data:` URL
+  prefix is stripped), `fileName` and `mimeType`, at most 5 MB decoded
+  (`QR_MCP_FILE_MAX_BYTES`), uploaded through `createFile` / `updateFile`;
+  an update without `fileBase64` keeps the stored file.
+  `qr_code_create_many` rows keep the seven original types.
+
 ## 1.1.0
 
 Needs `@posty5/qr-code` 4.6.0 for the dynamic QR parameters.
