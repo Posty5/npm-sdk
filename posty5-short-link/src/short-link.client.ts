@@ -196,7 +196,7 @@ export class ShortLinkClient {
                     links,
                     defaults: opts.defaults,
                     fetchMetadata: opts.fetchMetadata,
-                    ...ShortLinkCreateSourceConst,
+                    // No templateType: the bulk schema does not allow it (400 "templateType is not allowed").
                     createdFrom: this.http.createdFrom,
                 }),
             },

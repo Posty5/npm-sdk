@@ -28,7 +28,8 @@ describe("ShortLinkClient.createMany (offline)", () => {
     expect(calls.map((c) => (c.body as { links: unknown[] }).links.length)).toEqual([100, 100, 50]);
     expect(calls.map((c) => c.url)).toEqual(Array(3).fill("/api/short-link/bulk"));
     expect(calls.map((c) => c.headers?.["Idempotency-Key"])).toEqual(["k-0", "k-1", "k-2"]);
-    expect(calls[0].body).toMatchObject({ templateType: "user", createdFrom: "npmPackage" });
+    expect(calls[0].body).toMatchObject({ createdFrom: "npmPackage" });
+    expect(calls[0].body).not.toHaveProperty("templateType");
     expect(result.created).toBe(250);
     expect(result.items.map((i) => i.row)).toEqual(Array.from({ length: 250 }, (_, i) => i + 1));
     expect(result.items[249].id).toBe("https://example.com/249");

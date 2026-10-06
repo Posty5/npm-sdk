@@ -21,7 +21,8 @@ describe("QRCodeClient bulk (offline)", () => {
 
     expect(calls).toHaveLength(2);
     expect(calls[0]).toMatchObject({ url: "/api/qr-code/bulk", headers: { "Idempotency-Key": "q-0" } });
-    expect(calls[0].body).toMatchObject({ defaults: { templateId: "t1" }, templateType: "user", createdFrom: "npmPackage" });
+    expect(calls[0].body).toMatchObject({ defaults: { templateId: "t1" }, createdFrom: "npmPackage" });
+    expect(calls[0].body).not.toHaveProperty("templateType");
     expect((calls[1].body as { items: unknown[] }).items).toHaveLength(50);
     expect(result.items[149].row).toBe(150);
   });

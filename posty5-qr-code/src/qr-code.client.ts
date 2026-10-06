@@ -558,7 +558,7 @@ export class QRCodeClient {
         toBody: (rows, opts) => ({
           items: rows,
           defaults: opts.defaults,
-          ...QrCodeRequestSourceConst,
+          // No templateType: the bulk schema does not allow it (400 "templateType is not allowed").
           createdFrom: this.http.createdFrom,
         }),
       },
