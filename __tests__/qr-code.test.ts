@@ -193,6 +193,29 @@ describe("QR Code SDK — payloads (offline)", () => {
     expect(calls[2].body).toMatchObject({ mode: "static" });
   });
 
+  it("payload snapshot: a 4.x-style call without mode or access sends exactly the 4.5.0 body on all 14 methods (DQ)", async () => {
+    const { http, calls } = stubHttp({ _id: "qr1" });
+    const client = new QRCodeClient(http);
+    for (const { type, content } of structuredCases) {
+      await createStructured(client, type, { name: "N", templateId, [type]: content });
+      await updateStructured(client, type, "qr1", { name: "N", templateId, [type]: content });
+    }
+    await client.createFreeText({ name: "N", templateId, text: "T" });
+    await client.updateFreeText("qr1", { name: "N", templateId, text: "T" });
+
+    expect(calls).toHaveLength(14);
+    const structuredBodies = structuredCases.flatMap(({ type, content }) => {
+      const body = { name: "N", templateId, qrCodeTarget: { type, [type]: content }, ...source };
+      return [body, body];
+    });
+    const freeTextBody = { name: "N", templateId, qrCodeTarget: { type: "freeText", freeText: { text: "T" } }, options: { text: "T" }, ...source };
+    expect(calls.map((call) => call.body)).toEqual([...structuredBodies, freeTextBody, freeTextBody]);
+    for (const call of calls) {
+      expect(call.body).not.toHaveProperty("mode");
+      expect(call.body).not.toHaveProperty("access");
+    }
+  });
+
   it("a dynamic free-text code sends no client-built options.text (DQ)", async () => {
     const { http, calls } = stubHttp({ _id: "qr1" });
     await new QRCodeClient(http).createFreeText({ templateId, text: "HELLO", mode: "dynamic" });

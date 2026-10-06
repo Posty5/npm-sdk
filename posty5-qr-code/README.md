@@ -108,7 +108,7 @@ allQRCodes.items.forEach((qr) => {
 
 ---
 
-## 🔁 Dynamic QR codes
+## 🔁 Dynamic QR codes (4.6.0)
 
 A dynamic code's image encodes its Posty5 link (`qrCodeLandingPageURL`), not the
 content, so you can change where it leads after it is printed. Without `mode`

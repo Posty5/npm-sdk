@@ -88,6 +88,16 @@ runs a bulk job and answers a **signed link to a ZIP of the images** that
 expires within minutes; `qr_code_get_bulk_job` reports a job still running and
 hands out fresh links. Webhook endpoints are not exposed through MCP.
 
+### Dynamic QR codes
+
+`qr_code_create` makes **dynamic** codes by default (`mode: "dynamic"`): the
+image encodes the code's Posty5 link, so `qr_code_update` can change the
+target later without reprinting. Wi-Fi codes are always static. Left out on
+`qr_code_update`, `mode` keeps the stored mode. Dynamic codes take optional
+scan rules in `access` (`activeFrom`, `expiresAt`, `maxVisits`,
+`fallbackUrl`; `null` clears them, Starter plan or above). `qr_code_list`
+filters by `mode`.
+
 ## 🏷️ What gets recorded
 
 Every tool that creates or changes something takes `aiModel` — the assistant

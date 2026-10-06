@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
+
+Needs `@posty5/qr-code` 4.6.0 for the dynamic QR parameters.
+
 
 - `short_link_create_many` and `qr_code_create_many` (write, always `confirm`):
   1–25 rows per call, per-row results, the call's `idempotencyKey` (or the
