@@ -3,7 +3,7 @@ export const SERVER_NAME = "posty5";
 export const SERVER_TITLE = "Posty5";
 
 /** This package's version — kept in step with package.json (a test pins them). */
-export const PACKAGE_VERSION = "1.0.0";
+export const PACKAGE_VERSION = "1.1.0";
 
 /**
  * What every assistant is told when it connects (MCP server `instructions`).
