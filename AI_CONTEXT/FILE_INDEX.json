@@ -226,6 +226,34 @@
     {
       "path": "posty5-webhooks/src",
       "role": "@posty5/webhooks: endpoint client, signature verifier, event envelope types."
+    },
+    {
+      "path": "posty5-qr-design/src/render/svg-composer.ts",
+      "role": "renderDesignSvg: v2 SVG composer"
+    },
+    {
+      "path": "posty5-qr-design/src/scannability/scannability.helper.ts",
+      "role": "checkScannability (K5)"
+    },
+    {
+      "path": "posty5-qr-design/src/normalize/normalize.helper.ts",
+      "role": "normalizeDesign, isV2Design (legacy names, posty5Logo fallback, clamps)"
+    },
+    {
+      "path": "posty5-qr-design/src/render/frame.helper.ts",
+      "role": "Frame geometry (7 catalogue frames)"
+    },
+    {
+      "path": "posty5-qr-design/src/text/arabic-shaping.helper.ts",
+      "role": "Arabic contextual shaping + RTL visual order for frame text"
+    },
+    {
+      "path": "posty5-qr-design/src/fonts/glyphs.data.ts",
+      "role": "GENERATED glyph outlines (scripts/build-glyphs.mjs); do not edit"
+    },
+    {
+      "path": "posty5-qr-design/src",
+      "role": "@posty5/qr-design: QR design engine, catalogues, scannability."
     }
   ]
 }

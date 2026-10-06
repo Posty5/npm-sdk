@@ -157,6 +157,74 @@ await qrCodeClient.updateURL(qr._id, {
 // an access object replaces them whole).
 ```
 
+## 🧩 Content types (4.7.0)
+
+Five more content types, each with a `create<Type>` / `update<Type>` pair. The
+API builds the encoded text from `qrCodeTarget`; the SDK never sends it.
+
+| Method | Target | Required |
+| --- | --- | --- |
+| `createVCard` | `vcard: { firstName, lastName, organization, jobTitle, phones[{ kind, number }], emails[], website, address, note }` | `firstName` or `organization` |
+| `createEvent` | `event: { title, startsAt, endsAt, allDay, timezone, location, description, url }` | `title`, `startsAt` (`Date` or ISO) |
+| `createWhatsApp` | `whatsapp: { phoneNumber, message }` | `phoneNumber` |
+| `createReview` | `review: { platform, placeId, url }` | `platform`; Google: `placeId` or `url`, others: `url` |
+| `createSocial` | `social: { profiles[{ platform, handle, url }], title }` | one profile (`handle` or `url`) |
+
+```typescript
+await qrCodeClient.createVCard({
+  name: 'Sales contact',
+  templateId: 'template_123',
+  vcard: { firstName: 'Sara', organization: 'Acme', phones: [{ kind: 'mobile', number: '+201001234567' }] },
+});
+
+await qrCodeClient.createEvent({
+  name: 'Launch',
+  templateId: 'template_123',
+  event: { title: 'Product launch', startsAt: new Date('2026-11-01T18:00:00Z'), timezone: 'Africa/Cairo' },
+});
+
+await qrCodeClient.createWhatsApp({
+  name: 'Chat with us',
+  templateId: 'template_123',
+  whatsapp: { phoneNumber: '+201001234567', message: 'Hi' },
+});
+```
+
+`update<Type>(id, data)` takes the same fields plus `name`.
+
+### Dynamic-only types: app store and file
+
+These two are always dynamic: omit `mode` (the API defaults it) or pass
+`"dynamic"`. `social` also takes up to 12 profiles on a dynamic code.
+
+| Method | Target | Required |
+| --- | --- | --- |
+| `createAppStore` | `appStore: { androidUrl, iosUrl, fallbackUrl }` | `fallbackUrl` |
+| `createFile(data, content)` | `file: { fileName, mimeType }` + the content | content: PDF, JPEG, PNG or WebP |
+
+`createFile` uploads and creates in one call: it asks
+`POST /api/qr-code/file/upload-url` for a signed URL, PUTs the content to it
+(valid 60 s), then creates the code with the returned `bucketFilePath`. The
+content is a `Blob` / `File` or an `ArrayBuffer` / `Buffer`; for the latter
+`file.mimeType` is required. `updateFile(id, data, content?)` re-uploads only
+when `content` is given; without it the stored file is kept.
+
+```typescript
+import { readFileSync } from 'fs';
+
+await qrCodeClient.createAppStore({
+  name: 'Get the app',
+  templateId: 'template_123',
+  appStore: { iosUrl: 'https://apps.apple.com/app/id123456789', fallbackUrl: 'https://example.com/app' },
+});
+
+const menu = await qrCodeClient.createFile(
+  { name: 'Menu', templateId: 'template_123', file: { fileName: 'menu.pdf', mimeType: 'application/pdf' } },
+  readFileSync('./menu.pdf'),
+);
+console.log(menu.qrCodeTarget?.file?.fileURL);
+```
+
 ## 📦 Bulk create, bulk jobs and export (4.5.0)
 
 ```typescript

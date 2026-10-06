@@ -18,6 +18,8 @@ import {
   toLinkAnalyticsQuery,
   toLinkStatisticsPath,
   toLinkStatisticsQuery,
+  uploadToR2,
+  NetworkError,
 } from "@posty5/core";
 import {
   ICreateQRCodeResponse,
@@ -40,13 +42,38 @@ import {
   IUpdateSMSQRCodeRequest,
   IUpdateURLQRCodeRequest,
   IUpdateGeolocationQRCodeRequest,
+  ICreateVCardQRCodeRequest,
+  ICreateEventQRCodeRequest,
+  ICreateWhatsAppQRCodeRequest,
+  ICreateReviewQRCodeRequest,
+  ICreateSocialQRCodeRequest,
+  IUpdateVCardQRCodeRequest,
+  IUpdateEventQRCodeRequest,
+  IUpdateWhatsAppQRCodeRequest,
+  IUpdateReviewQRCodeRequest,
+  IUpdateSocialQRCodeRequest,
+  ICreateAppStoreQRCodeRequest,
+  IUpdateAppStoreQRCodeRequest,
+  ICreateFileQRCodeRequest,
+  IUpdateFileQRCodeRequest,
+  IQRCodeFileInput,
+  IQRCodeFileUploadTicket,
+  IQRCodeRequest,
+  QrCodeFileContent,
   QrCodeTargetType,
   IQRCodeStatisticsResponse,
   IQrCodeBulkRow,
   IQrCodeExportParams,
   ICreateQrCodeBulkJobInput,
 } from "./interfaces";
-import { toFreeTextQrCodeBody, toQrCodeListQuery, toStructuredQrCodeBody } from "./helpers/qr-code-request.helper";
+import {
+  toEventQrCodeBody,
+  toFileQrCodeBody,
+  toFreeTextQrCodeBody,
+  toQrCodeFileUpload,
+  toQrCodeListQuery,
+  toStructuredQrCodeBody,
+} from "./helpers/qr-code-request.helper";
 import { QrCodeBulkPathsConst, QrCodeRequestSourceConst } from "./qr-code.config";
 
 /**
@@ -395,6 +422,290 @@ export class QRCodeClient {
    */
   async updateGeolocation(id: string, data: IUpdateGeolocationQRCodeRequest): Promise<IUpdateQRCodeResponse> {
     return this.updateOfType("geolocation", id, toStructuredQrCodeBody("geolocation", data));
+  }
+
+  /**
+   * Create a vCard (contact card) QR code. The API encodes it as vCard 3.0;
+   * `firstName` or `organization` is required.
+   *
+   * @example
+   * ```typescript
+   * const qrCode = await qrCodeClient.createVCard({
+   *   name: 'Sales contact',
+   *   templateId: 'template_123',
+   *   vcard: {
+   *     firstName: 'Sara',
+   *     lastName: 'Ali',
+   *     organization: 'Acme',
+   *     phones: [{ kind: 'mobile', number: '+201001234567' }],
+   *     emails: ['sara@acme.com'],
+   *     website: 'https://acme.com'
+   *   }
+   * });
+   * ```
+   */
+  async createVCard(data: ICreateVCardQRCodeRequest): Promise<ICreateQRCodeResponse> {
+    return this.createOfType("vcard", toStructuredQrCodeBody("vcard", data));
+  }
+
+  /**
+   * Create a calendar event QR code. `startsAt` / `endsAt` take a `Date` or an
+   * ISO string; a `Date` is sent as ISO.
+   *
+   * @example
+   * ```typescript
+   * const qrCode = await qrCodeClient.createEvent({
+   *   name: 'Launch',
+   *   templateId: 'template_123',
+   *   event: {
+   *     title: 'Product launch',
+   *     location: 'Cairo',
+   *     startsAt: new Date('2026-11-01T18:00:00Z'),
+   *     endsAt: '2026-11-01T20:00:00Z',
+   *     timezone: 'Africa/Cairo'
+   *   }
+   * });
+   * ```
+   */
+  async createEvent(data: ICreateEventQRCodeRequest): Promise<ICreateQRCodeResponse> {
+    return this.createOfType("event", toEventQrCodeBody(data));
+  }
+
+  /**
+   * Create a WhatsApp chat QR code (`https://wa.me/<digits>[?text=...]`).
+   *
+   * @example
+   * ```typescript
+   * const qrCode = await qrCodeClient.createWhatsApp({
+   *   name: 'Chat with us',
+   *   templateId: 'template_123',
+   *   whatsapp: { phoneNumber: '+201001234567', message: 'Hi' }
+   * });
+   * ```
+   */
+  async createWhatsApp(data: ICreateWhatsAppQRCodeRequest): Promise<ICreateQRCodeResponse> {
+    return this.createOfType("whatsapp", toStructuredQrCodeBody("whatsapp", data));
+  }
+
+  /**
+   * Create a review QR code. Google takes `placeId` or `url`; other platforms
+   * a `url` on their own host.
+   *
+   * @example
+   * ```typescript
+   * const qrCode = await qrCodeClient.createReview({
+   *   name: 'Review us',
+   *   templateId: 'template_123',
+   *   review: { platform: 'google', placeId: 'ChIJN1t_tDeuEmsRUsoyG83frY4' }
+   * });
+   * ```
+   */
+  async createReview(data: ICreateReviewQRCodeRequest): Promise<ICreateQRCodeResponse> {
+    return this.createOfType("review", toStructuredQrCodeBody("review", data));
+  }
+
+  /**
+   * Create a social profile QR code. A static code takes one profile, given
+   * as a `handle` or a `url`.
+   *
+   * @example
+   * ```typescript
+   * const qrCode = await qrCodeClient.createSocial({
+   *   name: 'Follow us',
+   *   templateId: 'template_123',
+   *   social: { profiles: [{ platform: 'instagram', handle: 'posty5' }] }
+   * });
+   * ```
+   */
+  async createSocial(data: ICreateSocialQRCodeRequest): Promise<ICreateQRCodeResponse> {
+    return this.createOfType("social", toStructuredQrCodeBody("social", data));
+  }
+
+  /**
+   * Update a vCard QR code. Takes the same fields as {@link createVCard} plus `name`.
+   *
+   * @example
+   * ```typescript
+   * await qrCodeClient.updateVCard('qr_code_id', {
+   *   name: 'Sales contact',
+   *   templateId: 'template_123',
+   *   vcard: { firstName: 'Sara', organization: 'Acme' }
+   * });
+   * ```
+   */
+  async updateVCard(id: string, data: IUpdateVCardQRCodeRequest): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("vcard", id, toStructuredQrCodeBody("vcard", data));
+  }
+
+  /**
+   * Update an event QR code. `startsAt` / `endsAt` take a `Date` or an ISO string.
+   *
+   * @example
+   * ```typescript
+   * await qrCodeClient.updateEvent('qr_code_id', {
+   *   name: 'Launch',
+   *   templateId: 'template_123',
+   *   event: { title: 'Product launch (moved)', startsAt: '2026-11-02T18:00:00Z' }
+   * });
+   * ```
+   */
+  async updateEvent(id: string, data: IUpdateEventQRCodeRequest): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("event", id, toEventQrCodeBody(data));
+  }
+
+  /**
+   * Update a WhatsApp QR code.
+   *
+   * @example
+   * ```typescript
+   * await qrCodeClient.updateWhatsApp('qr_code_id', {
+   *   name: 'Chat with us',
+   *   templateId: 'template_123',
+   *   whatsapp: { phoneNumber: '+201001234567' }
+   * });
+   * ```
+   */
+  async updateWhatsApp(id: string, data: IUpdateWhatsAppQRCodeRequest): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("whatsapp", id, toStructuredQrCodeBody("whatsapp", data));
+  }
+
+  /**
+   * Update a review QR code.
+   *
+   * @example
+   * ```typescript
+   * await qrCodeClient.updateReview('qr_code_id', {
+   *   name: 'Review us',
+   *   templateId: 'template_123',
+   *   review: { platform: 'trustpilot', url: 'https://www.trustpilot.com/review/example.com' }
+   * });
+   * ```
+   */
+  async updateReview(id: string, data: IUpdateReviewQRCodeRequest): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("review", id, toStructuredQrCodeBody("review", data));
+  }
+
+  /**
+   * Update a social profile QR code.
+   *
+   * @example
+   * ```typescript
+   * await qrCodeClient.updateSocial('qr_code_id', {
+   *   name: 'Follow us',
+   *   templateId: 'template_123',
+   *   social: { profiles: [{ platform: 'x', url: 'https://x.com/posty5' }] }
+   * });
+   * ```
+   */
+  async updateSocial(id: string, data: IUpdateSocialQRCodeRequest): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("social", id, toStructuredQrCodeBody("social", data));
+  }
+
+  /**
+   * Create an app store QR code (dynamic-only): a scan goes to Google Play on
+   * Android, the App Store on iOS, else `fallbackUrl`. `mode` may be omitted;
+   * the API makes it dynamic.
+   *
+   * @example
+   * ```typescript
+   * const qrCode = await qrCodeClient.createAppStore({
+   *   name: 'Get the app',
+   *   templateId: 'template_123',
+   *   appStore: {
+   *     androidUrl: 'https://play.google.com/store/apps/details?id=com.example',
+   *     iosUrl: 'https://apps.apple.com/app/id123456789',
+   *     fallbackUrl: 'https://example.com/app'
+   *   }
+   * });
+   * ```
+   */
+  async createAppStore(data: ICreateAppStoreQRCodeRequest): Promise<ICreateQRCodeResponse> {
+    return this.createOfType("appStore", toStructuredQrCodeBody("appStore", data as IQRCodeRequest));
+  }
+
+  /**
+   * Update an app store QR code.
+   *
+   * @example
+   * ```typescript
+   * await qrCodeClient.updateAppStore('qr_code_id', {
+   *   name: 'Get the app',
+   *   templateId: 'template_123',
+   *   appStore: { fallbackUrl: 'https://example.com/app-v2' }
+   * });
+   * ```
+   */
+  async updateAppStore(id: string, data: IUpdateAppStoreQRCodeRequest): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("appStore", id, toStructuredQrCodeBody("appStore", data as IQRCodeRequest));
+  }
+
+  /**
+   * Create a file QR code (dynamic-only): a hosted PDF or image (PDF, JPEG,
+   * PNG or WebP). Uploads the content and creates the code in one call:
+   * `POST /api/qr-code/file/upload-url` → PUT to the signed URL (valid 60 s)
+   * → `POST /api/qr-code/file` with the returned `bucketFilePath`.
+   *
+   * `content` is a `Blob` / `File` (its `type` is used unless
+   * `data.file.mimeType` is given) or an `ArrayBuffer` / `Buffer` (then
+   * `data.file.mimeType` is required). Plan limits answer 403 and bad files
+   * 400, surfaced as the core error types.
+   *
+   * @example
+   * ```typescript
+   * import { readFileSync } from 'fs';
+   *
+   * const qrCode = await qrCodeClient.createFile(
+   *   { name: 'Menu', templateId: 'template_123', file: { fileName: 'menu.pdf', mimeType: 'application/pdf' } },
+   *   readFileSync('./menu.pdf')
+   * );
+   * ```
+   */
+  async createFile(data: ICreateFileQRCodeRequest, content: QrCodeFileContent): Promise<ICreateQRCodeResponse> {
+    const bucketFilePath = await this.uploadQrFile(data, content);
+    return this.createOfType("file", toFileQrCodeBody(data, bucketFilePath));
+  }
+
+  /**
+   * Update a file QR code. With `content`, the new file is uploaded first and
+   * replaces the stored one; without it, the stored file is kept (only
+   * `file.fileName` and the common fields change).
+   *
+   * @example
+   * ```typescript
+   * await qrCodeClient.updateFile('qr_code_id', { name: 'Menu', templateId: 'template_123', file: { fileName: 'menu-2026.pdf' } }, newPdfBlob);
+   * ```
+   */
+  async updateFile(id: string, data: IUpdateFileQRCodeRequest, content?: QrCodeFileContent): Promise<IUpdateQRCodeResponse> {
+    const bucketFilePath = content === undefined ? undefined : await this.uploadQrFile(data, content);
+    return this.updateOfType("file", id, toFileQrCodeBody(data, bucketFilePath));
+  }
+
+  /**
+   * Steps 1-2 of a `file` code: ask for a signed upload URL, then PUT the
+   * content to it. Returns the `bucketFilePath` to send on create / update.
+   * The PUT is retried once on a network error while the URL is still valid;
+   * a failure after the URL expired says so.
+   */
+  private async uploadQrFile(data: { file?: IQRCodeFileInput }, content: QrCodeFileContent): Promise<string> {
+    const { blob, mimeType, sizeBytes } = toQrCodeFileUpload(content, data.file?.mimeType);
+    const fileName = data.file?.fileName || "file";
+    const response = await this.http.post<IQRCodeFileUploadTicket>(`${this.basePath}/file/upload-url`, { fileName, mimeType, sizeBytes });
+    const ticket = response.result!;
+    const expiresAt = Date.now() + (ticket.expiresInSeconds || 60) * 1000;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await uploadToR2(ticket.uploadFileURL, blob, { contentType: mimeType });
+        return ticket.bucketFilePath;
+      } catch (error) {
+        const expired = Date.now() >= expiresAt;
+        if (expired) {
+          throw new NetworkError(`The upload URL expired (${ticket.expiresInSeconds || 60} s) before the file was uploaded; please retry.`, error);
+        }
+        // `fetch` rejects with a TypeError on a network failure; an HTTP status is not retried.
+        if (attempt === 1 && error instanceof TypeError) continue;
+        throw error;
+      }
+    }
   }
 
   /**

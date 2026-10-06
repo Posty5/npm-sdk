@@ -1,5 +1,40 @@
 # Changelog
 
+## 4.7.0 — QR content types (static)
+
+Needs the API release of QR content types; an older API answers "Schema not
+found for this type", surfaced unchanged.
+
+### Added
+
+- `createVCard` / `updateVCard`, `createEvent` / `updateEvent`,
+  `createWhatsApp` / `updateWhatsApp`, `createReview` / `updateReview`,
+  `createSocial` / `updateSocial` — `POST /api/qr-code/<type>` and
+  `PUT /api/qr-code/<type>/:id` for `vcard`, `event`, `whatsapp`, `review`,
+  `social`. They send `qrCodeTarget` only; the API builds the encoded text.
+  `mode` and `access` pass through like the other types.
+- Targets `IQRCodeVCardTarget` (+ `IQRCodeVCardPhone`, `IQRCodeVCardAddress`),
+  `IQRCodeEventTarget`, `IQRCodeWhatsappTarget`, `IQRCodeReviewTarget`,
+  `IQRCodeSocialTarget` (+ `IQRCodeSocialProfile`); request types
+  `ICreate<Type>QRCodeRequest` / `IUpdate<Type>QRCodeRequest`; unions
+  `QrCodeVCardPhoneKind`, `QrCodeReviewPlatform`, `QrCodeSocialPlatform`;
+  `QrCodeTargetType` extended. Responses' `qrCodeTarget` carries the new
+  sub-objects.
+- `event.startsAt` / `endsAt` accept `Date | string`; a `Date` is sent as ISO.
+- Dynamic-only types (QT pass 2, same unpublished 4.7.0):
+  `createAppStore` / `updateAppStore` (`appStore: { androidUrl, iosUrl, fallbackUrl }`)
+  and `createFile(data, content)` / `updateFile(id, data, content?)`, which run
+  `POST /api/qr-code/file/upload-url` → PUT to the signed URL (`uploadToR2`,
+  60 s) → `POST /api/qr-code/file` / `PUT /api/qr-code/file/:id` with
+  `bucketFilePath`. Content is a `Blob` or an `ArrayBuffer` / `Buffer` (then
+  `file.mimeType` is required — `ValidationError` before any request).
+  `updateFile` without content keeps the stored file. The PUT is retried once
+  on a network error; a failure after the URL expired throws `NetworkError`
+  saying so. Types `IQRCodeAppStoreTarget`, `IQRCodeFileTarget`,
+  `IQRCodeFileInput`, `IQRCodeFileUploadTicket`, `QrCodeFileContent`,
+  `QrCodeFileMimeType`; `QrCodeTargetType` gains `appStore`, `file`.
+- `social` takes up to 12 profiles on a dynamic code (one on a static code).
+
 ## 4.6.0 — dynamic QR codes
 
 Needs the API release of dynamic QR codes; an older API rejects `mode`.

@@ -8,7 +8,44 @@ export type QrCodeStatusType = BasePreviewStatusType;
 /**
  * QR Code target type
  */
-export type QrCodeTargetType = "freeText" | "email" | "wifi" | "call" | "sms" | "url" | "geolocation";
+export type QrCodeTargetType =
+  | "freeText"
+  | "email"
+  | "wifi"
+  | "call"
+  | "sms"
+  | "url"
+  | "geolocation"
+  | "vcard"
+  | "event"
+  | "whatsapp"
+  | "review"
+  | "social"
+  | "appStore"
+  | "file";
+
+/** MIME types a `file` code accepts (PDF or image). */
+export type QrCodeFileMimeType = "application/pdf" | "image/jpeg" | "image/png" | "image/webp";
+
+/** vCard phone kinds (`TEL;TYPE=CELL` / `WORK,VOICE` / `HOME,VOICE`). Default `"mobile"`. */
+export type QrCodeVCardPhoneKind = "mobile" | "work" | "home";
+
+/** Review platforms of a `review` code. */
+export type QrCodeReviewPlatform = "google" | "tripadvisor" | "trustpilot" | "yelp" | "facebook" | "other";
+
+/** Social profile platforms of a `social` code. */
+export type QrCodeSocialPlatform =
+  | "instagram"
+  | "facebook"
+  | "tiktok"
+  | "x"
+  | "youtube"
+  | "linkedin"
+  | "snapchat"
+  | "telegram"
+  | "threads"
+  | "pinterest"
+  | "other";
 
 /**
  * The QR types whose content the caller passes under a key named after the

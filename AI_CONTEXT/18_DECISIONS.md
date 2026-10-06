@@ -82,6 +82,24 @@ nothing: 4.3.0 is the MCP release (`mcp-wave-2`), which merges first. The packag
 already out of lockstep after the truth pass (core 4.2.0, short-link/qr-code/
 store 4.3.0).
 
+## D10 - The QR design engine lives in npm-sdk and is an in-house composer.
+
+**Status:** decided 2026-10-06 (`qr-design-and-export`, QD-D1/D2/D8 defaults).
+
+- **Where it lives (QD-D2).** `@posty5/qr-design` lives here because:
+  - the api cannot consume ui-shared, which is Angular-bound;
+  - three copies would drift.
+
+  The api, dashboard and web install it at an exact version.
+- **Renderer (QD-D1).** The engine is an in-house SVG composer, not `qr-code-styling`. Legacy (v1) designs stay on EasyQRCode and are not rendered here.
+- **Encoder.** `qrcode-generator` 2.0.4 is bundled; it is small and dependency-free with deterministic mask choice.
+- **Frame text (QD-D8).** Frame text is drawn as outlines. The spike found that opentype.js 2.0 throws on Noto Sans Arabic's GSUB (lookup type 6). The engine therefore:
+  - shapes Arabic to Unicode presentation forms itself;
+  - draws pre-extracted glyph outlines, so no font is parsed at runtime.
+
+  HarfBuzz (wasm) was not needed. Known limits: no kerning, and harakat are dropped.
+- **Test decoder.** Fixtures are decoded with ZXing (`@zxing/library`), not jsQR. jsQR failed on shrunk dots and on circle/diamond eyes that ZXing reads; a module-centre sampling check confirmed the geometry was correct.
+
 Do not invent historical rationale. Record evidence-based current decisions and label unknown rationale explicitly.
 
 ## 2026-10-05 — agent gaps (mcp-server feature, wave 2)

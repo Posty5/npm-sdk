@@ -61,6 +61,11 @@
       "name": "webhooks",
       "purpose": "@posty5/webhooks: WebhookEndpointClient over /api/webhook-endpoints (CRUD, rotate-secret, test, deliveries, redeliver, event-types) and verifyWebhookSignature (Standard Webhooks, node:crypto, Node only). New in 4.5.0.",
       "primary_path": "posty5-webhooks/src"
+    },
+    {
+      "name": "qr-design",
+      "purpose": "@posty5/qr-design: framework-free QR design engine. renderDesignSvg (deterministic v2 SVG: shapes, gradients, frames with outlined Latin/Arabic CTA text, print presets), checkScannability (K5), normalizeDesign/isV2Design/encodeMatrix, catalogues. No HTTP, no @posty5/core. New in 4.7.0.",
+      "primary_path": "posty5-qr-design/src"
     }
   ]
 }

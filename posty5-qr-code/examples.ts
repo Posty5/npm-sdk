@@ -205,6 +205,75 @@ async function createCallQRCode() {
 }
 
 // ============================================================================
+// Example 10b: Content types (4.7.0) — vCard, event, WhatsApp, review, social
+// ============================================================================
+async function createContentTypeQRCodes() {
+    const vcard = await qrCodeClient.createVCard({
+        name: 'Sales contact',
+        templateId: TEMPLATE_ID,
+        vcard: {
+            firstName: 'Sara',
+            lastName: 'Ali',
+            organization: 'Acme',
+            phones: [{ kind: 'mobile', number: '+201001234567' }],
+            emails: ['sara@acme.com'],
+        },
+    });
+    const event = await qrCodeClient.createEvent({
+        name: 'Launch',
+        templateId: TEMPLATE_ID,
+        event: { title: 'Product launch', startsAt: new Date('2026-11-01T18:00:00Z'), endsAt: '2026-11-01T20:00:00Z' },
+    });
+    const whatsapp = await qrCodeClient.createWhatsApp({
+        name: 'Chat with us',
+        templateId: TEMPLATE_ID,
+        whatsapp: { phoneNumber: '+201001234567', message: 'Hi' },
+    });
+    const review = await qrCodeClient.createReview({
+        name: 'Review us',
+        templateId: TEMPLATE_ID,
+        review: { platform: 'google', placeId: 'ChIJN1t_tDeuEmsRUsoyG83frY4' },
+    });
+    const social = await qrCodeClient.createSocial({
+        name: 'Follow us',
+        templateId: TEMPLATE_ID,
+        social: { profiles: [{ platform: 'instagram', handle: 'posty5' }] },
+    });
+    return { vcard, event, whatsapp, review, social };
+}
+
+// ============================================================================
+// Example 10c: Dynamic-only types (4.7.0) — app store, file; social with many profiles
+// ============================================================================
+async function createDynamicContentTypeQRCodes(pdf: Blob) {
+    const appStore = await qrCodeClient.createAppStore({
+        name: 'Get the app',
+        templateId: TEMPLATE_ID,
+        appStore: {
+            androidUrl: 'https://play.google.com/store/apps/details?id=com.example',
+            iosUrl: 'https://apps.apple.com/app/id123456789',
+            fallbackUrl: 'https://example.com/app',
+        },
+    });
+    // Uploads the PDF (signed URL, 60 s) and creates the code in one call.
+    const file = await qrCodeClient.createFile({ name: 'Menu', templateId: TEMPLATE_ID, file: { fileName: 'menu.pdf' } }, pdf);
+    const social = await qrCodeClient.createSocial({
+        name: 'All our profiles',
+        templateId: TEMPLATE_ID,
+        mode: 'dynamic',
+        social: {
+            title: 'Follow us',
+            profiles: [
+                { platform: 'instagram', handle: 'posty5' },
+                { platform: 'x', handle: 'posty5' },
+                { platform: 'youtube', url: 'https://youtube.com/@posty5' },
+            ],
+        },
+    });
+    return { appStore, file, social };
+}
+
+// ============================================================================
 // Example 11: Delete a QR code
 // ============================================================================
 async function deleteQRCode(qrCodeId: string) {

@@ -1,0 +1,24 @@
+{
+    "text": "https://posty5.com/qr/abc123?x=مرحبا",
+    "base": { "width": 300, "correctLevel": 2, "colorDark": "#1a1a2e", "colorLight": "#ffffff", "quietZone": 20 },
+    "fixtures": [
+        { "name": "square-square-square", "options": { "dotShape": "square" } },
+        { "name": "rounded-rounded-circle", "options": { "dotShape": "rounded", "eyeFrameShape": "rounded", "eyeBallShape": "circle" } },
+        { "name": "dots-circle-diamond", "options": { "dotShape": "dots", "dotScale": 0.9, "eyeFrameShape": "circle", "eyeBallShape": "diamond" } },
+        { "name": "classy-leaf-rounded", "options": { "dotShape": "classy", "eyeFrameShape": "leaf", "eyeBallShape": "rounded" } },
+        { "name": "extraRounded-square-circle", "options": { "dotShape": "extraRounded", "eyeBallShape": "circle" } },
+        { "name": "eye-colours", "options": { "dotShape": "rounded", "PO_TL": "#e1622f", "PO_TR": "#aa5b71", "PI_BL": "#2c5364", "AO": "#e1622f", "timing_H": "#aa5b71" } },
+        { "name": "linear-gradient", "options": { "dotShape": "rounded", "fill": { "type": "linear", "rotation": 45, "stops": [{ "offset": 0, "color": "#0f2027" }, { "offset": 1, "color": "#2c5364" }] } } },
+        { "name": "radial-gradient", "options": { "dotShape": "dots", "fill": { "type": "radial", "stops": [{ "offset": 0, "color": "#000000" }, { "offset": 0.5, "color": "#3a0ca3" }, { "offset": 1, "color": "#7209b7" }] } } },
+        { "name": "transparent-background", "options": { "dotShape": "rounded", "backgroundTransparent": true } },
+        { "name": "frame-title-strip", "options": { "dotShape": "rounded", "frame": { "id": "title-strip", "text": "Scan for menu" } } },
+        { "name": "frame-banner-bottom-ar", "options": { "dotShape": "rounded", "eyeFrameShape": "leaf", "fill": { "type": "linear", "rotation": 90, "stops": [{ "offset": 0, "color": "#3a0ca3" }, { "offset": 1, "color": "#7209b7" }] }, "frame": { "id": "banner-bottom", "text": "امسح لعرض القائمة", "color": "#7209b7" } } },
+        { "name": "frame-banner-top", "options": { "dotShape": "square", "frame": { "id": "banner-top", "text": "SCAN ME" } } },
+        { "name": "frame-rounded-box", "options": { "dotShape": "classy", "frame": { "id": "rounded-box", "text": "Scan to visit" } } },
+        { "name": "frame-speech-bubble-ar", "options": { "dotShape": "dots", "dotScale": 0.85, "frame": { "id": "speech-bubble", "text": "امسحني" } } },
+        { "name": "frame-ticket", "options": { "dotShape": "rounded", "frame": { "id": "ticket", "text": "Scan for Wi-Fi" } } },
+        { "name": "frame-circle-ring", "options": { "dotShape": "dots", "frame": { "id": "circle-ring", "text": "Scan to review us" } } },
+        { "name": "frame-long-text-truncated", "options": { "frame": { "id": "banner-bottom", "text": "Scan this code to open our full menu" } } },
+        { "name": "logo-excavated", "options": { "dotShape": "rounded", "logo": "logo.png", "logoWidth": 70, "logoHeight": 70 }, "logo": true }
+    ]
+}
