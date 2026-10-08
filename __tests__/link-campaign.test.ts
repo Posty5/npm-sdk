@@ -12,9 +12,9 @@ describe("Link Campaign SDK — payloads (offline)", () => {
     await client.list({ archived: false, term: "spring" }, { page: 1, pageSize: 10 });
     await client.get("c1");
     await client.create({ name: "Spring", color: "green", utm: { source: "news" } });
-    await client.update("c1", { archived: true });
-    await client.delete("c1", { detach: true });
-    await client.delete("c2");
+    await client.update("c1", { archived: true }, 0);
+    await client.delete("c1", 0, { detach: true });
+    await client.delete("c2", 0);
 
     expect(calls[0]).toEqual({ method: "GET", url: "/api/link-campaign", params: { archived: false, term: "spring", page: 1, pageSize: 10 } });
     expect(calls[1]).toEqual({ method: "GET", url: "/api/link-campaign/c1", params: undefined });
@@ -37,7 +37,7 @@ describeLive("Link Campaign SDK (live)", () => {
 
   afterAll(async () => {
     for (const campaignId of createdResources.linkCampaigns) {
-      await client.delete(campaignId, { detach: true }).catch(() => undefined);
+      await client.delete(campaignId, (await client.get(campaignId)).__v, { detach: true }).catch(() => undefined);
     }
   });
 
@@ -50,13 +50,13 @@ describeLive("Link Campaign SDK (live)", () => {
     expect(details.linkCount).toBe(0);
     expect(details.utm?.source).toBe("sdk");
 
-    const updated = await client.update(id, { archived: true });
+    const updated = await client.update(id, { archived: true }, details.__v);
     expect(updated.isArchived).toBe(true);
 
     const archived = await client.list({ archived: true });
     expect(archived.items.some((c) => c._id === id)).toBe(true);
 
-    await client.delete(id, { detach: true });
+    await client.delete(id, updated.__v, { detach: true });
     createdResources.linkCampaigns.splice(createdResources.linkCampaigns.indexOf(id), 1);
   });
 });

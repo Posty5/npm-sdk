@@ -45,6 +45,8 @@ export interface IPageInfoResponse {
  */
 export interface IShortLinkResponse {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   shorterLink: string;
   shortLinkId: string;
   name?: string;
@@ -107,6 +109,8 @@ export interface IShortLinkFullDetailsResponse extends IShortLinkResponse, IShor
 
 export interface IShortLinkLookupItem {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   name: string;
 }
 

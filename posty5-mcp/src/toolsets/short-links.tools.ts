@@ -3,7 +3,7 @@ import { MCP_BULK_MAX_ROWS } from "../config/limits.config";
 import { CREATE_SHORT_LINK_FEATURE_PATH } from "../config/link-costs.config";
 import { LINK_CLOCK_PATTERN, LINK_RULE_ID_PATTERN, LINK_UTM_VALUE_PATTERN, SHORT_LINK_CONTROLS_LIMITS as L } from "../config/short-link-controls-limits.config";
 import { LINK_CAMPAIGN_COLORS, LINK_DEVICE_TYPES, LINK_OS_FAMILIES, LINK_PIXEL_PROVIDERS, SHORT_LINK_STATUSES } from "../config/short-links-enums.config";
-import { defineTool, idField, pageFields, pickPage, withoutPaging } from "../core/define-tool.helper";
+import { defineTool, idField, pageFields, pickPage, versionField, withoutPaging } from "../core/define-tool.helper";
 import { batchIdempotencyKey, describeBatch, unwrapBulkError } from "../core/link-bulk.helper";
 import { withoutLinkPassword } from "../core/short-link-rules.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
@@ -233,11 +233,12 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
     description: `Changes a short link's target, details or controls. Fields left out keep their current value; access is merged key by key. To change only controls, short_link_set_rules is simpler. The short URL itself never changes. ${PLAN_GATED}`,
     input: z.object({
       id: idField(SHORT_LINK_ID),
+      version: versionField("the short link"),
       baseUrl: z.string().url().optional().describe("The new target URL."),
       ...editableFields,
     }),
     annotations: { idempotent: true },
-    run: async ({ id, ...changes }, { clients }) => {
+    run: async ({ id, version, ...changes }, { clients }) => {
       const current = await clients.shortLinks.get(id);
       const updated = await clients.shortLinks.update(id, {
         name: current.name,
@@ -247,7 +248,7 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
         isEnableMonetization: current.isEnableMonetization,
         pageInfo: current.pageInfo ? { title: current.pageInfo.title, description: current.pageInfo.description } : undefined,
         ...Object.fromEntries(Object.entries(changes).filter(([, value]) => value !== undefined)),
-      });
+      }, version);
       return withoutLinkPassword(updated);
     },
     entity: (_result, args) => ({ entityType: "shortLink", entityId: args.id }),
@@ -258,7 +259,7 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
     access: "full",
     title: "Delete a short link",
     description: "Deletes a short link. Its short URL and QR code stop working. Cannot be undone.",
-    input: z.object({ id: idField(SHORT_LINK_ID) }),
+    input: z.object({ id: idField(SHORT_LINK_ID), version: versionField("the short link") }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
       describe: async ({ id }, { clients }) => {
@@ -266,8 +267,8 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
         return `Delete the short link ${link.shorterLink}${link.name ? ` ("${link.name}")` : ""}, which opens ${link.baseUrl}. It has had ${link.numberOfVisitors} visits. The short URL and its QR code stop working, and this cannot be undone.`;
       },
     },
-    run: async ({ id }, { clients }) => {
-      await clients.shortLinks.delete(id);
+    run: async ({ id, version }, { clients }) => {
+      await clients.shortLinks.delete(id, version);
       return { deleted: true, id };
     },
     entity: (_result, args) => ({ entityType: "shortLink", entityId: args.id }),
@@ -278,9 +279,9 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
     access: "write",
     title: "Set a short link's controls",
     description: `Sets a short link's controls. Partial: only the sections given change; a section left out is untouched; null or [] clears it; access is merged key by key. Order per visit: access (dates, visit limit, password), then routing (first matching rule), then variants (A/B split), else the link's target; utm is appended to the destination. ${PLAN_GATED}`,
-    input: z.object({ id: idField(SHORT_LINK_ID), ...ruleSections }),
+    input: z.object({ id: idField(SHORT_LINK_ID), version: versionField("the short link"), ...ruleSections }),
     annotations: { idempotent: true },
-    run: async ({ id, ...rules }, { clients }) => withoutLinkPassword(await clients.shortLinks.setRules(id, rules)),
+    run: async ({ id, version, ...rules }, { clients }) => withoutLinkPassword(await clients.shortLinks.setRules(id, rules, version)),
     entity: (_result, args) => ({ entityType: "shortLink", entityId: args.id }),
   }),
   defineTool({
@@ -344,9 +345,9 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
     access: "write",
     title: "Update a link campaign",
     description: "Changes a link campaign. Fields left out keep their value. Campaigns are plan-gated.",
-    input: z.object({ id: idField(CAMPAIGN_ID), name: z.string().trim().min(1).max(L.CAMPAIGN_NAME_MAX_LENGTH).optional(), ...campaignFields }),
+    input: z.object({ id: idField(CAMPAIGN_ID), version: versionField("the campaign"), name: z.string().trim().min(1).max(L.CAMPAIGN_NAME_MAX_LENGTH).optional(), ...campaignFields }),
     annotations: { idempotent: true },
-    run: ({ id, ...changes }, { clients }) => clients.linkCampaigns.update(id, changes),
+    run: ({ id, version, ...changes }, { clients }) => clients.linkCampaigns.update(id, changes, version),
     entity: (_result, args) => ({ entityType: "linkCampaign", entityId: args.id }),
   }),
   defineTool({
@@ -357,6 +358,7 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
     description: "Deletes a link campaign. Refused while links use it unless detach is true, which first removes the campaign from its links (the links keep working). Cannot be undone.",
     input: z.object({
       id: idField(CAMPAIGN_ID),
+      version: versionField("the campaign"),
       detach: z.boolean().optional().describe("true: detach the campaign's links first. Default false."),
     }),
     annotations: { destructive: true, idempotent: true },
@@ -371,8 +373,8 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
         return `Delete the link campaign "${campaign.name}".${links} This cannot be undone.`;
       },
     },
-    run: async ({ id, detach }, { clients }) => {
-      await clients.linkCampaigns.delete(id, { detach });
+    run: async ({ id, version, detach }, { clients }) => {
+      await clients.linkCampaigns.delete(id, version, { detach });
       return { deleted: true, id };
     },
     entity: (_result, args) => ({ entityType: "linkCampaign", entityId: args.id }),

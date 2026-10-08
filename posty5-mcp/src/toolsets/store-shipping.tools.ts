@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { SHIPPING_PROFILE_TYPES, SHIPPING_ROUTE_LEVELS, SHIPPING_ROUTE_SORT_FIELDS, SHIPPING_SORT_TYPES } from "../config/store-shipping-enums.config";
 import { SHIPPING_BULK_ROUTES_MAX_ITEMS, SHIPPING_PLACE_PRICES_MAX_ITEMS } from "../config/store-shipping-limits.config";
-import { cursorFields, defineTool, idField, pageFields, requireAtLeastOne } from "../core/define-tool.helper";
+import { cursorFields, defineTool, idField, pageFields, requireAtLeastOne, versionField } from "../core/define-tool.helper";
 import {
   checkPlace,
   checkRoutePlace,
@@ -197,14 +197,15 @@ export const STORE_SHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       iso: countryIsoField(COUNTRY_ISO),
+      version: versionField("the shipping country"),
       isEnabled: z.boolean().optional().describe("false pauses delivery to the country; true opens it again."),
       defaultFee: nullableFeeField("The country's fee. null removes it, so the store default applies; 0 is free delivery.").optional(),
       order: z.number().int().min(0).optional().describe("Position in the store's country list."),
     }),
     annotations: { idempotent: true },
-    run: async ({ storeId, iso, ...changes }, { clients }) => {
+    run: async ({ storeId, iso, version, ...changes }, { clients }) => {
       requireAtLeastOne(changes, ["isEnabled", "defaultFee", "order"], "store_shipping_update_country");
-      return clients.store.shipping.updateCountry(storeId, iso, changes);
+      return clients.store.shipping.updateCountry(storeId, iso, changes, version);
     },
     entity: (_result, args) => ({ entityType: "shippingCountry", entityId: args.iso }),
   }),
@@ -219,12 +220,17 @@ export const STORE_SHIPPING_TOOLS: IToolDefinition[] = [
       storeId: idField(STORE_ID),
       iso: countryIsoField(COUNTRY_ISO),
       ...routeFields(),
+      version: z
+        .number()
+        .int()
+        .min(0)
+        .describe("The __v of the place's existing override, from store_shipping_list_routes; 0 when the place has no override of its own yet. If it changed since, nothing is saved and you are told to re-read it."),
     }),
     annotations: { idempotent: true },
-    run: async ({ storeId, iso, ...input }, { clients }) => {
+    run: async ({ storeId, iso, version, ...input }, { clients }) => {
       checkRoutePlace(input, 'level "city"');
       requireAtLeastOne(input, ["fee", "isAllowed"], "store_shipping_upsert_route");
-      return clients.store.shipping.upsertRoute(storeId, iso, input);
+      return clients.store.shipping.upsertRoute(storeId, iso, input, version);
     },
     entity: (result) => ({ entityType: "shippingRoute", entityId: result?.rate?._id }),
   }),
@@ -291,14 +297,15 @@ export const STORE_SHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       profileId: idField(PROFILE_ID),
+      version: versionField("the package profile"),
       name: z.string().min(2).max(80).optional(),
       description: z.string().max(300).optional(),
       condition: profileConditionSchema().optional().describe("The new size, replacing the current one."),
     }),
     annotations: { idempotent: true },
-    run: async ({ storeId, profileId, condition, ...changes }, { clients }) => {
+    run: async ({ storeId, profileId, version, condition, ...changes }, { clients }) => {
       requireAtLeastOne({ ...changes, condition }, ["name", "description", "condition"], "store_shipping_update_profile");
-      return clients.store.shipping.updateProfile(storeId, profileId, { ...changes, ...(condition ? { conditions: [condition] } : {}) });
+      return clients.store.shipping.updateProfile(storeId, profileId, { ...changes, ...(condition ? { conditions: [condition] } : {}) }, version);
     },
     entity: (_result, args) => ({ entityType: "shippingProfile", entityId: args.profileId }),
   }),
@@ -312,12 +319,13 @@ export const STORE_SHIPPING_TOOLS: IToolDefinition[] = [
       storeId: idField(STORE_ID),
       iso: countryIsoField(COUNTRY_ISO),
       ...placeFields(),
+      countryVersion: versionField("the shipping country (the prices are guarded by their country), from store_shipping_get_country"),
       prices: z.array(placePriceSchema()).min(1).max(SHIPPING_PLACE_PRICES_MAX_ITEMS).describe("One entry per profile to price or clear here."),
     }),
     annotations: { idempotent: true },
-    run: async ({ storeId, iso, ...input }, { clients }) => {
+    run: async ({ storeId, iso, countryVersion, ...input }, { clients }) => {
       checkPlace(input);
-      return clients.store.shipping.savePlacePrices(storeId, iso, input);
+      return clients.store.shipping.savePlacePrices(storeId, iso, input, countryVersion);
     },
     entity: (result) => ({ entityType: "shippingParcelPrice", count: (result?.saved ?? 0) + (result?.cleared ?? 0) }),
   }),
@@ -330,12 +338,13 @@ export const STORE_SHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       priceId: idField(PRICE_ID),
+      version: versionField("the parcel price"),
       fee: z.number().min(0).describe("The new fee; 0 is free delivery for this size here."),
     }),
     annotations: { idempotent: true },
-    run: async ({ storeId, priceId, fee }, { clients }) => {
-      await clients.store.shipping.updateParcelPrice(storeId, priceId, fee);
-      return { updated: true, priceId, fee };
+    run: async ({ storeId, priceId, version, fee }, { clients }) => {
+      const updated = await clients.store.shipping.updateParcelPrice(storeId, priceId, fee, version);
+      return { updated: true, priceId, fee, __v: updated.__v };
     },
     entity: (_result, args) => ({ entityType: "shippingParcelPrice", entityId: args.priceId }),
   }),
@@ -349,6 +358,7 @@ export const STORE_SHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       iso: countryIsoField(COUNTRY_ISO),
+      version: versionField("the shipping country"),
     }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
@@ -357,7 +367,7 @@ export const STORE_SHIPPING_TOOLS: IToolDefinition[] = [
         return `Stop delivering to ${country.name} (${country.iso.toUpperCase()}) and delete its ${country.routesCount} governorate and city override(s), ${country.blockedRoutesCount} of them blocks. Checkout stops offering it at once. This cannot be undone: adding the country again starts from a single fee, without these overrides.`;
       },
     },
-    run: ({ storeId, iso }, { clients }) => clients.store.shipping.deleteCountry(storeId, iso),
+    run: ({ storeId, iso, version }, { clients }) => clients.store.shipping.deleteCountry(storeId, iso, version),
     entity: (_result, args) => ({ entityType: "shippingCountry", entityId: args.iso }),
   }),
   defineTool({
@@ -370,13 +380,14 @@ export const STORE_SHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       rateId: idField("The override's rateId, from store_shipping_list_routes."),
+      version: versionField("the route override"),
     }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
       describe: ({ rateId }) =>
         `Remove the route override ${rateId}: that place drops its own fee and, if it was blocked, delivery there is allowed again — it charges whatever it inherits. The override itself cannot be restored, but the same fee or block can be set again with store_shipping_upsert_route.`,
     },
-    run: ({ storeId, rateId }, { clients }) => clients.store.shipping.clearRoute(storeId, rateId),
+    run: ({ storeId, rateId, version }, { clients }) => clients.store.shipping.clearRoute(storeId, rateId, version),
     entity: (_result, args) => ({ entityType: "shippingRoute", entityId: args.rateId }),
   }),
   defineTool({
@@ -388,6 +399,7 @@ export const STORE_SHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       profileId: idField(PROFILE_ID),
+      version: versionField("the package profile"),
     }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
@@ -398,7 +410,7 @@ export const STORE_SHIPPING_TOOLS: IToolDefinition[] = [
         return `Delete the ${profile.type} profile "${profile.name}" and its ${profile.assignmentsCount} parcel price(s): a base price in ${countries} country(ies) and ${overrides} governorate or city price(s). Parcels of that size fall to the next bigger priced size or the flat fees. This cannot be undone: the prices would have to be set again.`;
       },
     },
-    run: ({ storeId, profileId }, { clients }) => clients.store.shipping.deleteProfile(storeId, profileId),
+    run: ({ storeId, profileId, version }, { clients }) => clients.store.shipping.deleteProfile(storeId, profileId, version),
     entity: (_result, args) => ({ entityType: "shippingProfile", entityId: args.profileId }),
   }),
   defineTool({
@@ -411,14 +423,15 @@ export const STORE_SHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       priceId: idField(PRICE_ID),
+      version: versionField("the parcel price"),
     }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
       describe: ({ priceId }) =>
         `Remove the parcel price ${priceId}. That size falls back to the price above it at that place, or — for a country price — to the next bigger priced size or the flat route fees. The price itself cannot be restored, but the same fee can be set again with store_shipping_save_place_prices.`,
     },
-    run: async ({ storeId, priceId }, { clients }) => {
-      await clients.store.shipping.removeParcelPrice(storeId, priceId);
+    run: async ({ storeId, priceId, version }, { clients }) => {
+      await clients.store.shipping.removeParcelPrice(storeId, priceId, version);
       return { removed: true, priceId };
     },
     entity: (_result, args) => ({ entityType: "shippingParcelPrice", entityId: args.priceId }),

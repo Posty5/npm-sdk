@@ -1,4 +1,4 @@
-import { HttpClient } from "@posty5/core";
+import { ConflictError, HttpClient } from "@posty5/core";
 import { ICreateShortLinkRequest, IListParams, IUpdateShortLinkRequest, ShortLinkClient } from "@posty5/short-link";
 import { TEST_CONFIG, createdResources } from "./setup";
 import { stubHttp } from "./helpers/stub-http.helper";
@@ -22,7 +22,7 @@ describe("Short Link SDK — payloads (offline)", () => {
     const update: IUpdateShortLinkRequest = { baseUrl: "https://example.com", templateId, isEnableMonetization: false };
 
     await client.create(create);
-    await client.update("sl1", update);
+    await client.update("sl1", update, 0);
 
     expect(calls[0]).toEqual({
       method: "POST",
@@ -67,8 +67,8 @@ describe("Short Link SDK — payloads (offline)", () => {
     const { http, calls } = stubHttp();
     const client = new ShortLinkClient(http);
 
-    await client.update("sl1", { baseUrl: "https://example.com", templateId, androidUrl: "" });
-    await client.update("sl1", { baseUrl: "https://example.com/moved", templateId });
+    await client.update("sl1", { baseUrl: "https://example.com", templateId, androidUrl: "" }, 0);
+    await client.update("sl1", { baseUrl: "https://example.com/moved", templateId }, 0);
 
     expect(calls[0].body).toEqual({ baseUrl: "https://example.com", templateId, androidUrl: "" });
     // Absent keys stay absent so the API keeps (or, after a baseUrl change, re-derives) them.
@@ -162,7 +162,7 @@ describe("Short Link SDK — payloads (offline)", () => {
       // @ts-expect-error templateId is required on create
       void client.create({ baseUrl: "https://example.com" });
       // @ts-expect-error templateId is required on update
-      void client.update("sl1", { baseUrl: "https://example.com" });
+      void client.update("sl1", { baseUrl: "https://example.com" }, 0);
     };
     expect(typeof compileOnly).toBe("function");
   });
@@ -202,8 +202,8 @@ describe("Short Link SDK — short link controls payloads (offline)", () => {
 
     await client.listTags("spr");
     await client.checkHealth("sl1");
-    await client.setRules("sl1", { utm: { source: "x" } });
-    await client.setRules("sl2", { routing: null, baseUrl: "https://given.example.com", templateId });
+    await client.setRules("sl1", { utm: { source: "x" } }, 0);
+    await client.setRules("sl2", { routing: null, baseUrl: "https://given.example.com", templateId }, 0);
 
     expect(calls[0]).toEqual({ method: "GET", url: "/api/short-link/tags", params: { term: "spr" } });
     expect(calls[1]).toEqual({ method: "POST", url: "/api/short-link/sl1/health-check", body: {} });
@@ -235,7 +235,7 @@ describe("Short Link SDK — controls (live)", () => {
     expect(details.tags).toEqual(["sdk-controls"]);
     expect(details.routing).toHaveLength(1);
 
-    const after = await client.setRules(created._id, { utm: { source: "changed" } });
+    const after = await client.setRules(created._id, { utm: { source: "changed" } }, details.__v);
     expect(after.utm?.source).toBe("changed");
     expect(after.routing).toHaveLength(1);
     expect(after.variants).toHaveLength(2);
@@ -367,24 +367,35 @@ describeLive("Short Link SDK", () => {
   });
 
   describe("UPDATE", () => {
-    it("should update short link", async () => {
+    it("should update short link with the current version, and __v goes up", async () => {
+      const before = await client.get(createdId);
       const newName = "Updated Short Link - " + Date.now();
       const result = await client.update(createdId, {
         name: newName,
         baseUrl: "https://guide.posty5.com",
         templateId,
-      });
+      }, before.__v);
 
       expect(result._id).toBe(createdId);
+      expect(result.__v).toBeGreaterThan(before.__v);
     });
 
-    it("should update target URL", async () => {
-      const result = await client.update(createdId, {
-        baseUrl: "https://updated.posty5.com",
-        templateId,
-      });
+    it("chains a second update with the returned __v", async () => {
+      const before = await client.get(createdId);
+      const first = await client.update(createdId, { baseUrl: "https://updated.posty5.com", templateId }, before.__v);
+      const second = await client.update(createdId, { baseUrl: "https://guide.posty5.com", templateId }, first.__v);
 
-      expect(result._id).toBe(createdId);
+      expect(second._id).toBe(createdId);
+      expect(second.__v).toBeGreaterThan(first.__v);
+    });
+
+    it("throws ConflictError with currentVersion on a stale version", async () => {
+      const current = await client.get(createdId);
+      const stale = current.__v - 1 >= 0 ? current.__v - 1 : current.__v + 100;
+      const error = await client.update(createdId, { baseUrl: "https://guide.posty5.com", templateId }, stale).catch((e) => e);
+
+      expect(error).toBeInstanceOf(ConflictError);
+      expect(error.currentVersion).toBe(current.__v);
     });
   });
 
@@ -395,7 +406,7 @@ describeLive("Short Link SDK", () => {
 
     afterAll(async () => {
       if (s13Id) {
-        await client.delete(s13Id).catch(() => undefined);
+        await client.delete(s13Id, (await client.get(s13Id)).__v).catch(() => undefined);
       }
     });
 
@@ -421,7 +432,7 @@ describeLive("Short Link SDK", () => {
     });
 
     it("keeps the landing page and the deep links when the update omits them", async () => {
-      await client.update(s13Id, { name: "TP S13 renamed", baseUrl: "https://posty5.com", templateId, pageInfo: { title: "TP S13", description: "Kept" } });
+      await client.update(s13Id, { name: "TP S13 renamed", baseUrl: "https://posty5.com", templateId, pageInfo: { title: "TP S13", description: "Kept" } }, (await client.get(s13Id)).__v);
 
       const fetched = await client.get(s13Id);
       expect(fetched.isEnableLandingPage).toBe(true);
@@ -429,7 +440,7 @@ describeLive("Short Link SDK", () => {
     });
 
     it("re-derives the deep links when only baseUrl changes", async () => {
-      await client.update(s13Id, { baseUrl: "https://guide.posty5.com", templateId, pageInfo: { title: "TP S13", description: "Moved" } });
+      await client.update(s13Id, { baseUrl: "https://guide.posty5.com", templateId, pageInfo: { title: "TP S13", description: "Moved" } }, (await client.get(s13Id)).__v);
 
       const fetched = await client.get(s13Id);
       expect(fetched.baseUrl).toBe("https://guide.posty5.com");
@@ -438,10 +449,10 @@ describeLive("Short Link SDK", () => {
     });
 
     it("clears a deep link sent as an empty string", async () => {
-      await client.update(s13Id, { baseUrl: "https://guide.posty5.com", templateId, iosUrl: "myapp://item/2", pageInfo: { title: "TP S13", description: "Set" } });
+      await client.update(s13Id, { baseUrl: "https://guide.posty5.com", templateId, iosUrl: "myapp://item/2", pageInfo: { title: "TP S13", description: "Set" } }, (await client.get(s13Id)).__v);
       expect((await client.get(s13Id)).iosUrl).toBe("myapp://item/2");
 
-      await client.update(s13Id, { baseUrl: "https://guide.posty5.com", templateId, iosUrl: "", pageInfo: { title: "TP S13", description: "Cleared" } });
+      await client.update(s13Id, { baseUrl: "https://guide.posty5.com", templateId, iosUrl: "", pageInfo: { title: "TP S13", description: "Cleared" } }, (await client.get(s13Id)).__v);
       const fetched = await client.get(s13Id);
       expect(fetched.iosUrl || "").toBe("");
       expect(fetched.isSupportIOSDeepUrl).toBe(false);
@@ -527,7 +538,7 @@ describeLive("Short Link SDK", () => {
 
   describe("DELETE", () => {
     it("should delete short link", async () => {
-      await client.delete(createdId);
+      await client.delete(createdId, (await client.get(createdId)).__v);
 
       // Verify deletion
       await expect(client.get(createdId)).rejects.toThrow();

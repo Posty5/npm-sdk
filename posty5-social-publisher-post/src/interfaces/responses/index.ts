@@ -63,6 +63,8 @@ export interface IRemovePostPlatformResult {
 
 export interface IRemovePostResponse {
   _id: string;
+  /** The post's new version */
+  __v: number;
   results: Partial<Record<"youtube" | "facebook" | "instagram" | "tiktok", IRemovePostPlatformResult>>;
 }
 
@@ -156,6 +158,8 @@ export interface ISocialPublisherPostPlatform {
 
 export interface ISocialPublisherPostResponse {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   numbering: string;
   caption: string;
   createdAt: Date;
@@ -204,6 +208,8 @@ export interface ISocialPublisherPostResponse {
 
 export interface ISocialPublisherPostStatusResponse {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   numbering: string;
 
   type: "shortVideo" | "longVideo" | "image";

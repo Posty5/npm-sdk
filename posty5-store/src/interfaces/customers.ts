@@ -18,6 +18,8 @@ export interface IStoreCustomerStats {
 
 export interface IStoreCustomer {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   name?: string;
   phone?: string;
   email?: string;

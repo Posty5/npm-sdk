@@ -27,6 +27,8 @@ export interface IWorkspaceAccount {
 
 export interface IWorkspaceResponse {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   name: string;
   description: string;
   imageUrl?: string;
@@ -35,6 +37,8 @@ export interface IWorkspaceResponse {
 
 export interface IWorkspaceSampleDetails {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   name: string;
   description: string;
   imageUrl?: string; // URL to workspace logo/image
@@ -63,6 +67,12 @@ export interface IWorkspaceWithUploadConfig {
 export type ISearchWorkspaceResponse = IPaginationResponse<IWorkspaceSampleDetails>;
 export type ICreateWorkspaceResponse = IWorkspaceWithUploadConfig; // Returns workspace and upload config
 export type IUpdateWorkspaceResponse = IWorkspaceWithUploadConfig; // Returns workspace and upload config
+/** What a versioned workspace update answers. */
+export interface IUpdateWorkspaceResult {
+  _id: string;
+  /** The workspace's new version */
+  __v: number;
+}
 export interface IDeleteWorkspaceResponse {
   message?: string;
 }
@@ -72,6 +82,8 @@ export interface IDeleteWorkspaceResponse {
  */
 export interface IWorkspaceForNewPostResponse {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   name: string;
   description: string;
   imageUrl?: string;

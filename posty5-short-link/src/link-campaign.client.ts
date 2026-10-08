@@ -1,4 +1,4 @@
-import { HttpClient, IPaginationParams } from '@posty5/core';
+import { HttpClient, IPaginationParams, assertVersion, withVersion } from '@posty5/core';
 import {
     ICreateLinkCampaignRequest,
     IDeleteLinkCampaignOptions,
@@ -47,19 +47,26 @@ export class LinkCampaignClient {
         return response.result!;
     }
 
-    /** Update a campaign; omitted keys keep the stored value. */
-    async update(id: string, data: IUpdateLinkCampaignRequest): Promise<ILinkCampaignResponse> {
-        const response = await this.http.put<ILinkCampaignResponse>(`${this.basePath}/${id}`, data);
-        return response.result!;
+    /**
+     * Update a campaign; omitted keys keep the stored value. `version` is the
+     * campaign's `__v`; a stale one throws `ConflictError`.
+     */
+    async update(id: string, data: IUpdateLinkCampaignRequest, version: number): Promise<ILinkCampaignResponse> {
+        assertVersion(version);
+        const response = await this.http.put<ILinkCampaignResponse>(`${this.basePath}/${id}`, data, { version });
+        return withVersion(response, id);
     }
 
     /**
      * Delete a campaign.
+     * @param version - The campaign's `__v`
      * @param options.detach - `true` detaches the campaign's links first
      */
-    async delete(id: string, options?: IDeleteLinkCampaignOptions): Promise<void> {
+    async delete(id: string, version: number, options?: IDeleteLinkCampaignOptions): Promise<void> {
+        assertVersion(version);
         await this.http.delete(`${this.basePath}/${id}`, {
-            params: options?.detach ? { detach: true } : undefined
+            params: options?.detach ? { detach: true } : undefined,
+            version,
         });
     }
 }

@@ -2,7 +2,7 @@ import { isQueuedImport } from "@posty5/store";
 import { z } from "zod";
 import { DROPSHIPPING_CONTRACT_MODELS, SUPPLIER_ORDER_STATUSES } from "../config/store-dropshipping-enums.config";
 import { SUPPLIER_CATALOGUE_DEFAULT_PAGE_SIZE, SUPPLIER_CATALOGUE_MAX_PAGE_SIZE } from "../config/store-dropshipping-limits.config";
-import { cursorFields, defineTool, idField, pageFields, requireAtLeastOne } from "../core/define-tool.helper";
+import { cursorFields, defineTool, idField, pageFields, requireAtLeastOne, versionField } from "../core/define-tool.helper";
 import {
   findOrderPart,
   findSupplierBalance,
@@ -268,6 +268,7 @@ export const STORE_DROPSHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       linkId: idField(LINK_ID),
+      version: versionField("the product link"),
       priceRule: priceRuleSchema().optional(),
       sync: linkSyncSchema().optional().describe("true lets the sync overwrite that field on the store product; false protects it."),
       deliveryEstimate: z
@@ -288,9 +289,9 @@ export const STORE_DROPSHIPPING_TOOLS: IToolDefinition[] = [
       applyPriceRuleNow: z.boolean().optional().describe("Reprice the product with the rule now. Default false."),
     }),
     annotations: { idempotent: true },
-    run: async ({ storeId, linkId, ...changes }, { clients }) => {
+    run: async ({ storeId, linkId, version, ...changes }, { clients }) => {
       requireAtLeastOne(changes, ["priceRule", "sync", "deliveryEstimate", "disclosure", "applyPriceRuleNow"], "store_supplier_link_update");
-      return clients.store.suppliers.updateLink(storeId, linkId, changes);
+      return clients.store.suppliers.updateLink(storeId, linkId, changes, version);
     },
     entity: (_result, args) => ({ entityType: "supplierLink", entityId: args.linkId }),
   }),
@@ -319,6 +320,7 @@ export const STORE_DROPSHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       supplierOrderRowId: idField(SUPPLIER_ORDER_ROW_ID),
+      version: versionField("the supplier order"),
       acceptCost: z.boolean().optional().describe("Accept the supplier's new price (review reason costChanged). Default false."),
     }),
     annotations: { openWorld: true },
@@ -332,7 +334,7 @@ export const STORE_DROPSHIPPING_TOOLS: IToolDefinition[] = [
         return `Run the ${supplierOrderLabel(order)} (status ${order.status}) again.${reason} The run can send a real order to ${order.supplierKey} and, where the connection pays automatically, take ${amount} from the store's supplier balance. Money paid cannot be undone here.${priceNote}`;
       },
     },
-    run: ({ storeId, supplierOrderRowId, ...options }, { clients }) => clients.store.suppliers.retry(storeId, supplierOrderRowId, options),
+    run: ({ storeId, supplierOrderRowId, version, ...options }, { clients }) => clients.store.suppliers.retry(storeId, supplierOrderRowId, version, options),
     entity: (_result, args) => ({ entityType: "supplierOrder", entityId: args.supplierOrderRowId }),
   }),
   defineTool({
@@ -345,13 +347,14 @@ export const STORE_DROPSHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       linkId: idField(LINK_ID),
+      version: versionField("the product link"),
     }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
       describe: ({ linkId }) =>
         `Unlink the product link ${linkId}. The store product stays and becomes the store's own: its stock and cost stop syncing from the supplier, and its new orders are no longer sent to the supplier. The link itself cannot be restored; the product can be linked again with store_supplier_link_create, with its variants mapped again.`,
     },
-    run: ({ storeId, linkId }, { clients }) => clients.store.suppliers.deleteLink(storeId, linkId),
+    run: ({ storeId, linkId, version }, { clients }) => clients.store.suppliers.deleteLink(storeId, linkId, version),
     entity: (_result, args) => ({ entityType: "supplierLink", entityId: args.linkId }),
   }),
   defineTool({
@@ -390,6 +393,7 @@ export const STORE_DROPSHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       supplierOrderRowId: idField(SUPPLIER_ORDER_ROW_ID),
+      version: versionField("the supplier order"),
     }),
     annotations: { destructive: true, openWorld: true },
     confirm: {
@@ -403,7 +407,7 @@ export const STORE_DROPSHIPPING_TOOLS: IToolDefinition[] = [
         return `Pay the ${supplierOrderLabel(order)}: ${amount} is taken from the store's balance at ${order.supplierKey}. This spends real money and cannot be undone here; it comes back only if the order is cancelled and the supplier refunds it.${balanceNote}`;
       },
     },
-    run: ({ storeId, supplierOrderRowId }, { clients }) => clients.store.suppliers.pay(storeId, supplierOrderRowId),
+    run: ({ storeId, supplierOrderRowId, version }, { clients }) => clients.store.suppliers.pay(storeId, supplierOrderRowId, version),
     entity: (_result, args) => ({ entityType: "supplierOrder", entityId: args.supplierOrderRowId }),
   }),
   defineTool({
@@ -416,6 +420,7 @@ export const STORE_DROPSHIPPING_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       supplierOrderRowId: idField(SUPPLIER_ORDER_ROW_ID),
+      version: versionField("the supplier order"),
     }),
     annotations: { destructive: true, openWorld: true },
     confirm: {
@@ -428,7 +433,7 @@ export const STORE_DROPSHIPPING_TOOLS: IToolDefinition[] = [
         return `Cancel the ${supplierOrderLabel(order)} at the supplier, so the supplier does not ship these items.${refund} If the supplier already shipped it, or cannot cancel through Posty5, it is paused for review instead. This cannot be undone.`;
       },
     },
-    run: ({ storeId, supplierOrderRowId }, { clients }) => clients.store.suppliers.cancel(storeId, supplierOrderRowId),
+    run: ({ storeId, supplierOrderRowId, version }, { clients }) => clients.store.suppliers.cancel(storeId, supplierOrderRowId, version),
     entity: (_result, args) => ({ entityType: "supplierOrder", entityId: args.supplierOrderRowId }),
   }),
   defineTool({
@@ -442,6 +447,7 @@ export const STORE_DROPSHIPPING_TOOLS: IToolDefinition[] = [
       storeId: idField(STORE_ID),
       orderId: idField(ORDER_ID),
       groupKey: idField(GROUP_KEY),
+      orderVersion: versionField("the store order (the part is guarded by its order), from store_order_get"),
     }),
     annotations: { destructive: true },
     confirm: {
@@ -450,7 +456,7 @@ export const STORE_DROPSHIPPING_TOOLS: IToolDefinition[] = [
         return `Take ${part} away from its supplier: the store ships these items itself. A supplier order still open for it is cancelled at the supplier first (refused if the supplier already shipped it), and nothing more is sent to or paid to the supplier for this part. This cannot be undone.`;
       },
     },
-    run: ({ storeId, orderId, groupKey }, { clients }) => clients.store.suppliers.fulfilGroupManually(storeId, orderId, groupKey),
+    run: ({ storeId, orderId, groupKey, orderVersion }, { clients }) => clients.store.suppliers.fulfilGroupManually(storeId, orderId, groupKey, orderVersion),
     entity: (_result, args) => ({ entityType: "storeOrder", entityId: args.orderId }),
   }),
 ];

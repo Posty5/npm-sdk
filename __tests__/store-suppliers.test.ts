@@ -48,10 +48,10 @@ describe("Store suppliers — routes (offline)", () => {
   it("maps every connection route", async () => {
     const { http, calls } = stubHttp();
     const client = new StoreSuppliersClient(http);
-    await client.replaceCredentials("s1", "i1", { credentials: { apiKey: "k" } });
-    await client.updateSettings("s1", "i1", { settings: { fromCountryCode: "US" } });
-    await client.updateAutomation("s1", "i1", { mode: "submit" });
-    await client.setEnabled("s1", "i1", true);
+    await client.replaceCredentials("s1", "i1", { credentials: { apiKey: "k" } }, 0);
+    await client.updateSettings("s1", "i1", { settings: { fromCountryCode: "US" } }, 0);
+    await client.updateAutomation("s1", "i1", { mode: "submit" }, 0);
+    await client.setEnabled("s1", "i1", true, 0);
     await client.test("s1", "i1");
     await client.getBalance("s1", "i1");
     await client.getDisconnectImpact("s1", "i1");
@@ -71,7 +71,7 @@ describe("Store suppliers — routes (offline)", () => {
 
   it("disconnects with force as a string query value", async () => {
     const { http, calls } = stubHttp();
-    await new StoreSuppliersClient(http).disconnect("s1", "i1", { force: true });
+    await new StoreSuppliersClient(http).disconnect("s1", "i1", 0, { force: true });
     expect(calls[0]).toEqual({ method: "DELETE", url: `${base}/i1`, params: { force: "true" } });
   });
 
@@ -86,9 +86,9 @@ describe("Store suppliers — routes (offline)", () => {
     await client.getImportStatus("s1", "job1");
     await client.listLinks("s1", { productId: "prod1" });
     await client.createLink("s1", { productId: "prod1", integrationId: "i1", supplierProductId: "p1", variants: [{ supplierVariantId: "v1" }] });
-    await client.updateLink("s1", "l1", { sync: { price: true } });
+    await client.updateLink("s1", "l1", { sync: { price: true } }, 0);
     await client.syncLink("s1", "l1");
-    await client.deleteLink("s1", "l1");
+    await client.deleteLink("s1", "l1", 0);
     expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual([
       `GET ${base}/i1/products`,
       `GET ${base}/i1/products/p%2F1`,
@@ -112,10 +112,10 @@ describe("Store suppliers — routes (offline)", () => {
     await client.listSupplierOrders("s1", { needsReview: true, pageSize: 25 });
     await client.getSupplierOrder("s1", "so1");
     await client.submitGroup("s1", "o1", "supplier:i1", { payNow: true });
-    await client.retry("s1", "so1", { acceptCost: true });
-    await client.pay("s1", "so1");
-    await client.cancel("s1", "so1");
-    await client.fulfilGroupManually("s1", "o1", "supplier:i1");
+    await client.retry("s1", "so1", 0, { acceptCost: true });
+    await client.pay("s1", "so1", 0);
+    await client.cancel("s1", "so1", 0);
+    await client.fulfilGroupManually("s1", "o1", "supplier:i1", 0);
     expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual([
       `GET ${base}/orders`,
       `GET ${base}/orders/so1`,
@@ -267,7 +267,7 @@ describeLive("Store suppliers — live (fixture store, test-mode connection)", (
     try {
       const changed = await store.suppliers.updateAutomation(storeId, supplierIntegrationId, {
         allowUnpaidOrders: !original.allowUnpaidOrders,
-      });
+      }, before!.__v);
       expect(changed.automation.allowUnpaidOrders).toBe(!original.allowUnpaidOrders);
     } finally {
       const restored = await store.suppliers.updateAutomation(storeId, supplierIntegrationId, {
@@ -276,7 +276,7 @@ describeLive("Store suppliers — live (fixture store, test-mode connection)", (
         maxCostPerOrder: original.maxCostPerOrder ?? null,
         maxCostRatio: original.maxCostRatio ?? null,
         allowedCountries: original.allowedCountries,
-      });
+      }, (await store.suppliers.list(storeId)).find((row) => row._id === supplierIntegrationId)!.__v);
       expect(restored.automation.allowUnpaidOrders).toBe(original.allowUnpaidOrders);
     }
   });
@@ -294,14 +294,14 @@ describeLive("Store suppliers — live (fixture store, test-mode connection)", (
       });
       try {
         expect(link.supplierProductId).toBe(supplierProductId);
-        const updated = await store.suppliers.updateLink(storeId, link._id, { sync: { price: false } });
+        const updated = await store.suppliers.updateLink(storeId, link._id, { sync: { price: false } }, link.__v);
         expect(updated.sync.price).toBe(false);
         // Never synced (syncNow: false), so the once-a-minute limit does not apply yet.
         const synced = await store.suppliers.syncLink(storeId, link._id);
         expect(synced.link._id).toBe(link._id);
         expect(Array.isArray(synced.changed)).toBe(true);
       } finally {
-        await store.suppliers.deleteLink(storeId, link._id);
+        await store.suppliers.deleteLink(storeId, link._id, (await store.suppliers.listLinks(storeId)).find((row) => row._id === link._id)!.__v);
       }
     },
   );
@@ -326,7 +326,7 @@ describeLive("Store suppliers — live (fixture store, test-mode connection)", (
           expect(result.rows[0].state).toBe("added");
         }
       } finally {
-        for (const id of created) await store.products.delete(storeId, id);
+        for (const id of created) await store.products.delete(storeId, id, (await store.products.get(storeId, id)).__v);
       }
     },
   );
@@ -339,8 +339,8 @@ describeLive("Store suppliers — live (fixture store, test-mode connection)", (
     const page = await store.suppliers.listSupplierOrders(storeId, { orderId });
     const row = page.items.find((item) => item.fulfilmentGroupKey === groupKey);
     expect(row).toBeDefined();
-    expect(await outcomeOf(store.suppliers.retry(storeId, row!._id))).toContain("testMode");
-    const paid = await outcomeOf(store.suppliers.pay(storeId, row!._id));
+    expect(await outcomeOf(store.suppliers.retry(storeId, row!._id, row!.__v))).toContain("testMode");
+    const paid = await outcomeOf(store.suppliers.pay(storeId, row!._id, (await store.suppliers.getSupplierOrder(storeId, row!._id)).__v));
     // Nothing is ever paid through a test connection.
     expect(paid).not.toMatch(/"status":"confirmed"/);
   });
@@ -351,9 +351,9 @@ describeLive("Store suppliers — live (fixture store, test-mode connection)", (
       const page = await store.suppliers.listSupplierOrders(storeId, { orderId });
       const row = page.items.find((item) => item.fulfilmentGroupKey === groupKey);
       expect(row).toBeDefined();
-      await outcomeOf(store.suppliers.cancel(storeId, row!._id));
+      await outcomeOf(store.suppliers.cancel(storeId, row!._id, row!.__v));
       expect((await store.suppliers.getSupplierOrder(storeId, row!._id)).status).toBe("cancelled");
-      const manual = await store.suppliers.fulfilGroupManually(storeId, orderId, groupKey);
+      const manual = await store.suppliers.fulfilGroupManually(storeId, orderId, groupKey, (await store.orders.get(storeId, orderId)).__v);
       expect(manual.orderId).toBe(orderId);
     },
   );

@@ -150,27 +150,27 @@ type SectionData<K extends ProductSection> = z.output<(typeof PRODUCT_SECTION_SC
 /** A writer for section `K`, its `save` typed from that section's schema. */
 function sectionWriter<K extends ProductSection>(
   section: K,
-  save: (products: StoreProductsClient, storeId: string, productId: string, data: SectionData<K>) => Promise<IStoreProduct>,
+  save: (products: StoreProductsClient, storeId: string, productId: string, data: SectionData<K>, version: number) => Promise<IStoreProduct>,
 ): IProductSectionWriter {
   return {
     schema: PRODUCT_SECTION_SCHEMAS[section],
-    save: (products, storeId, productId, data) => save(products, storeId, productId, data as SectionData<K>),
+    save: (products, storeId, productId, data, version) => save(products, storeId, productId, data as SectionData<K>, version),
   };
 }
 
 /** Each section's SDK method. */
 export const PRODUCT_SECTION_WRITERS: Record<ProductSection, IProductSectionWriter> = {
-  basicInformation: sectionWriter("basicInformation", (products, storeId, productId, data) => products.updateBasicInformation(storeId, productId, data)),
-  media: sectionWriter("media", (products, storeId, productId, data) => products.updateMedia(storeId, productId, data)),
-  price: sectionWriter("price", (products, storeId, productId, data) => products.updatePrice(storeId, productId, data)),
-  stock: sectionWriter("stock", (products, storeId, productId, data) => products.updateStock(storeId, productId, data)),
-  variants: sectionWriter("variants", (products, storeId, productId, data) => products.updateVariants(storeId, productId, data)),
-  tags: sectionWriter("tags", (products, storeId, productId, data) => products.updateTags(storeId, productId, data)),
-  seo: sectionWriter("seo", (products, storeId, productId, data) => products.updateSeo(storeId, productId, data)),
-  settings: sectionWriter("settings", (products, storeId, productId, data) => products.updateSettings(storeId, productId, data)),
-  landing: sectionWriter("landing", (products, storeId, productId, data) => products.updateLanding(storeId, productId, data)),
-  shipping: sectionWriter("shipping", (products, storeId, productId, data) => products.updateShipping(storeId, productId, data)),
-  purchase: sectionWriter("purchase", (products, storeId, productId, data) => products.updatePurchase(storeId, productId, data)),
+  basicInformation: sectionWriter("basicInformation", (products, storeId, productId, data, version) => products.updateBasicInformation(storeId, productId, data, version)),
+  media: sectionWriter("media", (products, storeId, productId, data, version) => products.updateMedia(storeId, productId, data, version)),
+  price: sectionWriter("price", (products, storeId, productId, data, version) => products.updatePrice(storeId, productId, data, version)),
+  stock: sectionWriter("stock", (products, storeId, productId, data, version) => products.updateStock(storeId, productId, data, version)),
+  variants: sectionWriter("variants", (products, storeId, productId, data, version) => products.updateVariants(storeId, productId, data, version)),
+  tags: sectionWriter("tags", (products, storeId, productId, data, version) => products.updateTags(storeId, productId, data, version)),
+  seo: sectionWriter("seo", (products, storeId, productId, data, version) => products.updateSeo(storeId, productId, data, version)),
+  settings: sectionWriter("settings", (products, storeId, productId, data, version) => products.updateSettings(storeId, productId, data, version)),
+  landing: sectionWriter("landing", (products, storeId, productId, data, version) => products.updateLanding(storeId, productId, data, version)),
+  shipping: sectionWriter("shipping", (products, storeId, productId, data, version) => products.updateShipping(storeId, productId, data, version)),
+  purchase: sectionWriter("purchase", (products, storeId, productId, data, version) => products.updatePurchase(storeId, productId, data, version)),
 };
 
 /**
@@ -183,9 +183,10 @@ export async function saveProductSection(
   productId: string,
   section: ProductSection,
   data: unknown,
+  version: number,
 ): Promise<IStoreProduct> {
   const writer = PRODUCT_SECTION_WRITERS[section];
   const parsed = writer.schema.safeParse(data);
   if (!parsed.success) throw new ToolInputError(`data does not fit section "${section}":\n${z.prettifyError(parsed.error)}`);
-  return writer.save(products, storeId, productId, parsed.data);
+  return writer.save(products, storeId, productId, parsed.data, version);
 }

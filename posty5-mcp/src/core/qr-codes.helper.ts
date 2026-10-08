@@ -141,38 +141,38 @@ export function createQrCode(client: QRCodeClient, base: IQRCodeRequest, target:
 }
 
 /** Replaces a QR code's target (and the given base fields) through the SDK update method of its `type`. */
-export function updateQrCode(client: QRCodeClient, id: string, base: IUpdateQRCodeRequest, target: IQrCodeTargetArgs): Promise<IQRCode> {
+export function updateQrCode(client: QRCodeClient, id: string, base: IUpdateQRCodeRequest, target: IQrCodeTargetArgs, version: number): Promise<IQRCode> {
   const blocks = targetBlocks(target);
   switch (target.type) {
     case "freeText":
-      return client.updateFreeText(id, { ...base, text: blocks.text });
+      return client.updateFreeText(id, { ...base, text: blocks.text }, version);
     case "email":
-      return client.updateEmail(id, { ...base, email: blocks.email });
+      return client.updateEmail(id, { ...base, email: blocks.email }, version);
     case "wifi":
-      return client.updateWifi(id, { ...withoutAccess(base), mode: base.mode === "dynamic" ? undefined : base.mode, wifi: blocks.wifi });
+      return client.updateWifi(id, { ...withoutAccess(base), mode: base.mode === "dynamic" ? undefined : base.mode, wifi: blocks.wifi }, version);
     case "call":
-      return client.updateCall(id, { ...base, call: blocks.call });
+      return client.updateCall(id, { ...base, call: blocks.call }, version);
     case "sms":
-      return client.updateSMS(id, { ...base, sms: blocks.sms });
+      return client.updateSMS(id, { ...base, sms: blocks.sms }, version);
     case "url":
-      return client.updateURL(id, { ...base, url: blocks.url });
+      return client.updateURL(id, { ...base, url: blocks.url }, version);
     case "geolocation":
-      return client.updateGeolocation(id, { ...base, geolocation: blocks.geolocation });
+      return client.updateGeolocation(id, { ...base, geolocation: blocks.geolocation }, version);
     case "vcard":
-      return client.updateVCard(id, { ...base, vcard: target.vcard! });
+      return client.updateVCard(id, { ...base, vcard: target.vcard! }, version);
     case "event":
-      return client.updateEvent(id, { ...base, event: target.event! });
+      return client.updateEvent(id, { ...base, event: target.event! }, version);
     case "whatsapp":
-      return client.updateWhatsApp(id, { ...base, whatsapp: target.whatsapp! });
+      return client.updateWhatsApp(id, { ...base, whatsapp: target.whatsapp! }, version);
     case "review":
-      return client.updateReview(id, { ...base, review: target.review! });
+      return client.updateReview(id, { ...base, review: target.review! }, version);
     case "social":
-      return client.updateSocial(id, { ...base, social: target.social! });
+      return client.updateSocial(id, { ...base, social: target.social! }, version);
     case "appStore":
-      return client.updateAppStore(id, { ...withoutMode(base), appStore: target.appStore! });
+      return client.updateAppStore(id, { ...withoutMode(base), appStore: target.appStore! }, version);
     case "file": {
       const content = target.fileBase64 ? decodeQrFileBase64(target.fileBase64) : undefined;
-      return client.updateFile(id, { ...withoutMode(base), file: { fileName: target.fileName, mimeType: target.mimeType } }, content);
+      return client.updateFile(id, { ...withoutMode(base), file: { fileName: target.fileName, mimeType: target.mimeType } }, version, content);
     }
   }
 }

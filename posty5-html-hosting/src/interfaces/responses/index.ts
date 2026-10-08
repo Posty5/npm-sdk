@@ -44,6 +44,8 @@ export interface IPreviewReason {
 export interface IHtmlPageResponse {
   /** Page ID */
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   /** HTML hosting ID (short code) */
   htmlHostingId: string;
   /** Page name */
@@ -117,6 +119,8 @@ export interface IHtmlPageResponse {
 export interface IHtmlPageLookupItem {
   /** Page ID */
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   /** Page name */
   name: string;
   /** HTML hosting ID */

@@ -26,6 +26,8 @@ export interface ITagSearchFilters extends IPaginationParams, IDateRangeParams {
 
 export interface IStoreTag {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   name: string;
   slug: string;
   description?: string;

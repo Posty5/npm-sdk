@@ -146,3 +146,13 @@ Do not invent historical rationale. Record evidence-based current decisions and 
 - **No MCP webhook-endpoint tools** (BW-D12): an agent that can register an
   endpoint can be prompt-injected into sending visit data to a URL it chose.
   No export or short-link bulk-job tools either.
+- **Versioned writes (5.0.0, optimistic-concurrency D-5/D-6/D-10).** The
+  version is a required positional argument, never a field of `data`, and
+  travels as `If-Match` (bulk: a `versions` body map). Chosen over new
+  `putVersioned` methods: `IResponse` gained `version`, so the existing
+  `put`/`patch`/`delete`/`post` already hand it to resource clients
+  (`withVersion`). Any request carrying `If-Match` is never retried (a lost
+  response retried with the old version is a false 409), nor is a 409/428.
+  Only a 409 with `code: VERSION_CONFLICT` becomes `ConflictError`, so the tus
+  upload's offset 409 is untouched. Deletes stay `Promise<void>`: the API
+  sends no version for a document that no longer exists.

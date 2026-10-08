@@ -67,6 +67,8 @@ export interface ISyncingStatus {
 export interface IHtmlHostingFormSubmissionResponse {
   /** Submission ID */
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   /** HTML hosting ID (reference) */
   htmlHostingId: string;
   /** Form ID (reference) */
@@ -139,6 +141,10 @@ export type IGetFormSubmissionResponse = IHtmlHostingFormSubmissionFullDetailsRe
  * Change status response
  */
 export interface IChangeStatusResponse {
+  /** Submission ID */
+  _id: string;
+  /** The submission's new version */
+  __v: number;
   /** Success message */
   message?: string;
   /** Updated status history (grouped) */

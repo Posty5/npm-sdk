@@ -34,6 +34,8 @@ export interface IQRCodeTemplate {
 export interface IQRCode {
   /** QR code database ID */
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   /** QR code unique identifier */
   qrCodeId: string;
   /** Template ID used */
@@ -139,6 +141,8 @@ export interface IDeleteQRCodeResponse {
 export interface IQRCodeLookupItem {
   /** QR code ID */
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   /** Display name (format: "qrCodeId - name") */
   name: string;
 }

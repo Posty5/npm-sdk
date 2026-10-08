@@ -1,5 +1,7 @@
 import {
   HttpClient,
+  assertVersion,
+  withVersion,
   IBinaryResponse,
   IBulkCreateOptions,
   IBulkCreateResult,
@@ -288,8 +290,8 @@ export class QRCodeClient {
    * console.log('QR Code URL:', qrCode.qrCodeLandingPageURL);
    * ```
    */
-  async updateFreeText(id: string, data: ICreateFreeTextQRCodeRequest): Promise<ICreateQRCodeResponse> {
-    return this.updateOfType("freeText", id, toFreeTextQrCodeBody(data));
+  async updateFreeText(id: string, data: ICreateFreeTextQRCodeRequest, version: number): Promise<ICreateQRCodeResponse> {
+    return this.updateOfType("freeText", id, toFreeTextQrCodeBody(data), version);
   }
 
   /**
@@ -311,8 +313,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateEmail(id: string, data: IUpdateEmailQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("email", id, toStructuredQrCodeBody("email", data));
+  async updateEmail(id: string, data: IUpdateEmailQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("email", id, toStructuredQrCodeBody("email", data), version);
   }
 
   /**
@@ -334,8 +336,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateWifi(id: string, data: IUpdateWifiQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("wifi", id, toStructuredQrCodeBody("wifi", data));
+  async updateWifi(id: string, data: IUpdateWifiQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("wifi", id, toStructuredQrCodeBody("wifi", data), version);
   }
 
   /**
@@ -355,8 +357,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateCall(id: string, data: IUpdateCallQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("call", id, toStructuredQrCodeBody("call", data));
+  async updateCall(id: string, data: IUpdateCallQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("call", id, toStructuredQrCodeBody("call", data), version);
   }
 
   /**
@@ -377,8 +379,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateSMS(id: string, data: IUpdateSMSQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("sms", id, toStructuredQrCodeBody("sms", data));
+  async updateSMS(id: string, data: IUpdateSMSQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("sms", id, toStructuredQrCodeBody("sms", data), version);
   }
   /**
    * Update a URL QR code that opens a website
@@ -399,8 +401,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateURL(id: string, data: IUpdateURLQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("url", id, toStructuredQrCodeBody("url", data));
+  async updateURL(id: string, data: IUpdateURLQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("url", id, toStructuredQrCodeBody("url", data), version);
   }
   /**
    * Update a geolocation QR code that opens map coordinates
@@ -420,8 +422,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateGeolocation(id: string, data: IUpdateGeolocationQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("geolocation", id, toStructuredQrCodeBody("geolocation", data));
+  async updateGeolocation(id: string, data: IUpdateGeolocationQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("geolocation", id, toStructuredQrCodeBody("geolocation", data), version);
   }
 
   /**
@@ -533,8 +535,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateVCard(id: string, data: IUpdateVCardQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("vcard", id, toStructuredQrCodeBody("vcard", data));
+  async updateVCard(id: string, data: IUpdateVCardQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("vcard", id, toStructuredQrCodeBody("vcard", data), version);
   }
 
   /**
@@ -549,8 +551,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateEvent(id: string, data: IUpdateEventQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("event", id, toEventQrCodeBody(data));
+  async updateEvent(id: string, data: IUpdateEventQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("event", id, toEventQrCodeBody(data), version);
   }
 
   /**
@@ -565,8 +567,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateWhatsApp(id: string, data: IUpdateWhatsAppQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("whatsapp", id, toStructuredQrCodeBody("whatsapp", data));
+  async updateWhatsApp(id: string, data: IUpdateWhatsAppQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("whatsapp", id, toStructuredQrCodeBody("whatsapp", data), version);
   }
 
   /**
@@ -581,8 +583,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateReview(id: string, data: IUpdateReviewQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("review", id, toStructuredQrCodeBody("review", data));
+  async updateReview(id: string, data: IUpdateReviewQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("review", id, toStructuredQrCodeBody("review", data), version);
   }
 
   /**
@@ -597,8 +599,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateSocial(id: string, data: IUpdateSocialQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("social", id, toStructuredQrCodeBody("social", data));
+  async updateSocial(id: string, data: IUpdateSocialQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("social", id, toStructuredQrCodeBody("social", data), version);
   }
 
   /**
@@ -635,8 +637,8 @@ export class QRCodeClient {
    * });
    * ```
    */
-  async updateAppStore(id: string, data: IUpdateAppStoreQRCodeRequest): Promise<IUpdateQRCodeResponse> {
-    return this.updateOfType("appStore", id, toStructuredQrCodeBody("appStore", data as IQRCodeRequest));
+  async updateAppStore(id: string, data: IUpdateAppStoreQRCodeRequest, version: number): Promise<IUpdateQRCodeResponse> {
+    return this.updateOfType("appStore", id, toStructuredQrCodeBody("appStore", data as IQRCodeRequest), version);
   }
 
   /**
@@ -672,12 +674,13 @@ export class QRCodeClient {
    *
    * @example
    * ```typescript
-   * await qrCodeClient.updateFile('qr_code_id', { name: 'Menu', templateId: 'template_123', file: { fileName: 'menu-2026.pdf' } }, newPdfBlob);
+   * await qrCodeClient.updateFile('qr_code_id', { name: 'Menu', templateId: 'template_123', file: { fileName: 'menu-2026.pdf' } }, qr.__v, newPdfBlob);
    * ```
    */
-  async updateFile(id: string, data: IUpdateFileQRCodeRequest, content?: QrCodeFileContent): Promise<IUpdateQRCodeResponse> {
+  async updateFile(id: string, data: IUpdateFileQRCodeRequest, version: number, content?: QrCodeFileContent): Promise<IUpdateQRCodeResponse> {
+    assertVersion(version);
     const bucketFilePath = content === undefined ? undefined : await this.uploadQrFile(data, content);
-    return this.updateOfType("file", id, toFileQrCodeBody(data, bucketFilePath));
+    return this.updateOfType("file", id, toFileQrCodeBody(data, bucketFilePath), version);
   }
 
   /**
@@ -733,11 +736,12 @@ export class QRCodeClient {
    *
    * @example
    * ```typescript
-   * await qrCodeClient.delete('qr123');
+   * await qrCodeClient.delete('qr123', qr.__v);
    * ```
    */
-  async delete(id: string): Promise<void> {
-    await this.http.delete<IDeleteQRCodeResponse>(`${this.basePath}/${id}`);
+  async delete(id: string, version: number): Promise<void> {
+    assertVersion(version);
+    await this.http.delete<IDeleteQRCodeResponse>(`${this.basePath}/${id}`, { version });
   }
 
   /**
@@ -936,12 +940,18 @@ export class QRCodeClient {
   }
 
   /** PUT `/api/qr-code/:type/:id` with the body and this SDK's source fields. */
-  private async updateOfType(type: QrCodeTargetType, id: string, body: Record<string, unknown>): Promise<IUpdateQRCodeResponse> {
-    const response = await this.http.put<IUpdateQRCodeResponse>(`${this.basePath}/${type}/${id}`, {
-      ...body,
-      ...QrCodeRequestSourceConst,
-      createdFrom: this.http.createdFrom,
-    });
-    return response.result!;
+  private async updateOfType(type: QrCodeTargetType, id: string, body: Record<string, unknown>, version: number): Promise<IUpdateQRCodeResponse> {
+    // `version` travels as `If-Match`, never inside the body.
+    assertVersion(version);
+    const response = await this.http.put<IUpdateQRCodeResponse>(
+      `${this.basePath}/${type}/${id}`,
+      {
+        ...body,
+        ...QrCodeRequestSourceConst,
+        createdFrom: this.http.createdFrom,
+      },
+      { version },
+    );
+    return withVersion(response, id);
   }
 }

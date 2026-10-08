@@ -39,6 +39,8 @@ export interface IOrderSearchFilters extends IPaginationParams, IDateRangeParams
 
 export interface IStoreOrderSummary {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   orderNumber: string;
   customerName: string;
   customerPhone: string;
@@ -55,6 +57,8 @@ export interface IStoreOrderSummary {
 /** Full order details — loosely typed, the API returns the whole document. */
 export interface IStoreOrder {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   orderNumber: string;
   publicTrackingId: string;
   status: StoreOrderStatus;

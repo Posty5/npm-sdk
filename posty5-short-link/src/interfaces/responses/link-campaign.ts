@@ -5,6 +5,8 @@ import { ILinkUtm } from '../requests/link-rules';
 /** A link campaign as the API returns it. */
 export interface ILinkCampaignResponse {
     _id: string;
+    /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+    __v: number;
     userId: string;
     apiKeyId: string | null;
     name: string;

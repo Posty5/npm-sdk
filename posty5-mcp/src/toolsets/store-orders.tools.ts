@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ORDER_CREATED_FROM, ORDER_SOURCE_FILTERS, ORDER_SOURCES, ORDER_STATUSES } from "../config/store-orders-enums.config";
 import { ORDER_MAX_ITEMS, ORDER_STATISTICS_MAX_DAYS } from "../config/store-orders-limits.config";
-import { cursorFields, defineTool, idField } from "../core/define-tool.helper";
+import { cursorFields, defineTool, idField, versionField } from "../core/define-tool.helper";
 import { dateField } from "../core/store-date-field.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
@@ -118,11 +118,12 @@ export const STORE_ORDER_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       orderId: idField(ORDER_ID),
+      version: versionField("the order"),
       status: z.enum(ORDER_STATUSES).describe("The new status."),
       note: z.string().optional().describe("A note for the customer, shown with the status change and in the notification email."),
     }),
     annotations: { idempotent: true, openWorld: true },
-    run: ({ storeId, orderId, status, note }, { clients }) => clients.store.orders.updateStatus(storeId, orderId, status, note),
+    run: ({ storeId, orderId, version, status, note }, { clients }) => clients.store.orders.updateStatus(storeId, orderId, status, version, note),
     entity: (_result, args) => ({ entityType: "storeOrder", entityId: args.orderId }),
   }),
   defineTool({

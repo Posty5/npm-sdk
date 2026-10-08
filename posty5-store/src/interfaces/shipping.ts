@@ -36,6 +36,8 @@ export interface IShippingCountryFilters {
 /** One row of the store's shipping-countries grid. */
 export interface IShippingCountryRow {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   iso: string;
   name: string;
   flag: string;
@@ -70,6 +72,8 @@ export interface IShippingCatalogueResult {
 
 export interface IShippingZone {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   countryIso: string;
   countryName: string;
   isEnabled: boolean;
@@ -162,6 +166,8 @@ export interface IShippingRoutesResult {
 /** A saved override on one place. */
 export interface IShippingRoute {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   level: ShippingRouteLevel;
   governorateCode: string;
   governorateName: string;
@@ -304,6 +310,8 @@ export interface IShippingProfilePricing {
 
 export interface IShippingProfile {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   name: string;
   type: ShippingProfileType;
   description?: string;
@@ -448,6 +456,8 @@ export interface IShippingParcelPriceFilters {
 /** One price the merchant set, as the store-wide list shows it. */
 export interface IShippingParcelPriceRow {
   priceId: string;
+  /** The price row's version: pass it to `updateParcelPrice` / `removeParcelPrice`. */
+  __v: number;
   profileId: string;
   profileName: string;
   type: ShippingProfileType;

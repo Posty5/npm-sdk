@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { FORM_SUBMISSION_STATUSES, HTML_PAGE_SOURCE_TYPES, HTML_PAGE_STATUSES, HTML_VARIABLE_KEY_PREFIX, INLINE_HTML_FILE_NAME } from "../config/html-hosting-enums.config";
 import { INLINE_HTML_MAX_BYTES } from "../config/limits.config";
-import { defineTool, idField, pageFields, pickPage, withoutPaging } from "../core/define-tool.helper";
+import { defineTool, idField, pageFields, pickPage, versionField, withoutPaging } from "../core/define-tool.helper";
 import { inlineHtmlBlob } from "../core/html-hosting.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
@@ -129,17 +129,19 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
     description: "Replaces a hosted page's content with the given HTML. The URL stays the same; the page is reviewed again and goes live once the upload finishes.",
     input: z.object({
       id: idField(HTML_PAGE_ID),
+      version: versionField("the page"),
       html: htmlField,
       ...pageUpdateFields,
     }),
     annotations: { idempotent: true },
-    run: async ({ id, html, name, autoSaveInGoogleSheet }, { clients }) => {
+    run: async ({ id, version, html, name, autoSaveInGoogleSheet }, { clients }) => {
       const file = inlineHtmlBlob(html, "html_page_update_from_github");
       const current = await clients.htmlPages.get(id);
       return clients.htmlPages.updateWithNewFile(
         id,
         { name: name ?? current.name ?? "", autoSaveInGoogleSheet: autoSaveInGoogleSheet ?? current.autoSaveInGoogleSheet, fileName: INLINE_HTML_FILE_NAME },
         file,
+        version,
       );
     },
     entity: (_result, args) => ({ entityType: "htmlPage", entityId: args.id }),
@@ -152,17 +154,18 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
     description: "Replaces a hosted page's content with an HTML file from a public GitHub repository. The URL stays the same; Posty5 fetches and redeploys the file.",
     input: z.object({
       id: idField(HTML_PAGE_ID),
+      version: versionField("the page"),
       githubFileUrl: githubFileUrlField,
       ...pageUpdateFields,
     }),
     annotations: { idempotent: true },
-    run: async ({ id, githubFileUrl, name, autoSaveInGoogleSheet }, { clients }) => {
+    run: async ({ id, version, githubFileUrl, name, autoSaveInGoogleSheet }, { clients }) => {
       const current = await clients.htmlPages.get(id);
       return clients.htmlPages.updateWithGithubFile(id, {
         name: name ?? current.name ?? "",
         autoSaveInGoogleSheet: autoSaveInGoogleSheet ?? current.autoSaveInGoogleSheet,
         githubInfo: { fileURL: githubFileUrl },
-      });
+      }, version);
     },
     entity: (_result, args) => ({ entityType: "htmlPage", entityId: args.id }),
   }),
@@ -186,7 +189,7 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
     access: "full",
     title: "Delete an HTML page",
     description: "Deletes a hosted page. Its URL stops working. Cannot be undone.",
-    input: z.object({ id: idField(HTML_PAGE_ID) }),
+    input: z.object({ id: idField(HTML_PAGE_ID), version: versionField("the page") }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
       describe: async ({ id }, { clients }) => {
@@ -196,8 +199,8 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
       },
       costFeaturePath: "htmlHosting.deleteHtmlPage",
     },
-    run: async ({ id }, { clients }) => {
-      await clients.htmlPages.delete(id);
+    run: async ({ id, version }, { clients }) => {
+      await clients.htmlPages.delete(id, version);
       return { deleted: true, id };
     },
     entity: (_result, args) => ({ entityType: "htmlPage", entityId: args.id }),
@@ -248,6 +251,7 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
     description: "Changes a runtime variable. Fields left out keep their current value. Pages read the new value on their next load.",
     input: z.object({
       id: idField(HTML_VARIABLE_ID),
+      version: versionField("the variable"),
       name: variableFields.name.optional(),
       key: variableFields.key.optional(),
       value: variableFields.value.optional(),
@@ -255,16 +259,16 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
       tag: variableFields.tag,
     }),
     annotations: { idempotent: true },
-    run: async ({ id, ...changes }, { clients }) => {
+    run: async ({ id, version, ...changes }, { clients }) => {
       const current = await clients.htmlVariables.get(id);
-      await clients.htmlVariables.update(id, {
+      const updated = await clients.htmlVariables.update(id, {
         name: changes.name ?? current.name,
         key: changes.key ?? current.key,
         value: changes.value ?? current.value,
         refId: changes.refId ?? current.refId,
         tag: changes.tag ?? current.tag,
-      });
-      return { updated: true, id };
+      }, version);
+      return { updated: true, id, __v: updated.__v };
     },
     entity: (_result, args) => ({ entityType: "htmlVariable", entityId: args.id }),
   }),
@@ -274,7 +278,7 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
     access: "full",
     title: "Delete an HTML variable",
     description: "Deletes a runtime variable. Pages that read its key stop getting a value. Cannot be undone.",
-    input: z.object({ id: idField(HTML_VARIABLE_ID) }),
+    input: z.object({ id: idField(HTML_VARIABLE_ID), version: versionField("the variable") }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
       describe: async ({ id }, { clients }) => {
@@ -283,8 +287,8 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
       },
       costFeaturePath: "htmlHosting.deleteVariable",
     },
-    run: async ({ id }, { clients }) => {
-      await clients.htmlVariables.delete(id);
+    run: async ({ id, version }, { clients }) => {
+      await clients.htmlVariables.delete(id, version);
       return { deleted: true, id };
     },
     entity: (_result, args) => ({ entityType: "htmlVariable", entityId: args.id }),
@@ -333,14 +337,15 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
     description: "Moves a form submission to a new status (e.g. inProgress, completed, rejected), with an optional reason and note. The change is added to its status history.",
     input: z.object({
       id: idField(FORM_SUBMISSION_ID),
+      version: versionField("the submission"),
       status: z.enum(FORM_SUBMISSION_STATUSES),
       rejectedReason: z.string().optional().describe('Why, when status is "rejected".'),
       notes: z.string().optional().describe("A note kept with this status change."),
     }),
     annotations: { idempotent: true },
-    run: async ({ id, ...request }, { clients }) => {
-      const changed = await clients.formSubmissions.changeStatus(id, request);
-      return { changed, id, status: request.status };
+    run: async ({ id, version, ...request }, { clients }) => {
+      const changed = await clients.formSubmissions.changeStatus(id, request, version);
+      return { changed: true, id, status: request.status, __v: changed.__v };
     },
     entity: (_result, args) => ({ entityType: "formSubmission", entityId: args.id }),
   }),
@@ -350,7 +355,7 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
     access: "full",
     title: "Delete a form submission",
     description: "Deletes one form submission. Cannot be undone.",
-    input: z.object({ id: idField(FORM_SUBMISSION_ID) }),
+    input: z.object({ id: idField(FORM_SUBMISSION_ID), version: versionField("the submission") }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
       describe: async ({ id }, { clients }) => {
@@ -359,8 +364,8 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
         return `Delete form submission #${submission.numbering}${page}, received ${submission.createdAt}. Its data is gone for good: this cannot be undone.`;
       },
     },
-    run: async ({ id }, { clients }) => {
-      await clients.formSubmissions.delete(id);
+    run: async ({ id, version }, { clients }) => {
+      await clients.formSubmissions.delete(id, version);
       return { deleted: true, id };
     },
     entity: (_result, args) => ({ entityType: "formSubmission", entityId: args.id }),

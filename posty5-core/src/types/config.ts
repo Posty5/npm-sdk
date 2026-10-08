@@ -22,7 +22,7 @@ export interface IPosty5Config {
      * to the default otherwise.
      */
     createdFrom?: string;
-    /** Retries after a retryable failure (default 3; `0` disables). POST and PATCH are never retried once the server has answered. */
+    /** Retries after a retryable failure (default 3; `0` disables). POST and PATCH are never retried once the server has answered; a versioned write (`If-Match`) is never retried at all. */
     maxRetries?: number;
     /** Request timeout in milliseconds (default 30000). */
     timeout?: number;
@@ -49,6 +49,14 @@ export interface IRequestConfig {
     timeout?: number;
     /** Skip retry logic */
     skipRetry?: boolean;
+    /**
+     * The document's version (`__v`) for a versioned write. Sent as
+     * `If-Match: "<version>"`; such a request is never retried. Must be a
+     * non-negative integer.
+     */
+    version?: number;
+    /** Request body for a DELETE that takes one (bulk deletes). */
+    data?: any;
 }
 
 /**

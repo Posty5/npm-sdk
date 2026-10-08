@@ -106,6 +106,33 @@ console.log("YouTube:", status.youtube?.postInfo.currentStatus);
 
 ---
 
+## 🔒 Versioned writes (5.0.0)
+
+Every write to an existing document carries the version you read, so two
+people (or two scripts) can never silently overwrite each other.
+
+- **Where `__v` comes from:** every entity this SDK returns (`get`, `list`,
+  and every write) has `__v`. Keep the `__v` a write returns for your next write.
+- **A stale version** throws `ConflictError` (409). It carries
+  `currentVersion`, the document's version now.
+- **Merging deliberately:** reload, re-apply your change, and resend with the
+  fresh version (`currentVersion`). There is no "overwrite anyway" flag;
+  resending blindly is exactly the lost update this prevents.
+- Versioned writes are never retried automatically.
+
+```ts
+import { ConflictError } from "@posty5/core";
+
+try {
+  const post = await client.getStatus(id);
+  await client.reschedulePost(id, { schedule: 'now' }, post.__v);
+} catch (error) {
+  if (error instanceof ConflictError) {
+    // error.currentVersion: reload, merge, and resend with the fresh __v
+  } else throw error;
+}
+```
+
 ## ðŸ“š API Reference & Examples
 
 ### publishShortVideo()

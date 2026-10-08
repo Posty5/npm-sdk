@@ -3,7 +3,7 @@ import { BULK_CREATE_MAX_ITEMS } from "../config/limits.config";
 import { PRODUCT_CREATE_STATUSES, PRODUCT_SECTIONS, PRODUCT_STATUSES, TAG_STATUSES } from "../config/store-catalog-enums.config";
 import { ADD_PRODUCT_FEATURE_PATH, AI_PRODUCT_CONTENT_FEATURE_PATH, CLONE_ADD_PRODUCT_MULTIPLIER } from "../config/store-catalog-costs.config";
 import { PRODUCT_MAX_IMAGES, PRODUCT_MAX_TAGS, PRODUCT_REORDER_MAX_ITEMS, TAG_ASSIGN_MAX_PRODUCTS, TAG_RESOLVE_MAX_LIMIT } from "../config/store-catalog-limits.config";
-import { cursorFields, defineTool, idField, requireAtLeastOne } from "../core/define-tool.helper";
+import { cursorFields, defineTool, idField, requireAtLeastOne, versionField } from "../core/define-tool.helper";
 import { dateField } from "../core/store-date-field.helper";
 import { saveProductSection } from "../core/store-product-sections.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
@@ -217,12 +217,13 @@ export const STORE_CATALOG_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       productId: idField(PRODUCT_ID),
+      version: versionField("the product"),
       ...productUpdateFields,
     }),
     annotations: { idempotent: true },
-    run: async ({ storeId, productId, ...changes }, { clients }) => {
+    run: async ({ storeId, productId, version, ...changes }, { clients }) => {
       requireAtLeastOne(changes, Object.keys(productUpdateFields), "store_product_update");
-      return clients.store.products.update(storeId, productId, changes);
+      return clients.store.products.update(storeId, productId, changes, version);
     },
     entity: (_result, args) => ({ entityType: "storeProduct", entityId: args.productId }),
   }),
@@ -235,11 +236,12 @@ export const STORE_CATALOG_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       productId: idField(PRODUCT_ID),
+      version: versionField("the product"),
       section: z.enum(PRODUCT_SECTIONS).describe("Which part of the product to write."),
       data: z.record(z.string(), z.unknown()).describe("The section's fields, as the tool description lists them for that section."),
     }),
     annotations: { idempotent: true },
-    run: ({ storeId, productId, section, data }, { clients }) => saveProductSection(clients.store.products, storeId, productId, section, data),
+    run: ({ storeId, productId, version, section, data }, { clients }) => saveProductSection(clients.store.products, storeId, productId, section, data, version),
     entity: (_result, args) => ({ entityType: "storeProduct", entityId: args.productId }),
   }),
   defineTool({
@@ -301,6 +303,7 @@ export const STORE_CATALOG_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       productId: idField(PRODUCT_ID),
+      version: versionField("the product"),
     }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
@@ -309,8 +312,8 @@ export const STORE_CATALOG_TOOLS: IToolDefinition[] = [
         return `Delete the product "${product.name}"${product.sku ? ` (SKU ${product.sku})` : ""}, now ${product.status}. It leaves the catalogue and the storefront at once; past orders keep their copy. This cannot be undone.`;
       },
     },
-    run: async ({ storeId, productId }, { clients }) => {
-      await clients.store.products.delete(storeId, productId);
+    run: async ({ storeId, productId, version }, { clients }) => {
+      await clients.store.products.delete(storeId, productId, version);
       return { deleted: true, productId };
     },
     entity: (_result, args) => ({ entityType: "storeProduct", entityId: args.productId }),
@@ -411,13 +414,14 @@ export const STORE_CATALOG_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       tagId: idField(TAG_ID),
+      version: versionField("the tag"),
       name: z.string().min(1).optional().describe("The tag's new name."),
       ...tagEditableFields,
     }),
     annotations: { idempotent: true },
-    run: async ({ storeId, tagId, ...changes }, { clients }) => {
+    run: async ({ storeId, tagId, version, ...changes }, { clients }) => {
       requireAtLeastOne(changes, ["name", ...Object.keys(tagEditableFields)], "store_tag_update");
-      return clients.store.tags.update(storeId, tagId, changes);
+      return clients.store.tags.update(storeId, tagId, changes, version);
     },
     entity: (_result, args) => ({ entityType: "storeTag", entityId: args.tagId }),
   }),
@@ -460,10 +464,11 @@ export const STORE_CATALOG_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       productId: idField(PRODUCT_ID),
+      version: versionField("the product (its tag list is part of the product)"),
       tagIds: z.array(idField(TAG_ID)).max(PRODUCT_MAX_TAGS).describe("The product's complete tag list, ids from store_tag_search."),
     }),
     annotations: { idempotent: true },
-    run: ({ storeId, productId, tagIds }, { clients }) => clients.store.tags.setProductTags(storeId, productId, tagIds),
+    run: ({ storeId, productId, version, tagIds }, { clients }) => clients.store.tags.setProductTags(storeId, productId, tagIds, version),
     entity: (_result, args) => ({ entityType: "storeProduct", entityId: args.productId }),
   }),
   defineTool({
@@ -475,6 +480,7 @@ export const STORE_CATALOG_TOOLS: IToolDefinition[] = [
     input: z.object({
       storeId: idField(STORE_ID),
       tagId: idField(TAG_ID),
+      version: versionField("the tag"),
     }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
@@ -484,8 +490,8 @@ export const STORE_CATALOG_TOOLS: IToolDefinition[] = [
         return `Delete the tag "${tag.name}".${carried} This cannot be undone.`;
       },
     },
-    run: async ({ storeId, tagId }, { clients }) => {
-      await clients.store.tags.delete(storeId, tagId);
+    run: async ({ storeId, tagId, version }, { clients }) => {
+      await clients.store.tags.delete(storeId, tagId, version);
       return { deleted: true, tagId };
     },
     entity: (_result, args) => ({ entityType: "storeTag", entityId: args.tagId }),

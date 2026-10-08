@@ -10,3 +10,6 @@ export * from './types';
 // Utilities
 export * from './utils';
 
+
+// Response envelope
+export * from './interface';

@@ -47,17 +47,17 @@ function createStructured(client: QRCodeClient, type: (typeof structuredCases)[n
 function updateStructured(client: QRCodeClient, type: (typeof structuredCases)[number]["type"], id: string, data: any) {
   switch (type) {
     case "email":
-      return client.updateEmail(id, data);
+      return client.updateEmail(id, data, 0);
     case "wifi":
-      return client.updateWifi(id, data);
+      return client.updateWifi(id, data, 0);
     case "call":
-      return client.updateCall(id, data);
+      return client.updateCall(id, data, 0);
     case "sms":
-      return client.updateSMS(id, data);
+      return client.updateSMS(id, data, 0);
     case "url":
-      return client.updateURL(id, data);
+      return client.updateURL(id, data, 0);
     case "geolocation":
-      return client.updateGeolocation(id, data);
+      return client.updateGeolocation(id, data, 0);
   }
 }
 
@@ -102,7 +102,7 @@ describe("QR Code SDK — payloads (offline)", () => {
     };
 
     await client.createFreeText(data);
-    await client.updateFreeText("qr1", data);
+    await client.updateFreeText("qr1", data, 0);
 
     const expected = {
       name: "Ticket",
@@ -186,7 +186,7 @@ describe("QR Code SDK — payloads (offline)", () => {
 
     await client.createURL({ templateId, url: { url: "https://example.com" } });
     await client.createURL({ templateId, url: { url: "https://example.com" }, mode: "dynamic" });
-    await client.updateURL("qr1", { name: "N", templateId, url: { url: "https://example.com" }, mode: "static" });
+    await client.updateURL("qr1", { name: "N", templateId, url: { url: "https://example.com" }, mode: "static" }, 0);
 
     expect(calls[0].body).toEqual({ templateId, qrCodeTarget: { type: "url", url: { url: "https://example.com" } }, ...source });
     expect(calls[1].body).toEqual({ templateId, mode: "dynamic", qrCodeTarget: { type: "url", url: { url: "https://example.com" } }, ...source });
@@ -201,7 +201,7 @@ describe("QR Code SDK — payloads (offline)", () => {
       await updateStructured(client, type, "qr1", { name: "N", templateId, [type]: content });
     }
     await client.createFreeText({ name: "N", templateId, text: "T" });
-    await client.updateFreeText("qr1", { name: "N", templateId, text: "T" });
+    await client.updateFreeText("qr1", { name: "N", templateId, text: "T" }, 0);
 
     expect(calls).toHaveLength(14);
     const structuredBodies = structuredCases.flatMap(({ type, content }) => {
@@ -234,8 +234,8 @@ describe("QR Code SDK — payloads (offline)", () => {
     const access = { activeFrom: new Date("2026-11-01T00:00:00.000Z"), expiresAt: "2026-12-01T00:00:00.000Z", maxVisits: 100, fallbackUrl: "https://example.com/closed" };
 
     await client.createURL({ templateId, url: { url: "https://example.com" }, mode: "dynamic", access });
-    await client.updateURL("qr1", { name: "N", templateId, url: { url: "https://example.com" }, access: null });
-    await client.updateURL("qr1", { name: "N", templateId, url: { url: "https://example.com" } });
+    await client.updateURL("qr1", { name: "N", templateId, url: { url: "https://example.com" }, access: null }, 0);
+    await client.updateURL("qr1", { name: "N", templateId, url: { url: "https://example.com" } }, 0);
 
     expect(JSON.parse(JSON.stringify(calls[0].body)).access).toEqual({ ...access, activeFrom: "2026-11-01T00:00:00.000Z" });
     expect((calls[1].body as any).access).toBeNull();
@@ -469,7 +469,7 @@ describeLive("QR Code SDK", () => {
         url: {
           url: "https://updated.posty5.com",
         },
-      });
+      }, (await client.get(targetId)).__v);
 
       expect(result._id).toBe(targetId);
     });
@@ -491,7 +491,7 @@ describeLive("QR Code SDK", () => {
         name: "Updated Free Text QR",
         templateId,
         text: "Updated text content",
-      });
+      }, (await client.get(targetId)).__v);
 
       expect(result._id).toBe(targetId);
     });
@@ -513,7 +513,7 @@ describeLive("QR Code SDK", () => {
 
     it("changing the target keeps the landing page URL", async () => {
       const before = await client.get(dynamicId);
-      await client.updateURL(dynamicId, { name: before.name, templateId, url: { url: "https://example.com/b" } });
+      await client.updateURL(dynamicId, { name: before.name, templateId, url: { url: "https://example.com/b" } }, before.__v);
       const after = await client.get(dynamicId);
       expect(after.qrCodeLandingPageURL).toBe(before.qrCodeLandingPageURL);
       expect(after.mode).toBe("dynamic");
@@ -534,7 +534,7 @@ describeLive("QR Code SDK", () => {
       const before = await client.get(dynamicId);
       const access = { expiresAt: new Date(Date.now() + 86_400_000).toISOString(), maxVisits: 5, fallbackUrl: "https://example.com/closed" };
       try {
-        await client.updateURL(dynamicId, { name: before.name, templateId, url: { url: "https://example.com/b" }, access });
+        await client.updateURL(dynamicId, { name: before.name, templateId, url: { url: "https://example.com/b" }, access }, (await client.get(dynamicId)).__v);
       } catch (error: any) {
         // A Free test account: the plan gate surfaces through the core error unchanged
         expect(String(error?.message)).toContain("not available on your current plan");
@@ -545,7 +545,7 @@ describeLive("QR Code SDK", () => {
       expect(set.access?.fallbackUrl).toBe("https://example.com/closed");
       expect(set.access?.activeFrom ?? null).toBeNull();
 
-      await client.updateURL(dynamicId, { name: before.name, templateId, url: { url: "https://example.com/b" }, access: null });
+      await client.updateURL(dynamicId, { name: before.name, templateId, url: { url: "https://example.com/b" }, access: null }, (await client.get(dynamicId)).__v);
       expect((await client.get(dynamicId)).access ?? null).toBeNull();
     });
   });
@@ -556,7 +556,7 @@ describeLive("QR Code SDK", () => {
 
     afterAll(async () => {
       for (const id of ids) {
-        await client.delete(id).catch(() => undefined);
+        await client.delete(id, (await client.get(id)).__v).catch(() => undefined);
       }
     });
 
@@ -656,7 +656,7 @@ describeLive("QR Code SDK", () => {
 
   describe("DELETE", () => {
     it("should delete QR code", async () => {
-      await client.delete(createdId);
+      await client.delete(createdId, (await client.get(createdId)).__v);
 
       // Verify deletion
       await expect(client.get(createdId)).rejects.toThrow();

@@ -15,7 +15,7 @@ import {
   TWITTER_REPLY_SETTINGS,
 } from "../config/social-publisher-enums.config";
 import { IMAGE_CAPTION_MAX_LENGTH, THREADS_TEXT_MAX_LENGTH, TWITTER_TEXT_MAX_WEIGHTED_LENGTH, YOUTUBE_TITLE_MAX_LENGTH } from "../config/social-publisher-limits.config";
-import { defineTool, idField, pageFields, pickPage, requireExactlyOne, requireFields, withoutPaging } from "../core/define-tool.helper";
+import { defineTool, idField, pageFields, pickPage, requireExactlyOne, requireFields, versionField, withoutPaging } from "../core/define-tool.helper";
 import {
   postListParams,
   postPlatforms,
@@ -211,14 +211,15 @@ export const SOCIAL_PUBLISHER_TOOLS: IToolDefinition[] = [
     description: "Changes a workspace's name or description. Fields left out keep their current value. Its logo and connected accounts are not touched.",
     input: z.object({
       id: idField(WORKSPACE_ID),
+      version: versionField("the workspace"),
       name: z.string().min(1).optional().describe("A new name; must be unique among your workspaces."),
       description: z.string().optional(),
     }),
     annotations: { idempotent: true },
-    run: async ({ id, name, description }, { clients }) => {
+    run: async ({ id, version, name, description }, { clients }) => {
       const current = await clients.workspaces.get(id);
-      await clients.workspaces.update(id, { name: name ?? current.name, description: description ?? current.description ?? "" });
-      return { updated: true, id };
+      const updated = await clients.workspaces.update(id, { name: name ?? current.name, description: description ?? current.description ?? "" }, version);
+      return { updated: true, id, __v: updated.__v };
     },
     entity: (_result, args) => ({ entityType: "socialWorkspace", entityId: args.id }),
   }),
@@ -228,7 +229,7 @@ export const SOCIAL_PUBLISHER_TOOLS: IToolDefinition[] = [
     access: "full",
     title: "Delete a workspace",
     description: "Deletes a workspace. Posts already published stay on their platforms. Cannot be undone.",
-    input: z.object({ id: idField(WORKSPACE_ID) }),
+    input: z.object({ id: idField(WORKSPACE_ID), version: versionField("the workspace") }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
       describe: async ({ id }, { clients }) => {
@@ -236,8 +237,8 @@ export const SOCIAL_PUBLISHER_TOOLS: IToolDefinition[] = [
         return `Delete the workspace "${workspace.name}". Posts already published stay on their platforms, but nothing can be published to this workspace again, and this cannot be undone.`;
       },
     },
-    run: async ({ id }, { clients }) => {
-      await clients.workspaces.delete(id);
+    run: async ({ id, version }, { clients }) => {
+      await clients.workspaces.delete(id, version);
       return { deleted: true, id };
     },
     entity: (_result, args) => ({ entityType: "socialWorkspace", entityId: args.id }),
@@ -458,15 +459,16 @@ export const SOCIAL_PUBLISHER_TOOLS: IToolDefinition[] = [
       'Moves a post that has not published yet to a new time, or publishes it now ("now"), optionally replacing its caption. A post that has started publishing is refused.',
     input: z.object({
       id: idField(POST_ID),
+      version: versionField("the post"),
       schedule: z
         .union([z.literal(PUBLISH_NOW), z.iso.datetime({ offset: true })])
         .describe('"now" to publish at once, or the new time: ISO 8601 with a time zone, e.g. 2026-11-01T09:00:00Z.'),
       caption: z.string().optional().describe("A new caption."),
     }),
     annotations: { idempotent: true },
-    run: async ({ id, schedule, caption }, { clients }) => {
-      await clients.posts.reschedulePost(id, { schedule: toRescheduleValue(schedule), caption });
-      return { rescheduled: true, id, schedule };
+    run: async ({ id, version, schedule, caption }, { clients }) => {
+      const rescheduled = await clients.posts.reschedulePost(id, { schedule: toRescheduleValue(schedule), caption }, version);
+      return { rescheduled: true, id, schedule, __v: rescheduled.__v };
     },
     entity: (_result, args) => ({ entityType: "socialPost", entityId: args.id }),
   }),
@@ -477,7 +479,7 @@ export const SOCIAL_PUBLISHER_TOOLS: IToolDefinition[] = [
     title: "Delete an unpublished post",
     description:
       "Deletes a post that has not published yet, with its uploaded media. A post that has published is refused — take it down with social_post_remove_from_platforms. Cannot be undone.",
-    input: z.object({ id: idField(POST_ID) }),
+    input: z.object({ id: idField(POST_ID), version: versionField("the post") }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
       describe: async ({ id }, { clients }) => {
@@ -486,8 +488,8 @@ export const SOCIAL_PUBLISHER_TOOLS: IToolDefinition[] = [
         return `Delete post #${post.numbering} (${post.type}, status ${post.currentStatus}${when}) and its uploaded media. Only a post that has not published yet can be deleted, and this cannot be undone.`;
       },
     },
-    run: async ({ id }, { clients }) => {
-      await clients.posts.deletePost(id);
+    run: async ({ id, version }, { clients }) => {
+      await clients.posts.deletePost(id, version);
       return { deleted: true, id };
     },
     entity: (_result, args) => ({ entityType: "socialPost", entityId: args.id }),
@@ -499,7 +501,7 @@ export const SOCIAL_PUBLISHER_TOOLS: IToolDefinition[] = [
     title: "Remove a post from the platforms",
     description:
       "Deletes a published post's media from the platforms it was published to, at once. Instagram and TikTok offer no delete through their APIs, so media there stays. Irreversible. Paid, only when the removal succeeds: the price is in account_get_operation_costs.",
-    input: z.object({ id: idField(POST_ID) }),
+    input: z.object({ id: idField(POST_ID), version: versionField("the post") }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
       describe: async ({ id }, { clients }) => {
@@ -510,7 +512,7 @@ export const SOCIAL_PUBLISHER_TOOLS: IToolDefinition[] = [
       },
       costFeaturePath: "socialMediaPublisher.removePost",
     },
-    run: ({ id }, { clients }) => clients.posts.removePost(id),
+    run: ({ id, version }, { clients }) => clients.posts.removePost(id, version),
     entity: (_result, args) => ({ entityType: "socialPost", entityId: args.id }),
   }),
 ];

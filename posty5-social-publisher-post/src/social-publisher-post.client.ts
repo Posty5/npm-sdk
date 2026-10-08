@@ -1,4 +1,4 @@
-import { HttpClient, IPaginationParams, uploadToR2 } from "@posty5/core";
+import { HttpClient, IPaginationParams, assertVersion, uploadToR2, withVersion } from "@posty5/core";
 import { supportsResumableUpload, uploadResumable } from "./resumable-upload";
 import {
   ICreateSocialPublisherPostRequest,
@@ -98,17 +98,20 @@ export class SocialPublisherPostClient {
    * cannot be removed programmatically and no credits are charged.
    *
    * @param id - Post ID
-   * @returns Per-platform removal results
+   * @param version - The post's `__v` as you read it. A stale one throws `ConflictError`.
+   * @returns Per-platform removal results, `__v` set to the post's new version
    *
    * @example
    * ```ts
-   * const { results } = await client.removePost("post_123");
+   * const post = await client.getStatus("post_123");
+   * const { results } = await client.removePost("post_123", post.__v);
    * // results.youtube?.success === true
    * ```
    */
-  async removePost(id: string): Promise<IRemovePostResponse> {
-    const response = await this.http.post<IRemovePostResponse>(`${this.basePath}/${id}/remove`, {});
-    return response.result!;
+  async removePost(id: string, version: number): Promise<IRemovePostResponse> {
+    assertVersion(version);
+    const response = await this.http.post<IRemovePostResponse>(`${this.basePath}/${id}/remove`, {}, { version });
+    return withVersion(response, id);
   }
 
   /**
@@ -765,22 +768,33 @@ export class SocialPublisherPostClient {
    *
    * @example
    * ```ts
-   * await client.reschedulePost("post_123", { schedule: new Date("2026-09-01T09:00:00Z") });
-   * await client.reschedulePost("post_123", { schedule: "now" });
+   * const post = await client.getStatus("post_123");
+   * const { __v } = await client.reschedulePost("post_123", { schedule: new Date("2026-09-01T09:00:00Z") }, post.__v);
+   * await client.reschedulePost("post_123", { schedule: "now" }, __v);
    * ```
+   *
+   * @param version - The post's `__v` as you read it. A stale one throws `ConflictError`.
+   * @returns `{ _id, __v }`, `__v` being the new version
    */
-  async reschedulePost(id: string, data: IReschedulePostRequest): Promise<void> {
+  async reschedulePost(id: string, data: IReschedulePostRequest, version: number): Promise<{ _id: string; __v: number }> {
     if (!id) {
       throw new Error("id is required");
     }
+    assertVersion(version);
     // The edit route takes the schedule flat (`scheduleType` + `scheduledAt`), not
     // the `schedule` object the create routes take, and refuses `scheduledAt` with "now".
-    await this.http.put(`${this.basePath}/${id}`, {
-      ...(data.schedule === "now"
-        ? { scheduleType: "now" }
-        : { scheduleType: "schedule", scheduledAt: data.schedule.toISOString() }),
-      ...(data.caption !== undefined ? { caption: data.caption } : {}),
-    });
+    const response = await this.http.put<{ _id: string }>(
+      `${this.basePath}/${id}`,
+      {
+        ...(data.schedule === "now"
+          ? { scheduleType: "now" }
+          : { scheduleType: "schedule", scheduledAt: data.schedule.toISOString() }),
+        ...(data.caption !== undefined ? { caption: data.caption } : {}),
+      },
+      { version },
+    );
+    const updated = withVersion(response, id);
+    return { _id: updated._id, __v: updated.__v };
   }
 
   /**
@@ -793,14 +807,17 @@ export class SocialPublisherPostClient {
    *
    * @example
    * ```ts
-   * await client.deletePost("post_123");
+   * await client.deletePost("post_123", post.__v);
    * ```
+   *
+   * @param version - The post's `__v` as you read it. A stale one throws `ConflictError`.
    */
-  async deletePost(id: string): Promise<void> {
+  async deletePost(id: string, version: number): Promise<void> {
     if (!id) {
       throw new Error("id is required");
     }
-    await this.http.delete(`${this.basePath}/${id}`);
+    assertVersion(version);
+    await this.http.delete(`${this.basePath}/${id}`, { version });
   }
 
   /**

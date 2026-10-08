@@ -13,6 +13,8 @@ import {
   SDK_CLIENT_ID,
 } from "./client.config";
 import { shouldRetryRequest } from "./retry-policy.helper";
+import { IF_MATCH_HEADER } from "./concurrency.config";
+import { ifMatchHeader, warnOnMissingVersion } from "./concurrency.helper";
 
 /**
  * Pull the filename out of a `Content-Disposition` header. The server sends it
@@ -101,6 +103,7 @@ export class HttpClient {
     // Add response interceptor for error handling
     this.axiosInstance.interceptors.response.use(
       (response) => {
+        warnOnMissingVersion(response.headers, response.config?.method, response.config?.url);
         if (this.config.debug) {
           console.log("[Posty5 SDK] Response:", {
             status: response.status,
@@ -238,11 +241,21 @@ export class HttpClient {
     const axiosConfig: AxiosRequestConfig = {};
 
     if (config.headers) {
-      axiosConfig.headers = config.headers;
+      axiosConfig.headers = { ...config.headers };
+    }
+
+    if (config.version !== undefined) {
+      // A versioned write: send the precondition and never retry it.
+      axiosConfig.headers = { ...(axiosConfig.headers || {}), [IF_MATCH_HEADER]: ifMatchHeader(config.version) };
+      axiosConfig["axios-retry"] = { retries: 0 };
     }
 
     if (config.params) {
       axiosConfig.params = config.params;
+    }
+
+    if (config.data !== undefined) {
+      axiosConfig.data = config.data;
     }
 
     if (config.timeout) {

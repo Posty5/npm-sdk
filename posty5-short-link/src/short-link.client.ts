@@ -1,5 +1,7 @@
 import {
     HttpClient,
+    assertVersion,
+    withVersion,
     IBinaryResponse,
     IBulkCreateOptions,
     IBulkCreateResult,
@@ -98,19 +100,23 @@ export class ShortLinkClient {
      * @param data - Update request data (`templateId` is required). Omitted
      * `isEnableLandingPage`, `androidUrl` and `iosUrl` keep (or, for the deep
      * links after a `baseUrl` change, re-derive) the stored values.
-     * @returns Updated short link details
+     * @param version - The link's `__v` as you read it. A stale one throws `ConflictError`.
+     * @returns Updated short link details, `__v` set to the new version
      */
-    async update(id: string, data: IUpdateShortLinkRequest): Promise<IUpdateShortLinkResponse> {
-        const response = await this.http.put<IUpdateShortLinkResponse>(`${this.basePath}/${id}`, toShortLinkBody(data));
-        return response.result!;
+    async update(id: string, data: IUpdateShortLinkRequest, version: number): Promise<IUpdateShortLinkResponse> {
+        assertVersion(version);
+        const response = await this.http.put<IUpdateShortLinkResponse>(`${this.basePath}/${id}`, toShortLinkBody(data), { version });
+        return withVersion(response, id);
     }
 
     /**
      * Delete a Short Link
      * @param id - Short Link ID
+     * @param version - The link's `__v` as you read it. A stale one throws `ConflictError`.
      */
-    async delete(id: string): Promise<void> {
-        await this.http.delete<IDeleteShortLinkResponse>(`${this.basePath}/${id}`);
+    async delete(id: string, version: number): Promise<void> {
+        assertVersion(version);
+        await this.http.delete<IDeleteShortLinkResponse>(`${this.basePath}/${id}`, { version });
     }
 
     /**
@@ -141,9 +147,11 @@ export class ShortLinkClient {
      * is not passed, since the update requires them.
      * @param id - Short Link ID
      * @param rules - The sections to set
+     * @param version - The link's `__v` as you read it. A stale one throws `ConflictError`.
      * @returns Updated short link details
      */
-    async setRules(id: string, rules: IShortLinkRulesInput): Promise<IUpdateShortLinkResponse> {
+    async setRules(id: string, rules: IShortLinkRulesInput, version: number): Promise<IUpdateShortLinkResponse> {
+        assertVersion(version);
         const { baseUrl, templateId, ...sections } = rules;
         let resolvedBaseUrl = baseUrl;
         let resolvedTemplateId = templateId;
@@ -152,7 +160,7 @@ export class ShortLinkClient {
             resolvedBaseUrl = resolvedBaseUrl || stored.baseUrl || '';
             resolvedTemplateId = resolvedTemplateId || stored.templateId || stored.template?._id || '';
         }
-        return this.update(id, { ...sections, baseUrl: resolvedBaseUrl, templateId: resolvedTemplateId });
+        return this.update(id, { ...sections, baseUrl: resolvedBaseUrl, templateId: resolvedTemplateId }, version);
     }
 
     /**

@@ -16,6 +16,19 @@ export function idField(description: string) {
   return z.string().min(1).describe(description);
 }
 
+/**
+ * The record's version (`__v`) a versioned write is based on (optimistic
+ * concurrency). Required: if the record changed since it was read, the write
+ * is refused with `versionConflict` and the model re-reads it.
+ */
+export function versionField(what: string = "the item") {
+  return z
+    .number()
+    .int()
+    .min(0)
+    .describe(`The __v of ${what}, from its latest get or list result. If it changed since, nothing is saved and you are told to re-read it.`);
+}
+
 /** Page-numbered paging fields, for SDK list methods that take `IPaginationParams`. */
 export function pageFields() {
   return {

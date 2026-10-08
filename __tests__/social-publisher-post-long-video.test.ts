@@ -268,7 +268,7 @@ describe("reschedulePost", () => {
     const http = makeHttp([{}]);
     const client = new SocialPublisherPostClient(http);
 
-    await client.reschedulePost("post_abc", { schedule: when });
+    await client.reschedulePost("post_abc", { schedule: when }, 0);
 
     expect(http.calls[0]).toEqual({
       method: "PUT",
@@ -280,7 +280,7 @@ describe("reschedulePost", () => {
   it("can flip a scheduled post to publish now, without a scheduledAt", async () => {
     const http = makeHttp([{}]);
     const client = new SocialPublisherPostClient(http);
-    await client.reschedulePost("post_abc", { schedule: "now" });
+    await client.reschedulePost("post_abc", { schedule: "now" }, 0);
     expect(http.calls[0].body).toEqual({ scheduleType: "now" });
   });
 
@@ -288,17 +288,17 @@ describe("reschedulePost", () => {
     const http = makeHttp([{}, {}]);
     const client = new SocialPublisherPostClient(http);
 
-    await client.reschedulePost("post_abc", { schedule: "now", caption: "New caption" });
+    await client.reschedulePost("post_abc", { schedule: "now", caption: "New caption" }, 0);
     expect(http.calls[0].body.caption).toBe("New caption");
 
-    await client.reschedulePost("post_abc", { schedule: "now" });
+    await client.reschedulePost("post_abc", { schedule: "now" }, 0);
     expect("caption" in http.calls[1].body).toBe(false);
   });
 
   it("requires an id", async () => {
     const http = makeHttp();
     const client = new SocialPublisherPostClient(http);
-    await expect(client.reschedulePost("", { schedule: "now" })).rejects.toThrow("id is required");
+    await expect(client.reschedulePost("", { schedule: "now" }, 0)).rejects.toThrow("id is required");
     expect(http.calls).toHaveLength(0);
   });
 });
@@ -308,7 +308,7 @@ describe("deletePost", () => {
     const http = makeHttp([{}]);
     const client = new SocialPublisherPostClient(http);
 
-    await client.deletePost("post_abc");
+    await client.deletePost("post_abc", 0);
 
     expect(http.calls[0]).toEqual({ method: "DELETE", url: "/api/social-publisher-post/post_abc" });
   });
@@ -316,7 +316,7 @@ describe("deletePost", () => {
   it("requires an id", async () => {
     const http = makeHttp();
     const client = new SocialPublisherPostClient(http);
-    await expect(client.deletePost("")).rejects.toThrow("id is required");
+    await expect(client.deletePost("", 0)).rejects.toThrow("id is required");
     expect(http.calls).toHaveLength(0);
   });
 });

@@ -3,7 +3,7 @@
  * feature, decision 6). Tool failures are results with `isError: true`, never
  * protocol errors.
  */
-import { AuthenticationError, AuthorizationError, NetworkError, NotFoundError, Posty5Error, RateLimitError, ServerError, ValidationError } from "@posty5/core";
+import { AuthenticationError, AuthorizationError, ConflictError, NetworkError, NotFoundError, Posty5Error, RateLimitError, ServerError, ValidationError, VersionRequiredError } from "@posty5/core";
 import type { ToolOutcomeStatus } from "../interfaces/hooks.interface";
 import { ToolInputError } from "./tool-input.error";
 
@@ -40,6 +40,17 @@ export function mapToolError(error: unknown, isWrite: boolean): IMappedToolError
   if (error instanceof RateLimitError) {
     const wait = error.retryAfter ? ` Retry after ${error.retryAfter} seconds.` : "";
     return { status: "rateLimited", code: "rateLimited", message: `Too many requests.${wait}` };
+  }
+  if (error instanceof ConflictError) {
+    const now = error.currentVersion >= 0 ? ` Its current version is ${error.currentVersion}.` : "";
+    return {
+      status: "toolError",
+      code: "versionConflict",
+      message: `This item has changed since you read it, so nothing was saved.${now} Re-read it with the matching get tool, check the latest values, then retry with its new version (__v) if the change still applies.`,
+    };
+  }
+  if (error instanceof VersionRequiredError) {
+    return { status: "toolError", code: "versionRequired", message: "This write needs the item's current version. Read it with the matching get tool and pass its __v as version." };
   }
   if (error instanceof ValidationError) {
     const message = detailOf(error);

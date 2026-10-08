@@ -46,7 +46,7 @@ import {
  *
  * // Orders
  * const { items } = await store.orders.search(storeId, { status: "pending" });
- * await store.orders.updateStatus(storeId, items[0]._id, "confirmed");
+ * await store.orders.updateStatus(storeId, items[0]._id, "confirmed", items[0].__v);
  *
  * // Tags, customers, shipping
  * await store.tags.assignProducts(storeId, tagId, [productId]);
@@ -115,7 +115,7 @@ export class StoreClient {
    * and `delivered` are reached by the parts themselves (the order moves at the
    * pace of its slowest part), not set by hand.
    */
-  async updateOrderStatus(storeId: string, orderId: string, status: StoreOrderStatus, note?: string): Promise<IStoreOrder> {
-    return this.orders.updateStatus(storeId, orderId, status, note);
+  async updateOrderStatus(storeId: string, orderId: string, status: StoreOrderStatus, version: number, note?: string): Promise<IStoreOrder> {
+    return this.orders.updateStatus(storeId, orderId, status, version, note);
   }
 }

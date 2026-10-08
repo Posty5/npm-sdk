@@ -1,4 +1,4 @@
-import { HttpClient, IPaginationParams } from "@posty5/core";
+import { HttpClient, IBulkVersionedResult, IPaginationParams, assertVersion, assertVersions, withVersion } from "@posty5/core";
 import {
   ISearchFormSubmissionsResponse,
   IGetFormSubmissionResponse,
@@ -90,19 +90,22 @@ export class HtmlHostingFormSubmissionClient {
    * Change the status of a form submission
    * @param id - Submission ID
    * @param request - Status change request (status, rejectedReason, notes)
-   * @returns Updated status history (grouped by status)
+   * @param version - The submission's `__v` as you read it. A stale one throws `ConflictError`.
+   * @returns `{ _id, __v }` with the new version (plus whatever the API answers)
    * @example
    * ```typescript
+   * const s = await client.get('submission_id_123');
    * const result = await client.changeStatus('submission_id_123', {
    *   status: 'Approved',
    *   notes: 'Looks good!'
-   * });
-   * console.log(result.statusHistory); // Updated status history
+   * }, s.__v);
+   * console.log(result.__v); // the new version
    * ```
    */
-  async changeStatus(id: string, request: IChangeStatusRequest): Promise<boolean> {
-    const response = await this.http.put<IChangeStatusResponse>(`${this.basePath}/${id}/status`, request);
-    return response.isSuccess ? true : false;
+  async changeStatus(id: string, request: IChangeStatusRequest, version: number): Promise<IChangeStatusResponse> {
+    assertVersion(version);
+    const response = await this.http.put<IChangeStatusResponse>(`${this.basePath}/${id}/status`, request, { version });
+    return withVersion(response, id);
   }
 
   /**
@@ -111,10 +114,35 @@ export class HtmlHostingFormSubmissionClient {
    * @returns Success response
    * @example
    * ```typescript
-   * await client.delete('submission_id_123');
+   * await client.delete('submission_id_123', submission.__v);
    * ```
    */
-  async delete(id: string): Promise<void> {
-    await this.http.delete<IDeleteFormSubmissionResponse>(`${this.basePath}/${id}`);
+  async delete(id: string, version: number): Promise<void> {
+    assertVersion(version);
+    await this.http.delete<IDeleteFormSubmissionResponse>(`${this.basePath}/${id}`, { version });
+  }
+
+  /**
+   * Delete many submissions. Each id needs its `__v`; the items whose
+   * versions match are deleted, the rest come back in `skipped` (with
+   * `currentVersion` on a conflict). Throws `ConflictError` only when nothing
+   * was deleted and at least one item conflicted.
+   * @param versions - `{ [submissionId]: __v }`, one entry per submission to delete
+   * @example
+   * ```typescript
+   * const { applied, skipped } = await client.deleteBulk({ [a._id]: a.__v, [b._id]: b.__v });
+   * ```
+   */
+  async deleteBulk(versions: Record<string, number>): Promise<IBulkVersionedResult> {
+    assertVersions(versions);
+    const ids = Object.keys(versions);
+    const response = await this.http.delete<Partial<IBulkVersionedResult>>(`${this.basePath}/bulk`, { data: { ids, versions } });
+    const result = response.result ?? {};
+    return {
+      ...result,
+      applied: result.applied ?? [],
+      skipped: result.skipped ?? [],
+      versions: response.versions ?? result.versions ?? {},
+    };
   }
 }

@@ -8,6 +8,8 @@ import {
     RateLimitError,
     NetworkError,
     ServerError,
+    ConflictError,
+    VersionRequiredError,
 } from './base-error';
 import { IApiErrorResponse, IInvalidField } from '../types';
 
@@ -46,6 +48,24 @@ export function transformError(error: any): Posty5Error {
                 return new AuthorizationError(message, details);
             case 404:
                 return new NotFoundError(message, details);
+            case 409: {
+                // Only a version conflict is typed; any other 409 (the tus
+                // upload's offset re-sync, for one) stays a generic error.
+                const body: any = data;
+                if (body?.code === 'VERSION_CONFLICT') {
+                    const result = body?.result ?? {};
+                    const current = Number(result.currentVersion ?? body?.currentVersion);
+                    return new ConflictError(
+                        message,
+                        Number.isFinite(current) ? current : -1,
+                        String(result._id ?? body?._id ?? ''),
+                        details
+                    );
+                }
+                return new Posty5Error(message, body?.code, status, details);
+            }
+            case 428:
+                return new VersionRequiredError(message, details);
             case 429:
                 const retryAfter = axiosError.response.headers['retry-after'];
                 return new RateLimitError(

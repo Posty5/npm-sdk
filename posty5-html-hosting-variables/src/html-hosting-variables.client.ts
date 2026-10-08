@@ -1,4 +1,4 @@
-import { HttpClient, IPaginationParams } from '@posty5/core';
+import { HttpClient, IPaginationParams, assertVersion, withVersion } from '@posty5/core';
 import {
     ICreateHtmlHostingVariableRequest,
     ISearchHtmlHostingVariablesResponse,
@@ -67,21 +67,25 @@ export class HtmlHostingVariablesClient {
      * Update an HTML hosting variable
      * @param id - Variable ID to update
      * @param data - Updated variable data (name, key, value)
-     * @returns Success response
+     * @param version - The variable's `__v` as you read it. A stale one throws `ConflictError`.
+     * @returns `{ _id, __v }`, `__v` being the new version
      * @example
      * ```typescript
+     * const v = await client.get('variable_id_123');
      * await client.update('variable_id_123', {
      *   name: 'Updated API Key',
-     *   key: 'api_key',
+     *   key: 'pst5_api_key',
      *   value: 'sk_live_789012'
-     * });
+     * }, v.__v);
      * ```
      */
-    async update(id: string, data: ICreateHtmlHostingVariableRequest): Promise<void> {
+    async update(id: string, data: ICreateHtmlHostingVariableRequest, version: number): Promise<IUpdateHtmlHostingVariableResponse> {
+        assertVersion(version);
         if (!data.key.startsWith("pst5_")) {
             throw new Error(`Key must start with 'pst5_', change to pst5_${data.key}`);
         }
-        await this.http.put<IUpdateHtmlHostingVariableResponse>(`${this.basePath}/${id}`, data);
+        const response = await this.http.put<IUpdateHtmlHostingVariableResponse>(`${this.basePath}/${id}`, data, { version });
+        return withVersion(response, id);
     }
 
     /**
@@ -90,11 +94,12 @@ export class HtmlHostingVariablesClient {
      * @returns Success response
      * @example
      * ```typescript
-     * await client.delete('variable_id_123');
+     * await client.delete('variable_id_123', variable.__v);
      * ```
      */
-    async delete(id: string): Promise<void> {
-        await this.http.delete<IDeleteHtmlHostingVariableResponse>(`${this.basePath}/${id}`);
+    async delete(id: string, version: number): Promise<void> {
+        assertVersion(version);
+        await this.http.delete<IDeleteHtmlHostingVariableResponse>(`${this.basePath}/${id}`, { version });
     }
 
     /**

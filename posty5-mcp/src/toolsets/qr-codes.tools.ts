@@ -16,7 +16,7 @@ import {
 import { MCP_BULK_MAX_ROWS, QR_MCP_FILE_MAX_BYTES, QR_SOCIAL_MAX_PROFILES } from "../config/limits.config";
 import { CREATE_QR_CODE_FEATURE_PATH } from "../config/link-costs.config";
 import { batchIdempotencyKey, describeBatch, describeQrBulkJob, runQrZipJob, unwrapBulkError } from "../core/link-bulk.helper";
-import { defineTool, idField, pageFields, pickPage, requireFields, withoutPaging } from "../core/define-tool.helper";
+import { defineTool, idField, pageFields, pickPage, requireFields, versionField, withoutPaging } from "../core/define-tool.helper";
 import { checkQrCodeAccess, checkQrSocialProfiles, createQrCode, resolveQrCodeMode, toQrBulkRow, updateQrCode } from "../core/qr-codes.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
@@ -305,6 +305,7 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
       "access left out keeps the scan rules; an object replaces them; null clears them. It may be refused by the user's plan.",
     input: z.object({
       id: idField(QR_CODE_ID),
+      version: versionField("the QR code"),
       ...targetFields,
       templateId: z.string().optional().describe("A new template, from qr_code_list_templates."),
       ...labelFields,
@@ -320,7 +321,7 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
       checkQrSocialProfiles(args, mode);
       const current = await clients.qrCodes.get(args.id);
       const base = { name: args.name ?? current.name, templateId: args.templateId ?? current.templateId ?? "", refId: args.refId, tag: args.tag, mode, ...(args.access !== undefined ? { access: args.access } : {}) };
-      return updateQrCode(clients.qrCodes, args.id, base, args);
+      return updateQrCode(clients.qrCodes, args.id, base, args, args.version);
     },
     entity: (_result, args) => ({ entityType: "qrCode", entityId: args.id }),
   }),
@@ -330,7 +331,7 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
     access: "full",
     title: "Delete a QR code",
     description: "Deletes a QR code. Its landing page stops working, so printed copies stop working too. Cannot be undone.",
-    input: z.object({ id: idField(QR_CODE_ID) }),
+    input: z.object({ id: idField(QR_CODE_ID), version: versionField("the QR code") }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
       describe: async ({ id }, { clients }) => {
@@ -339,8 +340,8 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
       },
       costFeaturePath: "qrCodeGenerator.deleteQrCode",
     },
-    run: async ({ id }, { clients }) => {
-      await clients.qrCodes.delete(id);
+    run: async ({ id, version }, { clients }) => {
+      await clients.qrCodes.delete(id, version);
       return { deleted: true, id };
     },
     entity: (_result, args) => ({ entityType: "qrCode", entityId: args.id }),

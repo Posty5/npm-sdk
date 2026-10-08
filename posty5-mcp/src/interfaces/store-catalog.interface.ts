@@ -8,5 +8,5 @@ export type ProductSection = (typeof PRODUCT_SECTIONS)[number];
 /** How one product section is checked and saved: the shape of its `data`, and the SDK `update<Section>` call. */
 export interface IProductSectionWriter {
   schema: z.ZodType;
-  save(products: StoreProductsClient, storeId: string, productId: string, data: unknown): Promise<IStoreProduct>;
+  save(products: StoreProductsClient, storeId: string, productId: string, data: unknown, version: number): Promise<IStoreProduct>;
 }

@@ -254,6 +254,18 @@
     {
       "path": "posty5-qr-design/src",
       "role": "@posty5/qr-design: QR design engine, catalogues, scannability."
+    },
+    {
+      "path": "posty5-core/src/http/concurrency.helper.ts",
+      "role": "Versioned writes (5.0.0): assertVersion(s), ifMatchHeader, hasIfMatch, withVersion, one-time missing-version warning."
+    },
+    {
+      "path": "posty5-core/src/http/concurrency.config.ts",
+      "role": "Versioned-write constants: If-Match, X-Posty5-Concurrency, VERSION_CONFLICT/REQUIRED, non-retryable statuses."
+    },
+    {
+      "path": "__tests__/versioned-writes.test.ts",
+      "role": "Offline tests: version errors (generic 409 kept), If-Match, no retry, client header, report-mode warning."
     }
   ]
 }

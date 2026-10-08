@@ -1,5 +1,27 @@
 # Changelog
 
+## 5.0.0
+
+Optimistic concurrency. Released in lockstep with every `@posty5/*` package
+that writes (all at 5.0.0). Needs the API's versioned-writes release.
+
+### Breaking changes
+
+- **Versioned writes.** Every update, delete and state-change method takes the document's version (`__v`) as a required argument and sends it as `If-Match: "<v>"` (bulk methods send a `versions` map). Omitting it is a compile error in TypeScript and a `TypeError` at runtime.
+- **New return types.** Methods that returned `void`, a boolean or a rebuilt subset now return the server's result with `__v` set to the new version (at least `{ _id, __v }`). Deletes still return nothing: no successor document exists.
+- **Two typed errors** (from `@posty5/core`): `ConflictError` (409 `VERSION_CONFLICT`, carries `currentVersion` and `resourceId`) and `VersionRequiredError` (428 `VERSION_REQUIRED`). Any other 409 stays a generic `Posty5Error`.
+- **No automatic retry** of a versioned write (any request carrying `If-Match`), nor of a 409 or 428: a lost response retried with the old version would report a false conflict. The caller decides.
+- Every entity model declares `__v: number`.
+- In this package: products: `update`, `delete`, `patchSection` (now public) and every section method (`updateBasicInformation` ... `updatePurchase`) take `version` last; tags: `update`, `delete`, `setProductTags(storeId, productId, tagIds, productVersion)`; orders: `updateStatus(storeId, orderId, status, version, note?)` (and the facade's `updateOrderStatus`); shipping: `updateCountry`, `deleteCountry`, `upsertRoute` (0 for a place with no route yet), `clearRoute`, `updateProfile`, `deleteProfile`, `savePlacePrices(..., countryVersion)`, `updateParcelPrice` (now returns `{ _id, __v }`), `removeParcelPrice`; suppliers: `replaceCredentials`, `updateSettings`, `updateAutomation`, `setEnabled`, `disconnect(storeId, id, version, options?)`, `updateLink`, `deleteLink`, `retry(storeId, supplierOrderId, version, options?)`, `pay`, `cancel`, `fulfilGroupManually(..., orderVersion)`.
+
+### Migration
+
+```ts
+const product = await store.products.get(storeId, productId);
+const saved = await store.products.updatePrice(storeId, productId, { price: 10 }, product.__v);
+await store.products.updateStock(storeId, productId, { stock: 5 }, saved.__v);
+```
+
 ## 4.4.0
 
 - **`store.stores` / `listStores(term?)`** — the stores the key can manage (owned or staffed), from `GET /api/store/lookup`; each `_id` is the `storeId` every other method takes.

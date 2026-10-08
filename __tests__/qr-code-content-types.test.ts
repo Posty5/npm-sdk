@@ -20,37 +20,37 @@ const typedCases = [
     type: "vcard",
     content: { firstName: "Sara", lastName: "Ali", organization: "Acme", phones: [{ kind: "mobile", number: "+201001234567" }], emails: ["sara@acme.com"], website: "https://acme.com" },
     create: (c: QRCodeClient, d: any) => c.createVCard(d),
-    update: (c: QRCodeClient, id: string, d: any) => c.updateVCard(id, d),
+    update: (c: QRCodeClient, id: string, d: any) => c.updateVCard(id, d, 0),
   },
   {
     type: "event",
     content: { title: "Launch", location: "Cairo", startsAt: "2026-11-01T18:00:00.000Z", endsAt: "2026-11-01T20:00:00.000Z" },
     create: (c: QRCodeClient, d: any) => c.createEvent(d),
-    update: (c: QRCodeClient, id: string, d: any) => c.updateEvent(id, d),
+    update: (c: QRCodeClient, id: string, d: any) => c.updateEvent(id, d, 0),
   },
   {
     type: "whatsapp",
     content: { phoneNumber: "+201001234567", message: "Hi & welcome" },
     create: (c: QRCodeClient, d: any) => c.createWhatsApp(d),
-    update: (c: QRCodeClient, id: string, d: any) => c.updateWhatsApp(id, d),
+    update: (c: QRCodeClient, id: string, d: any) => c.updateWhatsApp(id, d, 0),
   },
   {
     type: "review",
     content: { platform: "google", placeId: "ChIJN1t_tDeuEmsRUsoyG83frY4" },
     create: (c: QRCodeClient, d: any) => c.createReview(d),
-    update: (c: QRCodeClient, id: string, d: any) => c.updateReview(id, d),
+    update: (c: QRCodeClient, id: string, d: any) => c.updateReview(id, d, 0),
   },
   {
     type: "social",
     content: { profiles: [{ platform: "instagram", handle: "posty5" }], title: "Follow us" },
     create: (c: QRCodeClient, d: any) => c.createSocial(d),
-    update: (c: QRCodeClient, id: string, d: any) => c.updateSocial(id, d),
+    update: (c: QRCodeClient, id: string, d: any) => c.updateSocial(id, d, 0),
   },
   {
     type: "appStore",
     content: { androidUrl: "https://play.google.com/store/apps/details?id=com.example", iosUrl: "https://apps.apple.com/app/id123456789", fallbackUrl: "https://example.com/app" },
     create: (c: QRCodeClient, d: any) => c.createAppStore(d),
-    update: (c: QRCodeClient, id: string, d: any) => c.updateAppStore(id, d),
+    update: (c: QRCodeClient, id: string, d: any) => c.updateAppStore(id, d, 0),
   },
 ] as const;
 
@@ -207,7 +207,7 @@ describe("QR Code SDK — content types (offline)", () => {
   it("updateFile without content keeps the stored file: no upload, no bucketFilePath", async () => {
     const { http, calls } = stubHttp({ _id: "qr1" });
     const fetchMock = mockFetch();
-    await new QRCodeClient(http).updateFile("qr1", { name: "Menu", templateId, file: { fileName: "menu-2026.pdf" } });
+    await new QRCodeClient(http).updateFile("qr1", { name: "Menu", templateId, file: { fileName: "menu-2026.pdf" } }, 0);
     expect(fetchMock).not.toHaveBeenCalled();
     expect(calls).toEqual([
       { method: "PUT", url: "/api/qr-code/file/qr1", body: { name: "Menu", templateId, qrCodeTarget: { type: "file", file: { fileName: "menu-2026.pdf" } }, ...source } },
@@ -217,7 +217,7 @@ describe("QR Code SDK — content types (offline)", () => {
   it("updateFile with content uploads first, then PUTs the new bucketFilePath", async () => {
     const { http, calls } = stubHttp(ticket);
     const fetchMock = mockFetch();
-    await new QRCodeClient(http).updateFile("qr1", { name: "Menu", templateId }, new Blob(["x"], { type: "image/webp" }));
+    await new QRCodeClient(http).updateFile("qr1", { name: "Menu", templateId }, 0, new Blob(["x"], { type: "image/webp" }));
     expect(calls[0]).toEqual({ method: "POST", url: "/api/qr-code/file/upload-url", body: { fileName: "file", mimeType: "image/webp", sizeBytes: 1 } });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(calls[1]).toEqual({
