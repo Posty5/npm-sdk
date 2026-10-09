@@ -1,4 +1,4 @@
-import { IBinaryResponse } from "@posty5/core";
+import { IBinaryResponse, assertVersion, withVersion } from "@posty5/core";
 import { BaseStoreClient } from "./base.client";
 import {
   ICreateOrderInput,
@@ -8,8 +8,10 @@ import {
   IPaginated,
   IStoreOrder,
   IStoreOrderSummary,
+  StoreOrderCreatedFrom,
   StoreOrderStatus,
 } from "../interfaces";
+import { STORE_ORDER_CREATED_FROM_VALUES, STORE_ORDER_DEFAULT_CREATED_FROM } from "../config/orders.config";
 
 /**
  * Merchant order management — `/api/store-orders`.
@@ -62,12 +64,16 @@ export class StoreOrdersClient extends BaseStoreClient {
 
   /**
    * Record an order received off-store. Runs the same pricing, stock, numbering
-   * and tracking machinery as a real checkout, tagged `createdFrom:
-   * "npmPackage"`. Charges the deferred `manualOrder` op. Shipping is resolved
-   * server-side from the destination — never send a fee.
+   * and tracking machinery as a real checkout, tagged with the client's
+   * `createdFrom` when the API accepts it for orders (see
+   * `STORE_ORDER_CREATED_FROM_VALUES`), else `"npmPackage"`. Charges the
+   * deferred `manualOrder` op. Shipping is resolved server-side from the
+   * destination — never send a fee.
    */
   async create(storeId: string, order: ICreateOrderInput): Promise<IStoreOrder> {
-    const res = await this.http.post<IStoreOrder>(`${this.base}/${storeId}`, { ...order, createdFrom: "npmPackage" });
+    const label = this.http.createdFrom as StoreOrderCreatedFrom;
+    const createdFrom = STORE_ORDER_CREATED_FROM_VALUES.includes(label) ? label : STORE_ORDER_DEFAULT_CREATED_FROM;
+    const res = await this.http.post<IStoreOrder>(`${this.base}/${storeId}`, { ...order, createdFrom });
     return res.result!;
   }
 
@@ -79,11 +85,13 @@ export class StoreOrdersClient extends BaseStoreClient {
    * customer-facing — it reaches the status event and the notification email.
    * On an order in several parts (`fulfilmentGroups`), `shipped` and `delivered`
    * are reached by the parts themselves — the order moves at the pace of its
-   * slowest part — not set by hand.
+   * slowest part — not set by hand. `version` is the order's `__v`; a stale
+   * one throws `ConflictError`.
    */
-  async updateStatus(storeId: string, orderId: string, status: StoreOrderStatus, note?: string): Promise<IStoreOrder> {
-    const res = await this.http.post<IStoreOrder>(`${this.base}/${storeId}/${orderId}/status`, { status, note: note ?? "" });
-    return res.result!;
+  async updateStatus(storeId: string, orderId: string, status: StoreOrderStatus, version: number, note?: string): Promise<IStoreOrder> {
+    assertVersion(version);
+    const res = await this.http.post<IStoreOrder>(`${this.base}/${storeId}/${orderId}/status`, { status, note: note ?? "" }, { version });
+    return withVersion(res, orderId);
   }
 
   /** Attach a staff-only note. Charges nothing and sends no email. */

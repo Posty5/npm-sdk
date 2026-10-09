@@ -126,6 +126,8 @@ export interface IStoreSupplierAuditEntry {
 /** A supplier connection. Credentials are never returned — only whether they are stored. */
 export interface IStoreSupplierIntegration {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   supplierKey: string;
   connectionMethod: StoreSupplierConnectionMethod;
   mode: StoreSupplierMode;
@@ -369,6 +371,8 @@ export interface IStoreProductSupplierLinkVariant {
 /** A store product and the supplier product it is fulfilled from. */
 export interface IStoreProductSupplierLink {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   productId: string;
   integrationId: string;
   supplierKey: string;

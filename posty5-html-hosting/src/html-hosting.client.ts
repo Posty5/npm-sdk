@@ -1,4 +1,4 @@
-import { HttpClient, IPaginationParams, uploadToR2 } from "@posty5/core";
+import { HttpClient, IPaginationParams, IResponse, assertVersion, uploadToR2, withVersion } from "@posty5/core";
 import {
   IHtmlPageResponse,
   ISearchHtmlPagesResponse,
@@ -54,7 +54,7 @@ export class HtmlHostingClient {
     // Step 1: Create the HTML page record and get upload configuration
     const response = await this.http.post<ICreateHtmlPageResponse>(`${this.basePath}/file`, {
       ...data,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     const result = response.result!.details;
     const uploadConfig = response.result!.uploadFileConfig;
@@ -82,7 +82,7 @@ export class HtmlHostingClient {
   async createWithGithubFile(data: ICreateHtmlPageRequestWithGithub): Promise<IHtmlPageCreateWithGithubResponse> {
     const response = await this.http.post<ICreateHtmlPageResponse>(`${this.basePath}/github`, {
       ...data,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
     const result = response.result!.details;
 
@@ -109,15 +109,21 @@ export class HtmlHostingClient {
    * @param id - HTML page ID to update
    * @param data - Update request data with file information
    * @param file - New HTML file to upload (File or Blob)
-   * @returns Updated page with ID, shorter link, and file URL
+   * @param version - The page's `__v` as you read it. A stale one throws `ConflictError`.
+   * @returns The updated page, `__v` set to the new version
    */
-  async updateWithNewFile(id: string, data: IUpdateHtmlPageRequestWithFile, file: File | Blob): Promise<IHtmlPageCreateWithFileResponse> {
+  async updateWithNewFile(id: string, data: IUpdateHtmlPageRequestWithFile, file: File | Blob, version: number): Promise<IHtmlPageResponse> {
+    assertVersion(version);
     // Step 1: Update the HTML page record and get upload configuration
-    const response = await this.http.put<IUpdateHtmlPageResponse>(`${this.basePath}/${id}/file`, {
-      ...data,
-      isNewFile: true,
-    });
-    const result = response.result!.details;
+    const response = await this.http.put<IUpdateHtmlPageResponse>(
+      `${this.basePath}/${id}/file`,
+      {
+        ...data,
+        isNewFile: true,
+      },
+      { version },
+    );
+    const result = this.pageWithVersion(response, id);
     const uploadConfig = response.result!.uploadFileConfig;
 
     // Step 2: Upload HTML file to R2 using uploadToR2 utility
@@ -129,11 +135,7 @@ export class HtmlHostingClient {
 
     // Page is auto-published by backend
 
-    return {
-      _id: result._id,
-      shorterLink: result.shorterLink,
-      fileUrl: result.fileUrl!,
-    };
+    return result;
   }
 
   /**
@@ -141,28 +143,28 @@ export class HtmlHostingClient {
    * The API will automatically fetch, deploy, and publish the file from GitHub
    * @param id - HTML page ID to update
    * @param data - Update request data with GitHub file URL
-   * @returns Updated page with ID, shorter link, and GitHub info
+   * @param version - The page's `__v` as you read it. A stale one throws `ConflictError`.
+   * @returns The updated page, `__v` set to the new version
    */
-  async updateWithGithubFile(id: string, data: IUpdateHtmlPageRequestWithGithub): Promise<IHtmlPageCreateWithGithubResponse> {
-    const response = await this.http.put<IUpdateHtmlPageResponse>(`${this.basePath}/${id}/github`, {
-      ...data,
-    });
-    const result = response.result!.details;
-
-    return {
-      _id: result._id,
-      shorterLink: result.shorterLink,
-      githubInfo: result.githubInfo!,
-    };
+  async updateWithGithubFile(id: string, data: IUpdateHtmlPageRequestWithGithub, version: number): Promise<IHtmlPageResponse> {
+    assertVersion(version);
+    const response = await this.http.put<IUpdateHtmlPageResponse>(`${this.basePath}/${id}/github`, { ...data }, { version });
+    return this.pageWithVersion(response, id);
   }
 
   /**
    * Delete an HTML page
    * @param id - HTML page ID
-   * @returns Deletion confirmation
+   * @param version - The page's `__v` as you read it. A stale one throws `ConflictError`.
    */
-  async delete(id: string): Promise<void> {
-    await this.http.delete<IDeleteHtmlPageResponse>(`${this.basePath}/${id}`);
+  async delete(id: string, version: number): Promise<void> {
+    assertVersion(version);
+    await this.http.delete<IDeleteHtmlPageResponse>(`${this.basePath}/${id}`, { version });
+  }
+
+  /** The update answer's `details`, with `__v` from the envelope's `version`. */
+  private pageWithVersion(response: IResponse<IUpdateHtmlPageResponse>, id: string): IHtmlPageResponse {
+    return withVersion({ ...response, result: response.result?.details as IHtmlPageResponse }, id);
   }
 
   /**

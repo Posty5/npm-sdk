@@ -1,0 +1,76 @@
+{
+    "name": "@posty5/mcp",
+    "version": "1.1.0",
+    "description": "Posty5 MCP server: every Posty5 SDK service as Model Context Protocol tools, for any AI assistant",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "bin": {
+        "posty5-mcp": "./dist/bin/stdio.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Posty5/npm-sdk.git"
+    },
+    "homepage": "https://github.com/Posty5/npm-sdk#readme",
+    "publishConfig": {
+        "access": "public"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "typecheck": "tsc --noEmit",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "posty5",
+        "mcp",
+        "model-context-protocol",
+        "ai",
+        "agent",
+        "claude",
+        "chatgpt",
+        "short-link",
+        "qr-code",
+        "social-media",
+        "online-store"
+    ],
+    "author": "Posty5",
+    "license": "MIT",
+    "dependencies": {
+        "@modelcontextprotocol/node": "2.1.1",
+        "@modelcontextprotocol/server": "2.3.1",
+        "@posty5/account": "^4.3.0",
+        "@posty5/core": "^5.0.0",
+        "@posty5/html-hosting": "^5.0.0",
+        "@posty5/html-hosting-form-submission": "^5.0.0",
+        "@posty5/html-hosting-variables": "^5.0.0",
+        "@posty5/qr-code": "^5.0.0",
+        "@posty5/short-link": "^5.0.0",
+        "@posty5/social-publisher-post": "^5.0.0",
+        "@posty5/social-publisher-workspace": "^5.0.0",
+        "@posty5/store": "^5.0.0",
+        "zod": "^4.2.0"
+    },
+    "devDependencies": {
+        "@modelcontextprotocol/client": "2.3.1",
+        "@types/node": "^20.0.0",
+        "tsup": "^8.0.0",
+        "typescript": "^5.3.0"
+    },
+    "engines": {
+        "node": ">=20.0.0"
+    }
+}

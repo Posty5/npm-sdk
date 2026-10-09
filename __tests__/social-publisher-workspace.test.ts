@@ -152,13 +152,13 @@ describe("Social Publisher Workspace SDK", () => {
       const result = await client.update(createdResources.workspaces[0], {
         name: newName,
         description: "Updated description",
-      });
+      }, (await client.get(createdResources.workspaces[0])).__v);
     });
   });
 
   describe("DELETE", () => {
     it("should delete workspace", async () => {
-      await client.delete(createdId);
+      await client.delete(createdId, (await client.get(createdId)).__v);
 
       // Verify deletion
       await expect(client.get(createdId)).rejects.toThrow();

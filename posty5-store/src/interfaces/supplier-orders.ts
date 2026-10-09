@@ -87,6 +87,8 @@ export interface IStoreSupplierOrderEvent {
 /** One attempt at sending one order part to its supplier. */
 export interface IStoreSupplierOrder {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   storeId: string;
   orderId: string;
   orderNumber?: string;

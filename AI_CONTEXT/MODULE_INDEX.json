@@ -4,17 +4,17 @@
   "modules": [
     {
       "name": "core",
-      "purpose": "HttpClient, retry/error handling, common types, pagination, and signed uploads.",
+      "purpose": "HttpClient, retry/error handling, common types, pagination, signed uploads, and the link analytics + statistics types and query helpers shared by short-link and qr-code (4.4.0).",
       "primary_path": "posty5-core/src"
     },
     {
       "name": "short-link",
-      "purpose": "Short-link CRUD/list client.",
+      "purpose": "Short-link CRUD/list client. templateId required; androidUrl/iosUrl and isEnableLandingPage (S13); isEnableMonetization deprecated and stripped from every request; legacy pageinfo.title filter sent as pageInfo.title (4.3.0). getAnalytics(id, query?) and statistics(query?) (4.4.0, VA). Bulk (createMany, export, bulk jobs) since 4.5.0 via core's runLinkBulkCreate/LinkBulkJobApi.",
       "primary_path": "posty5-short-link/src"
     },
     {
       "name": "qr-code",
-      "purpose": "Seven QR types with create/update/get/list/delete.",
+      "purpose": "Seven QR types with create/update/get/list/delete. Sends qrCodeTarget only; the API builds options.text (free text still sends it). isEnableMonetization deprecated and stripped; isEnableLandingPage on requests and list (4.3.0). getAnalytics(id, query?) and statistics(query?) (4.4.0, VA). Bulk (createMany, export, bulk jobs) since 4.5.0 via core's runLinkBulkCreate/LinkBulkJobApi.",
       "primary_path": "posty5-qr-code/src"
     },
     {
@@ -46,6 +46,26 @@
       "name": "store",
       "purpose": "Online Store management: products (incl. per-section saves, clone, Excel, AI), orders (incl. dropshipping parts), tags, customers, shipping and dropshipping suppliers. Split into six sub-clients on StoreClient. In the workspace and the publish workflow since 4.3.0.",
       "primary_path": "posty5-store/src"
+    },
+    {
+      "name": "account",
+      "purpose": "Who an API key is, credits, credit history and summary, live operation prices. New in 4.3.0.",
+      "primary_path": "posty5-account/src"
+    },
+    {
+      "name": "mcp",
+      "purpose": "@posty5/mcp: every SDK service as MCP tools (148 in 10 toolsets, incl. short_link_get_analytics / qr_code_get_analytics), createPosty5McpServer, listTools/listToolsets, and the posty5-mcp stdio binary. Access levels, confirm gate, aiModel attribution, idempotency. New in 1.0.0.",
+      "primary_path": "posty5-mcp/src"
+    },
+    {
+      "name": "webhooks",
+      "purpose": "@posty5/webhooks: WebhookEndpointClient over /api/webhook-endpoints (CRUD, rotate-secret, test, deliveries, redeliver, event-types) and verifyWebhookSignature (Standard Webhooks, node:crypto, Node only). New in 4.5.0.",
+      "primary_path": "posty5-webhooks/src"
+    },
+    {
+      "name": "qr-design",
+      "purpose": "@posty5/qr-design: framework-free QR design engine. renderDesignSvg (deterministic v2 SVG: shapes, gradients, frames with outlined Latin/Arabic CTA text, print presets), checkScannability (K5), normalizeDesign/isV2Design/encodeMatrix, catalogues. No HTTP, no @posty5/core. New in 4.7.0.",
+      "primary_path": "posty5-qr-design/src"
     }
   ]
 }

@@ -149,6 +149,32 @@ try {
 }
 ```
 
+## 🔒 Versioned writes (5.0.0)
+
+Every write to an existing document carries the version you read, so two
+people (or two scripts) can never silently overwrite each other.
+
+- **Where `__v` comes from:** every entity this SDK returns (`get`, `list`,
+  and every write) has `__v`. Keep the `__v` a write returns for your next write.
+- **A stale version** throws `ConflictError` (409). It carries
+  `currentVersion`, the document's version now.
+- **Merging deliberately:** reload, re-apply your change, and resend with the
+  fresh version (`currentVersion`). There is no "overwrite anyway" flag;
+  resending blindly is exactly the lost update this prevents.
+- Versioned writes are never retried automatically.
+
+```ts
+import { ConflictError } from "@posty5/core";
+
+try {
+  await http.put(`/api/short-link/${id}`, body, { version: link.__v }); // If-Match: "<__v>"
+} catch (error) {
+  if (error instanceof ConflictError) {
+    // error.currentVersion: reload, merge, and resend with the fresh __v
+  } else throw error;
+}
+```
+
 ## 📚 API Reference
 
 ### HttpClient
@@ -198,6 +224,16 @@ interface ApiResponse<T> {
   error?: any;
 }
 ```
+
+### Link Analytics Types
+
+`ILinkAnalyticsQuery`, `ILinkAnalyticsResponse` and the `LinkAnalyticsBreakdown`
+/ `LinkAnalyticsInterval` unions (4.4.0) describe the answer of
+`getAnalytics()` in `@posty5/short-link` and `@posty5/qr-code`, which re-export
+them; `ILinkStatisticsQuery`, `ILinkStatisticsResponse<TData>` and
+`ILinkStatisticsDailyRow` do the same for their `statistics()`.
+`toLinkAnalyticsQuery(query)` and `toLinkStatisticsQuery(query)` are the query
+serializations both use.
 
 ---
 
@@ -249,6 +285,25 @@ We're here to help you succeed with Posty5!
 3. **Rate Limiting**
    - The SDK includes automatic retry logic
    - Check your API plan limits in the dashboard
+
+---
+
+## 🧭 Client identity, origin label and retries (4.3.0)
+
+```ts
+const http = new HttpClient({
+  apiKey: process.env.POSTY5_API_KEY,
+  createdFrom: "my-integration", // stamped on records you create (default "npmPackage")
+  headers: { "X-Posty5-Client": "my-integration/1.0.0" }, // default: posty5-npm/<version>
+  maxRetries: 3, // 0 disables
+});
+```
+
+- Every request sends `X-Posty5-Client`. `X-API-Key` cannot be overridden through `headers`.
+- **POST and PATCH are never retried once the server has answered** — a retry
+  could publish a post twice or charge twice. They are retried only when the
+  connection was never made. GET, HEAD, OPTIONS, PUT and DELETE are retried on a
+  network error or a 5xx, as before.
 
 ---
 

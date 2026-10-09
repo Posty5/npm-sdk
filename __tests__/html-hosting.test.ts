@@ -323,7 +323,7 @@ describe("HTML Hosting SDK", () => {
           name: "Updated HTML Page - " + Date.now(),
           fileName: "updated.html",
         },
-        file,
+        file, (await client.get(createdIdWithFile)).__v,
       );
 
       expect(result._id).toBe(createdIdWithFile);
@@ -340,7 +340,7 @@ describe("HTML Hosting SDK", () => {
           fileName: "monetization.html",
           isEnableMonetization: false,
         },
-        file,
+        file, (await client.get(createdIdWithFile)).__v,
       );
 
       expect(result._id).toBe(createdIdWithFile);
@@ -369,7 +369,7 @@ describe("HTML Hosting SDK", () => {
         githubInfo: {
           fileURL: "https://github.com/Netflix/netflix.github.com/blob/master/index.html",
         },
-      });
+      }, (await client.get(createdIdWithGithub)).__v);
 
       expect(result._id).toBe(createdIdWithGithub);
       expect(result.githubInfo).toBeDefined();
@@ -384,7 +384,7 @@ describe("HTML Hosting SDK", () => {
         customLandingId: "updated-github-" + Date.now(),
         isEnableMonetization: false,
         autoSaveInGoogleSheet: true,
-      });
+      }, (await client.get(createdIdWithGithub)).__v);
 
       expect(result._id).toBe(createdIdWithGithub);
     });
@@ -402,21 +402,21 @@ describe("HTML Hosting SDK", () => {
 
   describe("DELETE", () => {
     it("should delete HTML hosting page created with file", async () => {
-      await client.delete(createdIdWithFile);
+      await client.delete(createdIdWithFile, (await client.get(createdIdWithFile)).__v);
 
       // Verify deletion
       await expect(client.get(createdIdWithFile)).rejects.toThrow();
     });
 
     it("should delete HTML hosting page created with GitHub", async () => {
-      await client.delete(createdIdWithGithub);
+      await client.delete(createdIdWithGithub, (await client.get(createdIdWithGithub)).__v);
 
       // Verify deletion
       await expect(client.get(createdIdWithGithub)).rejects.toThrow();
     });
 
     it("should fail to delete with invalid ID", async () => {
-      await expect(client.delete("invalid-id-123")).rejects.toThrow();
+      await expect(client.delete("invalid-id-123", 0)).rejects.toThrow();
     });
   });
 });

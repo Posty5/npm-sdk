@@ -14,6 +14,8 @@ import { IPaginationResponse } from "@posty5/core";
 export interface IHtmlHostingVariableResponse {
   /** Variable ID */
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   /** Variable name */
   name: string;
   /** Variable key */
@@ -50,8 +52,10 @@ export interface ICreateHtmlHostingVariableResponse {
  * Update HTML hosting variable response
  */
 export interface IUpdateHtmlHostingVariableResponse {
-  /** Success message */
-  message?: string;
+  /** Variable ID */
+  _id: string;
+  /** The variable's new version */
+  __v: number;
 }
 
 /**

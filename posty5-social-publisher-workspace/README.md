@@ -102,6 +102,33 @@ console.log(`Found ${workspaces.pagination.totalCount} workspaces`);
 
 ---
 
+## 🔒 Versioned writes (5.0.0)
+
+Every write to an existing document carries the version you read, so two
+people (or two scripts) can never silently overwrite each other.
+
+- **Where `__v` comes from:** every entity this SDK returns (`get`, `list`,
+  and every write) has `__v`. Keep the `__v` a write returns for your next write.
+- **A stale version** throws `ConflictError` (409). It carries
+  `currentVersion`, the document's version now.
+- **Merging deliberately:** reload, re-apply your change, and resend with the
+  fresh version (`currentVersion`). There is no "overwrite anyway" flag;
+  resending blindly is exactly the lost update this prevents.
+- Versioned writes are never retried automatically.
+
+```ts
+import { ConflictError } from "@posty5/core";
+
+try {
+  const ws = await client.get(id);
+  await client.update(id, { name, description }, ws.__v);
+} catch (error) {
+  if (error instanceof ConflictError) {
+    // error.currentVersion: reload, merge, and resend with the fresh __v
+  } else throw error;
+}
+```
+
 ## 📚 API Reference & Examples
 
 ### create()
@@ -595,6 +622,27 @@ We're here to help you succeed with Posty5!
 3. **Rate Limiting**
    - The SDK includes automatic retry logic
    - Check your API plan limits in the dashboard
+
+---
+
+## 👤 Connected social accounts (4.3.0)
+
+```ts
+import { SocialPublisherAccountClient } from "@posty5/social-publisher-workspace";
+
+const accounts = new SocialPublisherAccountClient(http);
+const { items } = await accounts.list({ platform: "instagram" });
+// items[0]._id is the accountId the account-targeted post methods take
+```
+
+| Method | Route |
+| --- | --- |
+| `list(params?, pagination?)` | `GET /api/social-publisher-account` |
+| `lookup(term?, platform?)` | `GET /api/social-publisher-account/lookup` |
+| `get(id)` | `GET /api/social-publisher-account/{id}` |
+
+Read-only: connecting an account is an OAuth flow done in the Posty5 dashboard.
+No response carries a platform token.
 
 ---
 

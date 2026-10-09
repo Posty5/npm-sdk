@@ -79,6 +79,8 @@ export interface IProductSearchFilters extends IPaginationParams {
 
 export interface IProductSummary {
   _id: string;
+  /** Document version: pass it to versioned writes (`update`, `delete`, ...). */
+  __v: number;
   numbering?: number;
   name: string;
   slug: string;

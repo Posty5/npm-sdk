@@ -236,7 +236,7 @@ describe("HTML Hosting Form Submission SDK", () => {
       const result = await client.changeStatus(submissionId, {
         status: "inProgress" as any,
         notes: "Status changed via test",
-      });
+      }, listResult.items[0].__v);
 
       expect(result).toBeDefined();
 
@@ -260,7 +260,7 @@ describe("HTML Hosting Form Submission SDK", () => {
         status: "Rejected" as any,
         rejectedReason: "Does not meet requirements",
         notes: "Rejected via test",
-      });
+      }, listResult.items[0].__v);
 
       expect(result).toBeDefined();
     });

@@ -1,4 +1,4 @@
-import { IBinaryResponse } from "@posty5/core";
+import { IBinaryResponse, assertVersion, withVersion } from "@posty5/core";
 import { BaseStoreClient } from "./base.client";
 import {
   IAddShippingCountryInput,
@@ -20,16 +20,18 @@ import {
   IUpdateShippingCountryInput,
   IUpsertShippingRouteInput,
   IUpsertShippingRouteResult,
-  IAssignShippingProfileInput,
-  IBulkImportReport,
   ICreateShippingProfileInput,
+  IDeleteShippingProfileResult,
   IExcelUploadInput,
-  IShippingAssignment,
+  ISaveShippingPlacePricesInput,
+  ISaveShippingPlacePricesResult,
   IShippingAssignmentPlace,
-  IShippingAssignmentsView,
+  IShippingParcelPriceFilters,
+  IShippingParcelPriceRow,
+  IShippingPlacePrices,
   IShippingProfile,
-  IShippingProfileCondition,
   IShippingProfileFilters,
+  IShippingProfileImportReport,
   IUpdateShippingProfileInput,
   ShippingProfileType,
 } from "../interfaces";
@@ -86,15 +88,19 @@ export class StoreShippingClient extends BaseStoreClient {
     return res.result!;
   }
 
-  /** Open or pause a country and set its fee. */
-  async updateCountry(storeId: string, iso: string, changes: IUpdateShippingCountryInput): Promise<{ zone: IShippingZone }> {
-    const res = await this.http.put<{ zone: IShippingZone }>(`${this.base}/${storeId}/countries/${iso}`, changes);
-    return res.result!;
+  /** Open or pause a country and set its fee. `version` is the country zone's `__v`. */
+  async updateCountry(storeId: string, iso: string, changes: IUpdateShippingCountryInput, version: number): Promise<{ zone: IShippingZone }> {
+    assertVersion(version);
+    const res = await this.http.put<{ zone: IShippingZone }>(`${this.base}/${storeId}/countries/${iso}`, changes, { version });
+    const result = res.result!;
+    if (result?.zone && typeof res.version === "number") result.zone.__v = res.version;
+    return result;
   }
 
-  /** Soft-delete a country and every route under it. */
-  async deleteCountry(storeId: string, iso: string): Promise<{ countryIso: string }> {
-    const res = await this.http.delete<{ countryIso: string }>(`${this.base}/${storeId}/countries/${iso}`);
+  /** Soft-delete a country and every route under it. `version` is the country zone's `__v`. */
+  async deleteCountry(storeId: string, iso: string, version: number): Promise<{ countryIso: string }> {
+    assertVersion(version);
+    const res = await this.http.delete<{ countryIso: string }>(`${this.base}/${storeId}/countries/${iso}`, { version });
     return res.result!;
   }
 
@@ -124,10 +130,12 @@ export class StoreShippingClient extends BaseStoreClient {
   /**
    * Price or block one governorate or city. A route that ends up saying nothing
    * — no fee AND delivery allowed — is removed rather than stored, so `rate`
-   * comes back `null` with `cleared: true`.
+   * comes back `null` with `cleared: true`. `version` is the route's `__v`,
+   * or `0` for a place that has no route of its own yet.
    */
-  async upsertRoute(storeId: string, iso: string, input: IUpsertShippingRouteInput): Promise<IUpsertShippingRouteResult> {
-    const res = await this.http.post<IUpsertShippingRouteResult>(`${this.base}/${storeId}/countries/${iso}/routes`, input);
+  async upsertRoute(storeId: string, iso: string, input: IUpsertShippingRouteInput, version: number): Promise<IUpsertShippingRouteResult> {
+    assertVersion(version);
+    const res = await this.http.post<IUpsertShippingRouteResult>(`${this.base}/${storeId}/countries/${iso}/routes`, input, { version });
     return res.result!;
   }
 
@@ -151,9 +159,10 @@ export class StoreShippingClient extends BaseStoreClient {
     return res.result!;
   }
 
-  /** Remove one override, putting the place back on whatever it inherits. */
-  async clearRoute(storeId: string, rateId: string): Promise<{ _id: string }> {
-    const res = await this.http.delete<{ _id: string }>(`${this.base}/${storeId}/routes/${rateId}`);
+  /** Remove one override, putting the place back on whatever it inherits. `version` is the route's `__v`. */
+  async clearRoute(storeId: string, rateId: string, version: number): Promise<{ _id: string }> {
+    assertVersion(version);
+    const res = await this.http.delete<{ _id: string }>(`${this.base}/${storeId}/routes/${rateId}`, { version });
     return res.result!;
   }
 
@@ -190,113 +199,98 @@ export class StoreShippingClient extends BaseStoreClient {
     return res.result!;
   }
 
-  /**
-   * Create a profile. A profile with no brackets is a legal first state — the
-   * name and type are saved before the brackets are known.
-   */
+  /** Create a profile — one parcel size, so `conditions` holds exactly one. Price it per place with `savePlacePrices`. */
   async createProfile(storeId: string, input: ICreateShippingProfileInput): Promise<IShippingProfile> {
     const res = await this.http.post<IShippingProfile>(`${this.base}/${storeId}/profiles`, input);
     return res.result!;
   }
 
-  /** Rename, re-describe, or replace the bracket list. `type` cannot change. */
-  async updateProfile(storeId: string, profileId: string, changes: IUpdateShippingProfileInput): Promise<IShippingProfile> {
-    const res = await this.http.put<IShippingProfile>(`${this.base}/${storeId}/profiles/${profileId}`, changes);
+  /** Rename, re-describe, or change the size (still one; keep its `key`). `type` cannot change. `version` is the profile's `__v`. */
+  async updateProfile(storeId: string, profileId: string, changes: IUpdateShippingProfileInput, version: number): Promise<IShippingProfile> {
+    assertVersion(version);
+    const res = await this.http.put<IShippingProfile>(`${this.base}/${storeId}/profiles/${profileId}`, changes, { version });
+    return withVersion(res, profileId);
+  }
+
+  /** Delete a profile, and every parcel price set for it at every place. `version` is the profile's `__v`. */
+  async deleteProfile(storeId: string, profileId: string, version: number): Promise<IDeleteShippingProfileResult> {
+    assertVersion(version);
+    const res = await this.http.delete<IDeleteShippingProfileResult>(`${this.base}/${storeId}/profiles/${profileId}`, { version });
     return res.result!;
   }
 
   /**
-   * Delete a profile. Refused while any place still assigns it — the fees a
-   * merchant typed against its brackets would go with it.
-   */
-  async deleteProfile(storeId: string, profileId: string): Promise<{ _id: string }> {
-    const res = await this.http.delete<{ _id: string }>(`${this.base}/${storeId}/profiles/${profileId}`);
-    return res.result!;
-  }
-
-  /**
-   * Append brackets, leaving the existing ones alone.
-   *
-   * A bracket added here shows up on every assignment immediately, unpriced —
-   * the profile owns the bracket list, an assignment only prices it.
-   */
-  async addProfileConditions(storeId: string, profileId: string, conditions: IShippingProfileCondition[]): Promise<IShippingProfile> {
-    const res = await this.http.post<IShippingProfile>(`${this.base}/${storeId}/profiles/${profileId}/conditions`, { conditions });
-    return res.result!;
-  }
-
-  /** Remove one bracket, and with it the fees pointing at it. */
-  async removeProfileCondition(storeId: string, profileId: string, conditionKey: string): Promise<IShippingProfile> {
-    const res = await this.http.delete<IShippingProfile>(
-      `${this.base}/${storeId}/profiles/${profileId}/conditions/${encodeURIComponent(conditionKey)}`,
-    );
-    return res.result!;
-  }
-
-  /**
-   * The spreadsheet a merchant fills brackets into.
+   * The spreadsheet a merchant fills sizes into, one profile per row.
    *
    * The columns differ by type — a weight profile gets two, a dimension profile
-   * five — so pass the type you are importing into. A weight store handed three
+   * five — so pass the type you are importing. A weight store handed three
    * columns it must leave empty cannot tell "no limit" from "I forgot".
    */
   async downloadProfileTemplate(storeId: string, type: ShippingProfileType = "weight"): Promise<IBinaryResponse> {
     return this.http.getBinary(`${this.base}/${storeId}/profiles/template`, { params: { type } });
   }
 
-  /** Bulk brackets from a filled-in template, base64-encoded in the body. */
-  async importProfileConditions(storeId: string, profileId: string, file: IExcelUploadInput): Promise<IBulkImportReport> {
-    const res = await this.http.post<IBulkImportReport>(`${this.base}/${storeId}/profiles/${profileId}/conditions/import`, {
+  /**
+   * Profiles from a filled-in template, base64-encoded in the body: every row
+   * becomes a profile of its own. Rows are applied independently, so the report
+   * lists the refused ones with their row numbers.
+   */
+  async importProfiles(storeId: string, type: ShippingProfileType, file: IExcelUploadInput): Promise<IShippingProfileImportReport> {
+    const res = await this.http.post<{ report: IShippingProfileImportReport }>(`${this.base}/${storeId}/profiles/import`, {
+      type,
       file: file.fileBase64,
     });
-    return res.result!;
+    return res.result!.report;
   }
 
-  // ─── Profile assignments ────────────────────────────────────────────────
+  // ─── Parcel prices ──────────────────────────────────────────────────────
 
   /**
-   * The profiles that apply at one place, and which tier they came from.
-   *
-   * Walks upward, so an unpriced city reports what it is currently inheriting
-   * rather than an empty list. Read `isInherited` before showing the rows as
-   * the place's own.
+   * A place's pricing table: every profile, its price here, the price it would
+   * otherwise inherit from the place above, and what a parcel of that size is
+   * charged here in the end. Needs `shipments.view`.
    */
-  async listAssignments(storeId: string, iso: string, place: IShippingAssignmentPlace): Promise<IShippingAssignmentsView> {
-    const res = await this.http.get<IShippingAssignmentsView>(`${this.base}/${storeId}/countries/${iso}/assignments`, {
+  async getPlacePrices(storeId: string, iso: string, place: IShippingAssignmentPlace): Promise<IShippingPlacePrices> {
+    const res = await this.http.get<IShippingPlacePrices>(`${this.base}/${storeId}/countries/${iso}/parcel-prices`, {
       params: this.toQuery(place),
     });
     return res.result!;
   }
 
   /**
-   * Assign a profile to a place, or re-price one already there.
-   *
-   * The moment a place has one of these, it stops inheriting from above
-   * entirely — including for parcels none of its own brackets fit. That is the
-   * rule the whole feature turns on: a merchant who prices a city separately
-   * means "this is what this city costs", not "add these to what the country
-   * already said".
+   * Save a place's prices in one call. A `null` fee removes the place's own
+   * price, so that size falls back to the price above it; profiles left out are
+   * untouched. Guarded by the country: `countryVersion` is the country
+   * zone's `__v`.
    */
-  async assignProfile(storeId: string, iso: string, input: IAssignShippingProfileInput): Promise<IShippingAssignment> {
-    const res = await this.http.post<IShippingAssignment>(`${this.base}/${storeId}/countries/${iso}/assignments`, input);
+  async savePlacePrices(storeId: string, iso: string, input: ISaveShippingPlacePricesInput, countryVersion: number): Promise<ISaveShippingPlacePricesResult> {
+    assertVersion(countryVersion, "countryVersion");
+    const res = await this.http.put<ISaveShippingPlacePricesResult>(`${this.base}/${storeId}/countries/${iso}/parcel-prices`, input, { version: countryVersion });
+    return res.result!;
+  }
+
+  /** Every parcel price the store has set, across countries, smallest size first. Cursor-paged. */
+  async listParcelPrices(storeId: string, filters: IShippingParcelPriceFilters = {}): Promise<IPaginated<IShippingParcelPriceRow>> {
+    const res = await this.http.get<IPaginated<IShippingParcelPriceRow>>(`${this.base}/${storeId}/parcel-prices`, {
+      params: this.toQuery(filters),
+    });
     return res.result!;
   }
 
   /**
-   * Make one assignment the place's default.
-   *
-   * Where a place offers alternatives ("by weight" or "by size"), the default
-   * is quoted even when the other is cheaper — the merchant named it, which is
-   * a decision rather than a tie-break. Without one, the cheaper match wins.
+   * Change one price, by the `priceId` a pricing table or the list returned.
+   * `version` is the price row's `__v`. Returns `{ _id, __v }` with the new version.
    */
-  async setDefaultAssignment(storeId: string, assignmentId: string): Promise<IShippingAssignment> {
-    const res = await this.http.put<IShippingAssignment>(`${this.base}/${storeId}/assignments/${assignmentId}/default`, {});
-    return res.result!;
+  async updateParcelPrice(storeId: string, priceId: string, fee: number, version: number): Promise<{ _id: string; __v: number }> {
+    assertVersion(version);
+    const res = await this.http.put<{ _id?: string }>(`${this.base}/${storeId}/parcel-prices/${priceId}`, { fee }, { version });
+    const updated = withVersion(res, priceId);
+    return { _id: updated._id, __v: updated.__v };
   }
 
-  /** Remove an assignment, putting the place back on whatever it inherits. */
-  async removeAssignment(storeId: string, assignmentId: string): Promise<{ _id: string }> {
-    const res = await this.http.delete<{ _id: string }>(`${this.base}/${storeId}/assignments/${assignmentId}`);
-    return res.result!;
+  /** Remove one price; that size falls back to the price above it. `version` is the price row's `__v`. */
+  async removeParcelPrice(storeId: string, priceId: string, version: number): Promise<void> {
+    assertVersion(version);
+    await this.http.delete(`${this.base}/${storeId}/parcel-prices/${priceId}`, { version });
   }
 }

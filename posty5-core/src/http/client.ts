@@ -3,6 +3,18 @@ import axiosRetry from "axios-retry";
 import { IBinaryResponse, IHttpClientConfig, IPosty5Config, IRequestConfig } from "../types";
 import { transformError } from "../errors";
 import { IResponse } from "../interface";
+import {
+  CLIENT_HEADER_NAME,
+  DEFAULT_BASE_URL,
+  DEFAULT_CREATED_FROM,
+  DEFAULT_MAX_RETRIES,
+  DEFAULT_RETRY_DELAY_MS,
+  DEFAULT_TIMEOUT_MS,
+  SDK_CLIENT_ID,
+} from "./client.config";
+import { shouldRetryRequest } from "./retry-policy.helper";
+import { IF_MATCH_HEADER } from "./concurrency.config";
+import { ifMatchHeader, warnOnMissingVersion } from "./concurrency.helper";
 
 /**
  * Pull the filename out of a `Content-Disposition` header. The server sends it
@@ -30,11 +42,11 @@ export class HttpClient {
   constructor(config: IPosty5Config = {}) {
     // Merge user config with internal defaults
     this.config = {
-      timeout: 30000,
-      maxRetries: 3,
-      retryDelay: 1000,
+      timeout: DEFAULT_TIMEOUT_MS,
+      maxRetries: DEFAULT_MAX_RETRIES,
+      retryDelay: DEFAULT_RETRY_DELAY_MS,
       ...config,
-      baseUrl: config.baseUrl || process.env.POSTY5_BASE_URL || "https://api.posty5.com",
+      baseUrl: config.baseUrl || process.env.POSTY5_BASE_URL || DEFAULT_BASE_URL,
     };
 
     // Create axios instance
@@ -43,20 +55,19 @@ export class HttpClient {
       timeout: this.config.timeout,
       headers: {
         "Content-Type": "application/json",
+        [CLIENT_HEADER_NAME]: SDK_CLIENT_ID,
         ...this.config.headers,
       },
     });
 
     // Configure retry logic
+    // `??`, not `||`: `maxRetries: 0` means no retries.
     axiosRetry(this.axiosInstance, {
-      retries: this.config.maxRetries || 3,
+      retries: this.config.maxRetries ?? DEFAULT_MAX_RETRIES,
       retryDelay: (retryCount) => {
-        return retryCount * (this.config.retryDelay || 1000);
+        return retryCount * (this.config.retryDelay ?? DEFAULT_RETRY_DELAY_MS);
       },
-      retryCondition: (error) => {
-        // Retry on network errors and 5xx server errors
-        return axiosRetry.isNetworkOrIdempotentRequestError(error) || (error.response?.status !== undefined && error.response.status >= 500);
-      },
+      retryCondition: shouldRetryRequest,
     });
 
     // Add request interceptor for authentication
@@ -92,6 +103,7 @@ export class HttpClient {
     // Add response interceptor for error handling
     this.axiosInstance.interceptors.response.use(
       (response) => {
+        warnOnMissingVersion(response.headers, response.config?.method, response.config?.url);
         if (this.config.debug) {
           console.log("[Posty5 SDK] Response:", {
             status: response.status,
@@ -107,6 +119,11 @@ export class HttpClient {
         return Promise.reject(transformError(error));
       },
     );
+  }
+
+  /** The `createdFrom` label the clients stamp on records they create. */
+  public get createdFrom(): string {
+    return this.config.createdFrom || DEFAULT_CREATED_FROM;
   }
 
   /**
@@ -224,11 +241,21 @@ export class HttpClient {
     const axiosConfig: AxiosRequestConfig = {};
 
     if (config.headers) {
-      axiosConfig.headers = config.headers;
+      axiosConfig.headers = { ...config.headers };
+    }
+
+    if (config.version !== undefined) {
+      // A versioned write: send the precondition and never retry it.
+      axiosConfig.headers = { ...(axiosConfig.headers || {}), [IF_MATCH_HEADER]: ifMatchHeader(config.version) };
+      axiosConfig["axios-retry"] = { retries: 0 };
     }
 
     if (config.params) {
       axiosConfig.params = config.params;
+    }
+
+    if (config.data !== undefined) {
+      axiosConfig.data = config.data;
     }
 
     if (config.timeout) {

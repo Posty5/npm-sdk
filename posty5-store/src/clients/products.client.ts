@@ -1,4 +1,4 @@
-import { IBinaryResponse } from "@posty5/core";
+import { IBinaryResponse, assertVersion, withVersion } from "@posty5/core";
 import { BaseStoreClient } from "./base.client";
 import {
   IBulkImportReport,
@@ -120,18 +120,24 @@ export class StoreProductsClient extends BaseStoreClient {
 
   // ─── Update / delete ────────────────────────────────────────────────────
 
-  /** Replace any subset of the product's top-level fields. */
-  async update(storeId: string, productId: string, changes: IUpdateProductInput): Promise<IStoreProduct> {
-    const res = await this.http.put<IStoreProduct>(`${this.base}/${storeId}/${productId}`, changes);
-    return res.result!;
+  /**
+   * Replace any subset of the product's top-level fields. `version` is the
+   * product's `__v` as you read it; a stale one throws `ConflictError`.
+   */
+  async update(storeId: string, productId: string, changes: IUpdateProductInput, version: number): Promise<IStoreProduct> {
+    assertVersion(version);
+    const res = await this.http.put<IStoreProduct>(`${this.base}/${storeId}/${productId}`, changes, { version });
+    return withVersion(res, productId);
   }
 
   /**
    * Soft-delete a product. It leaves the catalogue and the storefront; orders
-   * that reference it keep their snapshotted item rows.
+   * that reference it keep their snapshotted item rows. `version` is the
+   * product's `__v`.
    */
-  async delete(storeId: string, productId: string): Promise<unknown> {
-    const res = await this.http.delete(`${this.base}/${storeId}/${productId}`);
+  async delete(storeId: string, productId: string, version: number): Promise<unknown> {
+    assertVersion(version);
+    const res = await this.http.delete(`${this.base}/${storeId}/${productId}`, { version });
     return res.result;
   }
 
@@ -144,48 +150,48 @@ export class StoreProductsClient extends BaseStoreClient {
   // ─── Sections ───────────────────────────────────────────────────────────
 
   /** Name, SKU and description. The slug is on the SEO section, not here. */
-  async updateBasicInformation(storeId: string, productId: string, input: IProductBasicInformationInput): Promise<IStoreProduct> {
-    return this.patchSection(storeId, productId, "basic-information", input);
+  async updateBasicInformation(storeId: string, productId: string, input: IProductBasicInformationInput, version: number): Promise<IStoreProduct> {
+    return this.patchSection(storeId, productId, "basic-information", input, version);
   }
 
   /** The full ordered image list — index 0 is the primary image. */
-  async updateMedia(storeId: string, productId: string, input: IProductMediaInput): Promise<IStoreProduct> {
-    return this.patchSection(storeId, productId, "media", input);
+  async updateMedia(storeId: string, productId: string, input: IProductMediaInput, version: number): Promise<IStoreProduct> {
+    return this.patchSection(storeId, productId, "media", input, version);
   }
 
   /** Selling price and the optional compare-at price. */
-  async updatePrice(storeId: string, productId: string, input: IProductPriceInput): Promise<IStoreProduct> {
-    return this.patchSection(storeId, productId, "price", input);
+  async updatePrice(storeId: string, productId: string, input: IProductPriceInput, version: number): Promise<IStoreProduct> {
+    return this.patchSection(storeId, productId, "price", input, version);
   }
 
   /** Product-level stock. `null` means stock is not tracked. */
-  async updateStock(storeId: string, productId: string, input: IProductStockInput): Promise<IStoreProduct> {
-    return this.patchSection(storeId, productId, "stock", input);
+  async updateStock(storeId: string, productId: string, input: IProductStockInput, version: number): Promise<IStoreProduct> {
+    return this.patchSection(storeId, productId, "stock", input, version);
   }
 
   /** Variant groups and, optionally, the buyable stock combinations. */
-  async updateVariants(storeId: string, productId: string, input: IProductVariantsInput): Promise<IStoreProduct> {
-    return this.patchSection(storeId, productId, "variants", input);
+  async updateVariants(storeId: string, productId: string, input: IProductVariantsInput, version: number): Promise<IStoreProduct> {
+    return this.patchSection(storeId, productId, "variants", input, version);
   }
 
   /** Replace the product's whole tag list. */
-  async updateTags(storeId: string, productId: string, input: IProductTagsInput): Promise<IStoreProduct> {
-    return this.patchSection(storeId, productId, "tags", input);
+  async updateTags(storeId: string, productId: string, input: IProductTagsInput, version: number): Promise<IStoreProduct> {
+    return this.patchSection(storeId, productId, "tags", input, version);
   }
 
   /** Meta title, description, social image, index policy — and the slug. */
-  async updateSeo(storeId: string, productId: string, input: IProductSeoInput): Promise<IStoreProduct> {
-    return this.patchSection(storeId, productId, "seo", input);
+  async updateSeo(storeId: string, productId: string, input: IProductSeoInput, version: number): Promise<IStoreProduct> {
+    return this.patchSection(storeId, productId, "seo", input, version);
   }
 
   /** Publication status, featured flag, per-order limits and sort position. */
-  async updateSettings(storeId: string, productId: string, input: IProductSettingsInput): Promise<IStoreProduct> {
-    return this.patchSection(storeId, productId, "settings", input);
+  async updateSettings(storeId: string, productId: string, input: IProductSettingsInput, version: number): Promise<IStoreProduct> {
+    return this.patchSection(storeId, productId, "settings", input, version);
   }
 
   /** The landing sections: which are enabled, their order and each one's data. */
-  async updateLanding(storeId: string, productId: string, input: IProductLandingInput): Promise<IStoreProduct> {
-    return this.patchSection(storeId, productId, "landing", input);
+  async updateLanding(storeId: string, productId: string, input: IProductLandingInput, version: number): Promise<IStoreProduct> {
+    return this.patchSection(storeId, productId, "landing", input, version);
   }
 
   /**
@@ -193,16 +199,16 @@ export class StoreProductsClient extends BaseStoreClient {
    * regardless of the store's `shipping.calculation` mode, because a bulky item
    * costs more to ship for every copy of it.
    */
-  async updateShipping(storeId: string, productId: string, input: IProductShippingInput): Promise<IStoreProduct> {
-    return this.patchSection(storeId, productId, "shipping", input);
+  async updateShipping(storeId: string, productId: string, input: IProductShippingInput, version: number): Promise<IStoreProduct> {
+    return this.patchSection(storeId, productId, "shipping", input, version);
   }
 
   /**
    * How the product is bought: `store` through the cart, `external` on another
    * shop, or `both`. `external` and `both` need at least one link.
    */
-  async updatePurchase(storeId: string, productId: string, input: IProductPurchaseInput): Promise<IStoreProduct> {
-    return this.patchSection(storeId, productId, "purchase", input);
+  async updatePurchase(storeId: string, productId: string, input: IProductPurchaseInput, version: number): Promise<IStoreProduct> {
+    return this.patchSection(storeId, productId, "purchase", input, version);
   }
 
   // ─── Images ─────────────────────────────────────────────────────────────
@@ -235,8 +241,14 @@ export class StoreProductsClient extends BaseStoreClient {
     return res.result!;
   }
 
-  private async patchSection(storeId: string, productId: string, section: string, body: unknown): Promise<IStoreProduct> {
-    const res = await this.http.patch<IStoreProduct>(`${this.base}/${storeId}/${productId}/${section}`, body);
-    return res.result!;
+  /**
+   * PATCH one section. Every section shares the product's single version
+   * (D-7): pass the `__v` from the last read or write of this product, and
+   * keep the `__v` this returns for the next save.
+   */
+  async patchSection(storeId: string, productId: string, section: string, body: unknown, version: number): Promise<IStoreProduct> {
+    assertVersion(version);
+    const res = await this.http.patch<IStoreProduct>(`${this.base}/${storeId}/${productId}/${section}`, body, { version });
+    return withVersion(res, productId);
   }
 }

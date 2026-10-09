@@ -101,3 +101,31 @@ export class ServerError extends Posty5Error {
         this.name = 'ServerError';
     }
 }
+
+/**
+ * Version conflict (409 `VERSION_CONFLICT`): the document changed since you
+ * read it. `currentVersion` is its version now — reload (or merge) and resend
+ * with it deliberately. Never retried automatically.
+ */
+export class ConflictError extends Posty5Error {
+    public readonly currentVersion: number;
+    public readonly resourceId: string;
+
+    constructor(message: string = 'The document was changed by someone else', currentVersion: number = -1, resourceId: string = '', details?: any) {
+        super(message, 'VERSION_CONFLICT', 409, details);
+        this.name = 'ConflictError';
+        this.currentVersion = currentVersion;
+        this.resourceId = resourceId;
+    }
+}
+
+/**
+ * Version required (428 `VERSION_REQUIRED`): a versioned write was sent
+ * without `If-Match`. With this SDK it means an SDK bug.
+ */
+export class VersionRequiredError extends Posty5Error {
+    constructor(message: string = 'The document version is required', details?: any) {
+        super(message, 'VERSION_REQUIRED', 428, details);
+        this.name = 'VersionRequiredError';
+    }
+}

@@ -1,4 +1,4 @@
-import { HttpClient, IPaginationParams, uploadToR2 } from "@posty5/core";
+import { HttpClient, IPaginationParams, assertVersion, uploadToR2 } from "@posty5/core";
 import {
   ICreateWorkspaceRequest,
   IUpdateWorkspaceRequest,
@@ -9,6 +9,7 @@ import {
   IDeleteWorkspaceResponse,
   IWorkspaceResponse,
   IWorkspaceForNewPostResponse,
+  IUpdateWorkspaceResult,
 } from "./interfaces";
 
 /**
@@ -90,15 +91,14 @@ export class SocialPublisherWorkspaceClient {
     const response = await this.http.post<ICreateWorkspaceResponse>(this.basePath, {
       ...data,
       hasImage: !!logo,
-      createdFrom: "npmPackage",
+      createdFrom: this.http.createdFrom,
     });
 
     // Step 2: Upload image if provided
     if (logo && response.result?.uploadImageConfig) {
-      var res = await uploadToR2(response.result.uploadImageConfig.uploadUrl, logo, {
+      await uploadToR2(response.result.uploadImageConfig.uploadUrl, logo, {
         contentType: /*logo instanceof File ? logo.type : 'image/png'*/ "image/png",
       });
-      console.log(res);
     }
 
     return response.result?.workspaceId!;
@@ -108,25 +108,32 @@ export class SocialPublisherWorkspaceClient {
    * Update workspace with optional image upload
    * @param id - Workspace ID
    * @param data - Workspace data
+   * @param version - The workspace's `__v` as you read it. A stale one throws `ConflictError`.
    * @param logo - Optional new image file (File or Blob)
-   * @returns Workspace details
+   * @returns `{ _id, __v }`, `__v` being the new version
    *
    * @example
    * ```typescript
    * // Update without changing image
-   * await client.update('workspace-id', { name: 'New Name', description: 'New Description' });
+   * const ws = await client.get('workspace-id');
+   * await client.update('workspace-id', { name: 'New Name', description: 'New Description' }, ws.__v);
    *
    * // Update with new image
    * const file = new File([imageBlob], 'new-logo.png', { type: 'image/png' });
    * await client.update(
    *   'workspace-id',
    */
-  async update(id: string, data: IUpdateWorkspaceRequest, logo?: File | Blob): Promise<void> {
+  async update(id: string, data: IUpdateWorkspaceRequest, version: number, logo?: File | Blob): Promise<IUpdateWorkspaceResult> {
+    assertVersion(version);
     // Step 1: Update workspace and get upload config
-    const response = await this.http.put<IUpdateWorkspaceResponse>(`${this.basePath}/${id}`, {
-      ...data,
-      hasImage: !!logo,
-    });
+    const response = await this.http.put<IUpdateWorkspaceResponse>(
+      `${this.basePath}/${id}`,
+      {
+        ...data,
+        hasImage: !!logo,
+      },
+      { version },
+    );
 
     // Step 2: Upload image if provided
     if (logo && response.result?.uploadImageConfig) {
@@ -134,13 +141,17 @@ export class SocialPublisherWorkspaceClient {
         contentType: logo instanceof File ? logo.type : "image/png",
       });
     }
+
+    return { _id: response.result?.workspaceId ?? id, __v: response.version as number };
   }
 
   /**
    * Delete workspace
    * @param id - Workspace ID
+   * @param version - The workspace's `__v` as you read it. A stale one throws `ConflictError`.
    */
-  async delete(id: string): Promise<void> {
-    await this.http.delete<IDeleteWorkspaceResponse>(`${this.basePath}/${id}`);
+  async delete(id: string, version: number): Promise<void> {
+    assertVersion(version);
+    await this.http.delete<IDeleteWorkspaceResponse>(`${this.basePath}/${id}`, { version });
   }
 }

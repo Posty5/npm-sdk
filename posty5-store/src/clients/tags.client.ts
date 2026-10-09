@@ -1,4 +1,4 @@
-import { IBinaryResponse } from "@posty5/core";
+import { IBinaryResponse, assertVersion, withVersion } from "@posty5/core";
 import { BaseStoreClient } from "./base.client";
 import {
   IBulkImportReport,
@@ -42,14 +42,17 @@ export class StoreTagsClient extends BaseStoreClient {
     return res.result!;
   }
 
-  async update(storeId: string, tagId: string, changes: IUpdateTagInput): Promise<IStoreTag> {
-    const res = await this.http.put<IStoreTag>(`${this.base}/${storeId}/${tagId}`, changes);
-    return res.result!;
+  /** Update a tag. `version` is the tag's `__v`; a stale one throws `ConflictError`. */
+  async update(storeId: string, tagId: string, changes: IUpdateTagInput, version: number): Promise<IStoreTag> {
+    assertVersion(version);
+    const res = await this.http.put<IStoreTag>(`${this.base}/${storeId}/${tagId}`, changes, { version });
+    return withVersion(res, tagId);
   }
 
-  /** Soft-delete a tag and drop its assignments. The products are untouched. */
-  async delete(storeId: string, tagId: string): Promise<unknown> {
-    const res = await this.http.delete(`${this.base}/${storeId}/${tagId}`);
+  /** Soft-delete a tag and drop its assignments. The products are untouched. `version` is the tag's `__v`. */
+  async delete(storeId: string, tagId: string, version: number): Promise<unknown> {
+    assertVersion(version);
+    const res = await this.http.delete(`${this.base}/${storeId}/${tagId}`, { version });
     return res.result;
   }
 
@@ -87,10 +90,15 @@ export class StoreTagsClient extends BaseStoreClient {
     return res.result!;
   }
 
-  /** Replace one product's whole tag list — tags left out are unassigned. */
-  async setProductTags(storeId: string, productId: string, tagIds: string[]): Promise<unknown> {
-    const res = await this.http.put(`${this.base}/${storeId}/product/${productId}`, { tagIds });
-    return res.result;
+  /**
+   * Replace one product's whole tag list — tags left out are unassigned.
+   * Guarded by the PRODUCT's version: `productVersion` is the product's `__v`.
+   * Returns the API's answer with `__v` set to the product's new version.
+   */
+  async setProductTags(storeId: string, productId: string, tagIds: string[], productVersion: number): Promise<{ _id: string; __v: number; [key: string]: unknown }> {
+    assertVersion(productVersion, "productVersion");
+    const res = await this.http.put<Record<string, unknown>>(`${this.base}/${storeId}/product/${productId}`, { tagIds }, { version: productVersion });
+    return withVersion(res, productId);
   }
 
   // ─── Excel ──────────────────────────────────────────────────────────────

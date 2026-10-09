@@ -559,6 +559,48 @@ operations are free and unmetered. Importing a supplier product is charged like
 adding a product; connecting, linking, syncing and every supplier-order action
 are free.
 
+## 🏪 Finding your stores (4.4.0)
+
+```ts
+const stores = await store.listStores();        // [{ _id, name: "<slug> - <name>" }]
+const storeId = stores[0]._id;                  // the storeId every other method takes
+```
+
+`store.stores.lookup(term?)` is the same call. A manual order (`orders.create`)
+is tagged with the client's `createdFrom` when the API accepts it for orders
+(`STORE_ORDER_CREATED_FROM_VALUES`), otherwise `"npmPackage"`.
+
+---
+
 ## License
 
 MIT
+
+## 🔒 Versioned writes (5.0.0)
+
+Every write to an existing document carries the version you read, so two
+people (or two scripts) can never silently overwrite each other.
+
+- **Where `__v` comes from:** every entity this SDK returns (`get`, `list`,
+  and every write) has `__v`. Keep the `__v` a write returns for your next write.
+- **A stale version** throws `ConflictError` (409). It carries
+  `currentVersion`, the document's version now.
+- **Merging deliberately:** reload, re-apply your change, and resend with the
+  fresh version (`currentVersion`). There is no "overwrite anyway" flag;
+  resending blindly is exactly the lost update this prevents.
+- Versioned writes are never retried automatically.
+
+```ts
+import { ConflictError } from "@posty5/core";
+
+try {
+  const product = await store.products.get(storeId, productId);
+  const saved = await store.products.updatePrice(storeId, productId, { price: 10 }, product.__v);
+  await store.products.updateStock(storeId, productId, { stock: 5 }, saved.__v);
+} catch (error) {
+  if (error instanceof ConflictError) {
+    // error.currentVersion: reload, merge, and resend with the fresh __v
+  } else throw error;
+}
+```
+

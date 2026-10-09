@@ -5,6 +5,7 @@ import { StoreProductsClient } from "./clients/products.client";
 import { StoreShippingClient } from "./clients/shipping.client";
 import { StoreTagsClient } from "./clients/tags.client";
 import { StoreSuppliersClient } from "./clients/suppliers.client";
+import { StoreStoresClient } from "./clients/stores.client";
 import {
   IBulkImportReport,
   IBulkProductInput,
@@ -12,6 +13,7 @@ import {
   IOrderSearchFilters,
   IPaginated,
   IStoreOrder,
+  IStoreLookupItem,
   IStoreOrderSummary,
   StoreOrderStatus,
 } from "./interfaces";
@@ -44,7 +46,7 @@ import {
  *
  * // Orders
  * const { items } = await store.orders.search(storeId, { status: "pending" });
- * await store.orders.updateStatus(storeId, items[0]._id, "confirmed");
+ * await store.orders.updateStatus(storeId, items[0]._id, "confirmed", items[0].__v);
  *
  * // Tags, customers, shipping
  * await store.tags.assignProducts(storeId, tagId, [productId]);
@@ -65,6 +67,8 @@ export class StoreClient {
   public readonly shipping: StoreShippingClient;
   /** Dropshipping: supplier connections, imports, product links and supplier orders. */
   public readonly suppliers: StoreSuppliersClient;
+  /** The stores the key can manage — where a `storeId` comes from. */
+  public readonly stores: StoreStoresClient;
 
   constructor(http: HttpClient) {
     this.products = new StoreProductsClient(http);
@@ -73,6 +77,16 @@ export class StoreClient {
     this.customers = new StoreCustomersClient(http);
     this.shipping = new StoreShippingClient(http);
     this.suppliers = new StoreSuppliersClient(http);
+    this.stores = new StoreStoresClient(http);
+  }
+
+  /**
+   * The stores you own or are staff on, optionally filtered by name or slug.
+   * Shorthand for `stores.lookup`; each `_id` is the `storeId` the other
+   * methods take.
+   */
+  async listStores(term?: string, pageSize?: number): Promise<IStoreLookupItem[]> {
+    return this.stores.lookup(term, pageSize);
   }
 
   // ─── Shorthands ───────────────────────────────────────────────────────────
@@ -101,7 +115,7 @@ export class StoreClient {
    * and `delivered` are reached by the parts themselves (the order moves at the
    * pace of its slowest part), not set by hand.
    */
-  async updateOrderStatus(storeId: string, orderId: string, status: StoreOrderStatus, note?: string): Promise<IStoreOrder> {
-    return this.orders.updateStatus(storeId, orderId, status, note);
+  async updateOrderStatus(storeId: string, orderId: string, status: StoreOrderStatus, version: number, note?: string): Promise<IStoreOrder> {
+    return this.orders.updateStatus(storeId, orderId, status, version, note);
   }
 }

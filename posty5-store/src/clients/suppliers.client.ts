@@ -1,3 +1,4 @@
+import { assertVersion, withVersion } from "@posty5/core";
 import { BaseStoreClient } from "./base.client";
 import {
   IBrowseSupplierProductsFilters,
@@ -88,30 +89,34 @@ export class StoreSuppliersClient extends BaseStoreClient {
   }
 
   /** Replace a connection's credentials. `suppliers.manage`, plan gate. */
-  async replaceCredentials(storeId: string, id: string, input: IReplaceSupplierCredentialsInput): Promise<IStoreSupplierIntegration> {
-    const res = await this.http.put<IStoreSupplierIntegration>(`${this.base}/${storeId}/${id}`, input);
-    return res.result!;
+  async replaceCredentials(storeId: string, id: string, input: IReplaceSupplierCredentialsInput, version: number): Promise<IStoreSupplierIntegration> {
+    assertVersion(version);
+    const res = await this.http.put<IStoreSupplierIntegration>(`${this.base}/${storeId}/${id}`, input, { version });
+    return withVersion(res, id);
   }
 
   /** Change the supplier-specific settings (and optionally the mode). `suppliers.manage`. */
-  async updateSettings(storeId: string, id: string, input: IUpdateSupplierSettingsInput): Promise<IStoreSupplierIntegration> {
-    const res = await this.http.put<IStoreSupplierIntegration>(`${this.base}/${storeId}/${id}/settings`, input);
-    return res.result!;
+  async updateSettings(storeId: string, id: string, input: IUpdateSupplierSettingsInput, version: number): Promise<IStoreSupplierIntegration> {
+    assertVersion(version);
+    const res = await this.http.put<IStoreSupplierIntegration>(`${this.base}/${storeId}/${id}/settings`, input, { version });
+    return withVersion(res, id);
   }
 
   /**
    * Change what the connection may do on its own. `submitAndPay` is refused
    * for a supplier that cannot be paid from a balance. `suppliers.manage`, plan gate.
    */
-  async updateAutomation(storeId: string, id: string, automation: ISupplierAutomationInput): Promise<IStoreSupplierIntegration> {
-    const res = await this.http.put<IStoreSupplierIntegration>(`${this.base}/${storeId}/${id}/automation`, automation);
-    return res.result!;
+  async updateAutomation(storeId: string, id: string, automation: ISupplierAutomationInput, version: number): Promise<IStoreSupplierIntegration> {
+    assertVersion(version);
+    const res = await this.http.put<IStoreSupplierIntegration>(`${this.base}/${storeId}/${id}/automation`, automation, { version });
+    return withVersion(res, id);
   }
 
   /** Switch the connection on or off. `suppliers.manage`, plan gate. */
-  async setEnabled(storeId: string, id: string, enabled: boolean): Promise<IStoreSupplierIntegration> {
-    const res = await this.http.put<IStoreSupplierIntegration>(`${this.base}/${storeId}/${id}/enabled`, { enabled });
-    return res.result!;
+  async setEnabled(storeId: string, id: string, enabled: boolean, version: number): Promise<IStoreSupplierIntegration> {
+    assertVersion(version);
+    const res = await this.http.put<IStoreSupplierIntegration>(`${this.base}/${storeId}/${id}/enabled`, { enabled }, { version });
+    return withVersion(res, id);
   }
 
   /** Check the connection now and record its health. `suppliers.manage`. */
@@ -136,8 +141,9 @@ export class StoreSuppliersClient extends BaseStoreClient {
    * Disconnect. Credentials are deleted; imported products stay as the store's
    * own. Refused while supplier orders are open unless `force`. `suppliers.manage`.
    */
-  async disconnect(storeId: string, id: string, options: { force?: boolean } = {}): Promise<IDisconnectSupplierResult> {
-    const res = await this.http.delete<IDisconnectSupplierResult>(`${this.base}/${storeId}/${id}`, { params: this.toQuery(options) });
+  async disconnect(storeId: string, id: string, version: number, options: { force?: boolean } = {}): Promise<IDisconnectSupplierResult> {
+    assertVersion(version);
+    const res = await this.http.delete<IDisconnectSupplierResult>(`${this.base}/${storeId}/${id}`, { params: this.toQuery(options), version });
     return res.result!;
   }
 
@@ -202,14 +208,16 @@ export class StoreSuppliersClient extends BaseStoreClient {
   }
 
   /** Change a link's price rule, sync switches, estimate or disclosure. `suppliers.import`. */
-  async updateLink(storeId: string, linkId: string, changes: IUpdateSupplierLinkInput): Promise<IStoreProductSupplierLink> {
-    const res = await this.http.put<IStoreProductSupplierLink>(`${this.base}/${storeId}/links/${linkId}`, changes);
-    return res.result!;
+  async updateLink(storeId: string, linkId: string, changes: IUpdateSupplierLinkInput, version: number): Promise<IStoreProductSupplierLink> {
+    assertVersion(version);
+    const res = await this.http.put<IStoreProductSupplierLink>(`${this.base}/${storeId}/links/${linkId}`, changes, { version });
+    return withVersion(res, linkId);
   }
 
   /** Unlink. The product stays and becomes the store's own. `suppliers.import`. */
-  async deleteLink(storeId: string, linkId: string): Promise<{ _id: string }> {
-    const res = await this.http.delete<{ _id: string }>(`${this.base}/${storeId}/links/${linkId}`);
+  async deleteLink(storeId: string, linkId: string, version: number): Promise<{ _id: string }> {
+    assertVersion(version);
+    const res = await this.http.delete<{ _id: string }>(`${this.base}/${storeId}/links/${linkId}`, { version });
     return res.result!;
   }
 
@@ -262,9 +270,10 @@ export class StoreSuppliersClient extends BaseStoreClient {
    * `acceptCost` accepts the supplier's new price — recorded with the caller.
    * `suppliers.orders.manage`, plan gate. Throws on a pause.
    */
-  async retry(storeId: string, supplierOrderId: string, options: { acceptCost?: boolean } = {}): Promise<ISupplierOrderActionResult> {
-    const res = await this.http.post<ISupplierOrderActionResult>(`${this.base}/${storeId}/orders/${supplierOrderId}/retry`, options);
-    return res.result!;
+  async retry(storeId: string, supplierOrderId: string, version: number, options: { acceptCost?: boolean } = {}): Promise<ISupplierOrderActionResult> {
+    assertVersion(version);
+    const res = await this.http.post<ISupplierOrderActionResult>(`${this.base}/${storeId}/orders/${supplierOrderId}/retry`, options, { version });
+    return withVersion(res, supplierOrderId);
   }
 
   /**
@@ -272,9 +281,10 @@ export class StoreSuppliersClient extends BaseStoreClient {
    * status is read first, so an order already paid there is recorded, not
    * paid again. `suppliers.orders.manage`, plan gate. Throws on a pause.
    */
-  async pay(storeId: string, supplierOrderId: string): Promise<ISupplierOrderActionResult> {
-    const res = await this.http.post<ISupplierOrderActionResult>(`${this.base}/${storeId}/orders/${supplierOrderId}/pay`, {});
-    return res.result!;
+  async pay(storeId: string, supplierOrderId: string, version: number): Promise<ISupplierOrderActionResult> {
+    assertVersion(version);
+    const res = await this.http.post<ISupplierOrderActionResult>(`${this.base}/${storeId}/orders/${supplierOrderId}/pay`, {}, { version });
+    return withVersion(res, supplierOrderId);
   }
 
   /**
@@ -282,17 +292,18 @@ export class StoreSuppliersClient extends BaseStoreClient {
    * Once shipped it cannot be withdrawn and the call throws. Open below Pro.
    * `suppliers.orders.manage`.
    */
-  async cancel(storeId: string, supplierOrderId: string): Promise<ISupplierOrderActionResult> {
-    const res = await this.http.post<ISupplierOrderActionResult>(`${this.base}/${storeId}/orders/${supplierOrderId}/cancel`, {});
-    return res.result!;
+  async cancel(storeId: string, supplierOrderId: string, version: number): Promise<ISupplierOrderActionResult> {
+    assertVersion(version);
+    const res = await this.http.post<ISupplierOrderActionResult>(`${this.base}/${storeId}/orders/${supplierOrderId}/cancel`, {}, { version });
+    return withVersion(res, supplierOrderId);
   }
 
   /** Take a part over: the store ships it itself. Open below Pro. `suppliers.orders.manage`. */
-  async fulfilGroupManually(storeId: string, orderId: string, groupKey: string): Promise<{ orderId: string }> {
+  async fulfilGroupManually(storeId: string, orderId: string, groupKey: string, orderVersion: number): Promise<{ orderId: string }> {
+    assertVersion(orderVersion, "orderVersion");
     const res = await this.http.post<{ orderId: string }>(
       `${this.base}/${storeId}/orders/${orderId}/groups/${encodeURIComponent(groupKey)}/fulfil-manually`,
-      {},
-    );
+      {}, { version: orderVersion });
     return res.result!;
   }
 }
