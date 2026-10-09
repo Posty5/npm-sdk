@@ -117,21 +117,21 @@ describe("mcp html-hosting toolset — pages", () => {
   });
 
   it("html_page_update_from_html keeps the current name and sheet setting and uploads the new file", async () => {
-    const { calls } = await runTool("html_page_update_from_html", { id: "p1", html: "<p>v2</p>" }, undefined, [PAGE, FILE_SAVED]);
+    const { calls } = await runTool("html_page_update_from_html", { version: 1, id: "p1", html: "<p>v2</p>" }, undefined, [PAGE, FILE_SAVED]);
     expect(calls.map(route)).toEqual(["GET /api/html-hosting/p1", "PUT /api/html-hosting/p1/file"]);
     expect(calls[1].body).toEqual({ name: "Landing", autoSaveInGoogleSheet: true, fileName: "index.html", isNewFile: true });
     expect(uploads.map((upload) => upload.url)).toEqual([UPLOAD_URL]);
   });
 
   it("html_page_update_from_html refuses HTML over the inline cap before any request", async () => {
-    await expect(runTool("html_page_update_from_html", { id: "p1", html: "a".repeat(INLINE_HTML_MAX_BYTES + 1) }, undefined, [PAGE, FILE_SAVED])).rejects.toThrow(
+    await expect(runTool("html_page_update_from_html", { version: 1, id: "p1", html: "a".repeat(INLINE_HTML_MAX_BYTES + 1) }, undefined, [PAGE, FILE_SAVED])).rejects.toThrow(
       /html_page_update_from_github/,
     );
     expect(uploads).toHaveLength(0);
   });
 
   it("html_page_update_from_github sends the new name and the GitHub file URL", async () => {
-    const { calls } = await runTool("html_page_update_from_github", { id: "p1", githubFileUrl: GITHUB_URL, name: "Landing v2" }, undefined, [PAGE, GITHUB_SAVED]);
+    const { calls } = await runTool("html_page_update_from_github", { version: 1, id: "p1", githubFileUrl: GITHUB_URL, name: "Landing v2" }, undefined, [PAGE, GITHUB_SAVED]);
     expect(calls.map(route)).toEqual(["GET /api/html-hosting/p1", "PUT /api/html-hosting/p1/github"]);
     expect(calls[1].body).toEqual({ name: "Landing v2", autoSaveInGoogleSheet: true, githubInfo: { fileURL: GITHUB_URL } });
   });
@@ -143,12 +143,12 @@ describe("mcp html-hosting toolset — pages", () => {
   });
 
   it("html_page_delete deletes by id", async () => {
-    const { calls } = await runTool("html_page_delete", { id: "p1" });
+    const { calls } = await runTool("html_page_delete", { version: 1, id: "p1" });
     expect(route(calls[0])).toBe("DELETE /api/html-hosting/p1");
   });
 
   it("html_page_delete's confirmation only reads, names the page and quotes the delete price", async () => {
-    const { text, calls } = await previewTool("html_page_delete", { id: "p1" }, PAGE);
+    const { text, calls } = await previewTool("html_page_delete", { version: 1, id: "p1" }, PAGE);
     expect(calls.every((call) => call.method === "GET")).toBe(true);
     expect(text).toContain("Landing");
     expect(text).toContain("4 form submissions");
@@ -179,18 +179,18 @@ describe("mcp html-hosting toolset — variables", () => {
   });
 
   it("html_variable_update keeps the fields left out", async () => {
-    const { calls } = await runTool("html_variable_update", { id: "v1", value: "https://api2.example" }, undefined, [VARIABLE, {}]);
+    const { calls } = await runTool("html_variable_update", { version: 1, id: "v1", value: "https://api2.example" }, undefined, [VARIABLE, {}]);
     expect(calls.map(route)).toEqual(["GET /api/html-hosting-variables/v1", "PUT /api/html-hosting-variables/v1"]);
     expect(calls[1].body).toEqual({ name: "API base", key: "pst5_api", value: "https://api2.example", refId: "r1", tag: "prod" });
   });
 
   it("html_variable_delete deletes by id", async () => {
-    const { calls } = await runTool("html_variable_delete", { id: "v1" });
+    const { calls } = await runTool("html_variable_delete", { version: 1, id: "v1" });
     expect(route(calls[0])).toBe("DELETE /api/html-hosting-variables/v1");
   });
 
   it("html_variable_delete's confirmation only reads, names the key and quotes the delete price", async () => {
-    const { text, calls } = await previewTool("html_variable_delete", { id: "v1" }, VARIABLE);
+    const { text, calls } = await previewTool("html_variable_delete", { version: 1, id: "v1" }, VARIABLE);
     expect(calls.every((call) => call.method === "GET")).toBe(true);
     expect(text).toContain("pst5_api");
     expect(findTool("html_variable_delete").confirm?.costFeaturePath).toBe("htmlHosting.deleteVariable");
@@ -218,18 +218,18 @@ describe("mcp html-hosting toolset — form submissions", () => {
   });
 
   it("form_submission_change_status sends the status, reason and note", async () => {
-    const { calls } = await runTool("form_submission_change_status", { id: "s1", status: "rejected", rejectedReason: "spam", notes: "bot" });
+    const { calls } = await runTool("form_submission_change_status", { version: 1, id: "s1", status: "rejected", rejectedReason: "spam", notes: "bot" });
     expect(route(calls[0])).toBe("PUT /api/html-hosting-form-submission/s1/status");
     expect(calls[0].body).toEqual({ status: "rejected", rejectedReason: "spam", notes: "bot" });
   });
 
   it("form_submission_delete deletes by id", async () => {
-    const { calls } = await runTool("form_submission_delete", { id: "s1" });
+    const { calls } = await runTool("form_submission_delete", { version: 1, id: "s1" });
     expect(route(calls[0])).toBe("DELETE /api/html-hosting-form-submission/s1");
   });
 
   it("form_submission_delete's confirmation only reads and names the submission; the route is not charged", async () => {
-    const { text, calls } = await previewTool("form_submission_delete", { id: "s1" }, SUBMISSION);
+    const { text, calls } = await previewTool("form_submission_delete", { version: 1, id: "s1" }, SUBMISSION);
     expect(calls.every((call) => call.method === "GET")).toBe(true);
     expect(text).toContain("#0007");
     expect(text).toContain("Landing");

@@ -140,19 +140,19 @@ describe("@posty5/mcp — store-catalog products", () => {
   });
 
   it("store_product_update → PUT …/:productId with only the given fields", async () => {
-    const { calls } = await runTool("store_product_update", { storeId: S, productId: "p1", price: 25, compareAtPrice: null, status: "draft" }, PRODUCT);
+    const { calls } = await runTool("store_product_update", { version: 1, storeId: S, productId: "p1", price: 25, compareAtPrice: null, status: "draft" }, PRODUCT);
     expect(route(calls[0])).toBe("PUT /api/store-products/s1/p1");
     expect(calls[0].body).toEqual({ price: 25, compareAtPrice: null, status: "draft" });
   });
 
   it("store_product_update with nothing to change is a ToolInputError", async () => {
-    await expect(runTool("store_product_update", { storeId: S, productId: "p1" })).rejects.toBeInstanceOf(ToolInputError);
+    await expect(runTool("store_product_update", { version: 1, storeId: S, productId: "p1" })).rejects.toBeInstanceOf(ToolInputError);
   });
 
   it("store_product_update_section → PATCH …/:productId/<section> for each of the eleven sections", async () => {
     expect(Object.keys(SECTION_SAMPLES).sort()).toEqual([...PRODUCT_SECTIONS].sort());
     for (const [section, sample] of Object.entries(SECTION_SAMPLES)) {
-      const { calls } = await runTool("store_product_update_section", { storeId: S, productId: "p1", section, data: sample.data }, PRODUCT);
+      const { calls } = await runTool("store_product_update_section", { version: 1, storeId: S, productId: "p1", section, data: sample.data }, PRODUCT);
       expect([section, route(calls[0])]).toEqual([section, `PATCH /api/store-products/s1/p1/${sample.path}`]);
       expect([section, calls[0].body]).toEqual([section, sample.data]);
     }
@@ -166,7 +166,7 @@ describe("@posty5/mcp — store-catalog products", () => {
       ["purchase", { mode: "nowhere" }],
     ] as const) {
       const { http, calls } = stubHttp(PRODUCT);
-      const args = tool.input.parse({ storeId: S, productId: "p1", section, data });
+      const args = tool.input.parse({ storeId: S, productId: "p1", section, data, version: 1 });
       const outcome = tool.run(args, { clients: createClients(http), call: fakeCall(tool, args) });
       await expect(outcome).rejects.toBeInstanceOf(ToolInputError);
       await expect(outcome).rejects.toThrow(`section "${section}"`);
@@ -195,11 +195,11 @@ describe("@posty5/mcp — store-catalog products", () => {
   });
 
   it("store_product_delete → DELETE …/:productId; the preview only reads the product", async () => {
-    const { value, calls } = await runTool("store_product_delete", { storeId: S, productId: "p1" });
+    const { value, calls } = await runTool("store_product_delete", { version: 1, storeId: S, productId: "p1" });
     expect(route(calls[0])).toBe("DELETE /api/store-products/s1/p1");
     expect(value).toEqual({ deleted: true, productId: "p1" });
 
-    const preview = await previewTool("store_product_delete", { storeId: S, productId: "p1" }, PRODUCT);
+    const preview = await previewTool("store_product_delete", { version: 1, storeId: S, productId: "p1" }, PRODUCT);
     expect(preview.calls.map(route)).toEqual(["GET /api/store-products/s1/p1"]);
     expect(preview.text).toContain('"Tee"');
     expect(preview.text).toContain("cannot be undone");
@@ -244,10 +244,10 @@ describe("@posty5/mcp — store-catalog tags", () => {
   });
 
   it("store_tag_update → PUT …/:tagId with only the given fields; nothing to change is a ToolInputError", async () => {
-    const { calls } = await runTool("store_tag_update", { storeId: S, tagId: "t1", status: "hidden", autoRemoveAfterDays: null }, TAG);
+    const { calls } = await runTool("store_tag_update", { version: 1, storeId: S, tagId: "t1", status: "hidden", autoRemoveAfterDays: null }, TAG);
     expect(route(calls[0])).toBe("PUT /api/store-tags/s1/t1");
     expect(calls[0].body).toEqual({ status: "hidden", autoRemoveAfterDays: null });
-    await expect(runTool("store_tag_update", { storeId: S, tagId: "t1" })).rejects.toBeInstanceOf(ToolInputError);
+    await expect(runTool("store_tag_update", { version: 1, storeId: S, tagId: "t1" })).rejects.toBeInstanceOf(ToolInputError);
   });
 
   it("store_tag_assign_products → POST …/:tagId/products with { productIds }", async () => {
@@ -262,17 +262,17 @@ describe("@posty5/mcp — store-catalog tags", () => {
   });
 
   it("store_tag_set_product_tags → PUT …/product/:productId with the whole list (empty clears it)", async () => {
-    const { calls } = await runTool("store_tag_set_product_tags", { storeId: S, productId: "p1", tagIds: [] });
+    const { calls } = await runTool("store_tag_set_product_tags", { version: 1, storeId: S, productId: "p1", tagIds: [] });
     expect(route(calls[0])).toBe("PUT /api/store-tags/s1/product/p1");
     expect(calls[0].body).toEqual({ tagIds: [] });
   });
 
   it("store_tag_delete → DELETE …/:tagId; the preview only reads the tag", async () => {
-    const { value, calls } = await runTool("store_tag_delete", { storeId: S, tagId: "t1" });
+    const { value, calls } = await runTool("store_tag_delete", { version: 1, storeId: S, tagId: "t1" });
     expect(route(calls[0])).toBe("DELETE /api/store-tags/s1/t1");
     expect(value).toEqual({ deleted: true, tagId: "t1" });
 
-    const preview = await previewTool("store_tag_delete", { storeId: S, tagId: "t1" }, TAG);
+    const preview = await previewTool("store_tag_delete", { version: 1, storeId: S, tagId: "t1" }, TAG);
     expect(preview.calls.map(route)).toEqual(["GET /api/store-tags/s1/t1"]);
     expect(preview.text).toContain('"Sale"');
     expect(preview.text).toContain("4 products");

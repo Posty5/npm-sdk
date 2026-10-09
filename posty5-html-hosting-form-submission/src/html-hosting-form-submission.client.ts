@@ -136,7 +136,9 @@ export class HtmlHostingFormSubmissionClient {
   async deleteBulk(versions: Record<string, number>): Promise<IBulkVersionedResult> {
     assertVersions(versions);
     const ids = Object.keys(versions);
-    const response = await this.http.delete<Partial<IBulkVersionedResult>>(`${this.basePath}/bulk`, { data: { ids, versions } });
+    // A bulk versioned write is never retried automatically: a lost response
+    // followed by a resend would report the applied items as conflicts.
+    const response = await this.http.delete<Partial<IBulkVersionedResult>>(`${this.basePath}/bulk`, { data: { ids, versions }, skipRetry: true });
     const result = response.result ?? {};
     return {
       ...result,

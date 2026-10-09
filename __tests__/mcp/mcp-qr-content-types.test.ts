@@ -53,7 +53,7 @@ describe("mcp qr-codes — content types", () => {
   });
 
   it.each(BRANCHES)("qr_code_update type $type dispatches to its SDK update route", async ({ type, args, route: path }) => {
-    const { calls } = await runTool("qr_code_update", { id: "qr1", type, ...args }, undefined, [QR_CODE, QR_CODE]);
+    const { calls } = await runTool("qr_code_update", { version: 1, id: "qr1", type, ...args }, undefined, [QR_CODE, QR_CODE]);
     expect(calls.map(route)).toEqual(["GET /api/qr-code/qr1", `PUT ${path}/qr1`]);
   });
 
@@ -106,7 +106,7 @@ describe("mcp qr-codes — content types", () => {
 
   it("file: create needs fileBase64 and mimeType; update without fileBase64 keeps the stored file", async () => {
     await expect(runTool("qr_code_create", { type: "file", templateId: "tpl1", fileBase64: PDF_BASE64 })).rejects.toThrow(/mimeType/);
-    const { calls } = await runTool("qr_code_update", { id: "qr1", type: "file", fileName: "menu-2026.pdf" }, undefined, [QR_CODE, QR_CODE]);
+    const { calls } = await runTool("qr_code_update", { version: 1, id: "qr1", type: "file", fileName: "menu-2026.pdf" }, undefined, [QR_CODE, QR_CODE]);
     expect(calls.map(route)).toEqual(["GET /api/qr-code/qr1", "PUT /api/qr-code/file/qr1"]);
     expect(uploads).toHaveLength(0);
   });

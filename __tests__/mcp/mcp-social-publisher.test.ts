@@ -91,18 +91,18 @@ describe("mcp social-publisher toolset — workspaces and accounts", () => {
   });
 
   it("social_workspace_update keeps the current description and sends no logo", async () => {
-    const { calls } = await runTool("social_workspace_update", { id: "w1", name: "Brand EU" }, undefined, [WORKSPACE, { workspaceId: "w1" }]);
+    const { calls } = await runTool("social_workspace_update", { version: 1, id: "w1", name: "Brand EU" }, undefined, [WORKSPACE, { workspaceId: "w1" }]);
     expect(calls.map(route)).toEqual(["GET /api/social-publisher-workspace/w1", "PUT /api/social-publisher-workspace/w1"]);
     expect(calls[1].body).toEqual({ name: "Brand EU", description: "Main brand", hasImage: false });
   });
 
   it("social_workspace_delete deletes by id", async () => {
-    const { calls } = await runTool("social_workspace_delete", { id: "w1" });
+    const { calls } = await runTool("social_workspace_delete", { version: 1, id: "w1" });
     expect(route(calls[0])).toBe("DELETE /api/social-publisher-workspace/w1");
   });
 
   it("social_workspace_delete's confirmation only reads and names the workspace", async () => {
-    const { text, calls } = await previewTool("social_workspace_delete", { id: "w1" }, WORKSPACE);
+    const { text, calls } = await previewTool("social_workspace_delete", { version: 1, id: "w1" }, WORKSPACE);
     expect(calls.every((call) => call.method === "GET")).toBe(true);
     expect(text).toContain("Brand");
     expect(text).toContain("cannot be undone");
@@ -234,21 +234,21 @@ describe("mcp social-publisher toolset — publishing", () => {
 describe("mcp social-publisher toolset — changing posts", () => {
   // The edit route (updatePostSchema) takes the schedule flat and refuses scheduledAt with "now".
   it("social_post_reschedule sends a new time, or now", async () => {
-    const later = await runTool("social_post_reschedule", { id: "post1", schedule: AT, caption: "Moved" });
+    const later = await runTool("social_post_reschedule", { version: 1, id: "post1", schedule: AT, caption: "Moved" });
     expect(route(later.calls[0])).toBe("PUT /api/social-publisher-post/post1");
     expect(later.calls[0].body).toEqual({ scheduleType: "schedule", scheduledAt: new Date(AT).toISOString(), caption: "Moved" });
 
-    const now = await runTool("social_post_reschedule", { id: "post1", schedule: "now" });
+    const now = await runTool("social_post_reschedule", { version: 1, id: "post1", schedule: "now" });
     expect(now.calls[0].body).toEqual({ scheduleType: "now" });
   });
 
   it("social_post_delete deletes the unpublished post", async () => {
-    const { calls } = await runTool("social_post_delete", { id: "post1" });
+    const { calls } = await runTool("social_post_delete", { version: 1, id: "post1" });
     expect(route(calls[0])).toBe("DELETE /api/social-publisher-post/post1");
   });
 
   it("social_post_delete's confirmation only reads and names the post", async () => {
-    const { text, calls } = await previewTool("social_post_delete", { id: "post1" }, POST_STATUS);
+    const { text, calls } = await previewTool("social_post_delete", { version: 1, id: "post1" }, POST_STATUS);
     expect(calls.every((call) => call.method === "GET")).toBe(true);
     expect(text).toContain("#0042");
     expect(text).toContain("cannot be undone");
@@ -256,13 +256,13 @@ describe("mcp social-publisher toolset — changing posts", () => {
 
   it("social_post_remove_from_platforms calls the remove route", async () => {
     const removed = { _id: "post1", results: { youtube: { success: true } } };
-    const { calls, value } = await runTool("social_post_remove_from_platforms", { id: "post1" }, removed);
+    const { calls, value } = await runTool("social_post_remove_from_platforms", { version: 1, id: "post1" }, removed);
     expect(route(calls[0])).toBe("POST /api/social-publisher-post/post1/remove");
     expect(value).toEqual(removed);
   });
 
   it("social_post_remove_from_platforms's confirmation only reads, says it is irreversible and quotes the removal price", async () => {
-    const { text, calls } = await previewTool("social_post_remove_from_platforms", { id: "post1" }, POST_STATUS);
+    const { text, calls } = await previewTool("social_post_remove_from_platforms", { version: 1, id: "post1" }, POST_STATUS);
     expect(calls.every((call) => call.method === "GET")).toBe(true);
     expect(text).toContain("youtube, facebook");
     expect(text).toContain("irreversible");

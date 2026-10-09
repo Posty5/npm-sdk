@@ -190,10 +190,10 @@ describe("mcp — store-dropshipping toolset", () => {
   });
 
   it("store_supplier_link_update — and refuses a call that changes nothing", async () => {
-    const { calls } = await runTool("store_supplier_link_update", { storeId: "s1", linkId: "l1", sync: { price: false }, applyPriceRuleNow: true });
+    const { calls } = await runTool("store_supplier_link_update", { version: 1, storeId: "s1", linkId: "l1", sync: { price: false }, applyPriceRuleNow: true });
     expect(route(calls[0])).toBe(`PUT ${base}/links/l1`);
     expect(calls[0].body).toEqual({ sync: { price: false }, applyPriceRuleNow: true });
-    await expect(runTool("store_supplier_link_update", { storeId: "s1", linkId: "l1" })).rejects.toThrow(ToolInputError);
+    await expect(runTool("store_supplier_link_update", { version: 1, storeId: "s1", linkId: "l1" })).rejects.toThrow(ToolInputError);
   });
 
   it("store_supplier_link_sync", async () => {
@@ -202,20 +202,20 @@ describe("mcp — store-dropshipping toolset", () => {
   });
 
   it("store_supplier_order_retry — preview reads the order and says money can move", async () => {
-    const { calls } = await runTool("store_supplier_order_retry", { storeId: "s1", supplierOrderRowId: "so1", acceptCost: true });
+    const { calls } = await runTool("store_supplier_order_retry", { version: 1, storeId: "s1", supplierOrderRowId: "so1", acceptCost: true });
     expect(route(calls[0])).toBe(`POST ${base}/orders/so1/retry`);
     expect(calls[0].body).toEqual({ acceptCost: true });
 
-    const preview = await previewTool("store_supplier_order_retry", { storeId: "s1", supplierOrderRowId: "so1" }, SUPPLIER_ORDER);
+    const preview = await previewTool("store_supplier_order_retry", { version: 1, storeId: "s1", supplierOrderRowId: "so1" }, SUPPLIER_ORDER);
     expect(preview.calls.map(route)).toEqual([`GET ${base}/orders/so1`]);
     expect(preview.text).toContain("cannot be undone");
   });
 
   it("store_supplier_link_delete — preview makes no request", async () => {
-    const { calls } = await runTool("store_supplier_link_delete", { storeId: "s1", linkId: "l1" });
+    const { calls } = await runTool("store_supplier_link_delete", { version: 1, storeId: "s1", linkId: "l1" });
     expect(route(calls[0])).toBe(`DELETE ${base}/links/l1`);
 
-    const preview = await previewTool("store_supplier_link_delete", { storeId: "s1", linkId: "l1" });
+    const preview = await previewTool("store_supplier_link_delete", { version: 1, storeId: "s1", linkId: "l1" });
     expect(preview.calls).toEqual([]);
     expect(preview.text).toContain("l1");
   });
@@ -233,11 +233,11 @@ describe("mcp — store-dropshipping toolset", () => {
   });
 
   it("store_supplier_order_pay — preview reads the order and the balance", async () => {
-    const { calls } = await runTool("store_supplier_order_pay", { storeId: "s1", supplierOrderRowId: "so1" });
+    const { calls } = await runTool("store_supplier_order_pay", { version: 1, storeId: "s1", supplierOrderRowId: "so1" });
     expect(route(calls[0])).toBe(`POST ${base}/orders/so1/pay`);
     expect(calls[0].body).toEqual({});
 
-    const preview = await previewTool("store_supplier_order_pay", { storeId: "s1", supplierOrderRowId: "so1" }, undefined, [SUPPLIER_ORDER, { amount: 80, currency: "USD" }]);
+    const preview = await previewTool("store_supplier_order_pay", { version: 1, storeId: "s1", supplierOrderRowId: "so1" }, undefined, [SUPPLIER_ORDER, { amount: 80, currency: "USD" }]);
     expect(preview.calls.map(route)).toEqual([`GET ${base}/orders/so1`, `GET ${base}/i1/balance`]);
     expect(onlyReads(preview.calls)).toBe(true);
     expect(preview.text).toContain("12.5 USD");
@@ -246,21 +246,21 @@ describe("mcp — store-dropshipping toolset", () => {
   });
 
   it("store_supplier_order_cancel — preview reads the order", async () => {
-    const { calls } = await runTool("store_supplier_order_cancel", { storeId: "s1", supplierOrderRowId: "so1" });
+    const { calls } = await runTool("store_supplier_order_cancel", { version: 1, storeId: "s1", supplierOrderRowId: "so1" });
     expect(route(calls[0])).toBe(`POST ${base}/orders/so1/cancel`);
 
-    const preview = await previewTool("store_supplier_order_cancel", { storeId: "s1", supplierOrderRowId: "so1" }, SUPPLIER_ORDER);
+    const preview = await previewTool("store_supplier_order_cancel", { version: 1, storeId: "s1", supplierOrderRowId: "so1" }, SUPPLIER_ORDER);
     expect(preview.calls.map(route)).toEqual([`GET ${base}/orders/so1`]);
     expect(onlyReads(preview.calls)).toBe(true);
     expect(preview.text).toContain("P5-1042-1");
   });
 
   it("store_fulfilment_group_fulfil_manually — preview reads the order to name the part", async () => {
-    const { calls } = await runTool("store_fulfilment_group_fulfil_manually", { storeId: "s1", orderId: "o1", groupKey: "supplier:i1" });
+    const { calls } = await runTool("store_fulfilment_group_fulfil_manually", { orderVersion: 1, storeId: "s1", orderId: "o1", groupKey: "supplier:i1" });
     expect(route(calls[0])).toBe(`POST ${base}/orders/o1/groups/supplier%3Ai1/fulfil-manually`);
     expect(calls[0].body).toEqual({});
 
-    const preview = await previewTool("store_fulfilment_group_fulfil_manually", { storeId: "s1", orderId: "o1", groupKey: "supplier:i1" }, STORE_ORDER);
+    const preview = await previewTool("store_fulfilment_group_fulfil_manually", { orderVersion: 1, storeId: "s1", orderId: "o1", groupKey: "supplier:i1" }, STORE_ORDER);
     expect(preview.calls.map(route)).toEqual(["GET /api/store-orders/s1/o1"]);
     expect(onlyReads(preview.calls)).toBe(true);
     expect(preview.text).toContain("CJ Dropshipping");

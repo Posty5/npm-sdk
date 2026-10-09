@@ -265,7 +265,11 @@
     },
     {
       "path": "__tests__/versioned-writes.test.ts",
-      "role": "Offline tests: version errors (generic 409 kept), If-Match, no retry, client header, report-mode warning."
+      "role": "Offline tests: version errors (generic 409 kept), If-Match, no retry, client header, report-mode warning, form-submission bulk delete with versions."
+    },
+    {
+      "path": "__tests__/store-products-versioned.test.ts",
+      "role": "Store product section PATCH with versions: offline stub, plus a live current/chained/stale case gated on the store + product fixtures."
     }
   ]
 }

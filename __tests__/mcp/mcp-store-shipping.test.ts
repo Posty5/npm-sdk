@@ -134,18 +134,18 @@ describe("mcp — store-shipping toolset", () => {
   });
 
   it("store_shipping_update_country — and refuses a call that changes nothing", async () => {
-    const { calls } = await runTool("store_shipping_update_country", { storeId: "s1", iso: "eg", isEnabled: false, defaultFee: null });
+    const { calls } = await runTool("store_shipping_update_country", { version: 1, storeId: "s1", iso: "eg", isEnabled: false, defaultFee: null });
     expect(route(calls[0])).toBe(`PUT ${base}/countries/eg`);
     expect(calls[0].body).toEqual({ isEnabled: false, defaultFee: null });
-    await expect(runTool("store_shipping_update_country", { storeId: "s1", iso: "eg" })).rejects.toThrow(ToolInputError);
+    await expect(runTool("store_shipping_update_country", { version: 1, storeId: "s1", iso: "eg" })).rejects.toThrow(ToolInputError);
   });
 
   it("store_shipping_upsert_route — and refuses a city without cityKey or a route saying nothing", async () => {
-    const { calls } = await runTool("store_shipping_upsert_route", { storeId: "s1", iso: "eg", level: "city", governorateCode: "C", cityKey: "k", fee: 30 });
+    const { calls } = await runTool("store_shipping_upsert_route", { version: 1, storeId: "s1", iso: "eg", level: "city", governorateCode: "C", cityKey: "k", fee: 30 });
     expect(route(calls[0])).toBe(`POST ${base}/countries/eg/routes`);
     expect(calls[0].body).toEqual({ level: "city", governorateCode: "C", cityKey: "k", fee: 30 });
-    await expect(runTool("store_shipping_upsert_route", { storeId: "s1", iso: "eg", level: "city", governorateCode: "C", fee: 30 })).rejects.toThrow(ToolInputError);
-    await expect(runTool("store_shipping_upsert_route", { storeId: "s1", iso: "eg", level: "governorate", governorateCode: "C" })).rejects.toThrow(ToolInputError);
+    await expect(runTool("store_shipping_upsert_route", { version: 1, storeId: "s1", iso: "eg", level: "city", governorateCode: "C", fee: 30 })).rejects.toThrow(ToolInputError);
+    await expect(runTool("store_shipping_upsert_route", { version: 1, storeId: "s1", iso: "eg", level: "governorate", governorateCode: "C" })).rejects.toThrow(ToolInputError);
   });
 
   it("store_shipping_bulk_upsert_routes", async () => {
@@ -174,55 +174,55 @@ describe("mcp — store-shipping toolset", () => {
   });
 
   it("store_shipping_update_profile — and refuses a call that changes nothing", async () => {
-    const { calls } = await runTool("store_shipping_update_profile", { storeId: "s1", profileId: "p1", name: "Big parcels" });
+    const { calls } = await runTool("store_shipping_update_profile", { version: 1, storeId: "s1", profileId: "p1", name: "Big parcels" });
     expect(route(calls[0])).toBe(`PUT ${base}/profiles/p1`);
     expect(calls[0].body).toEqual({ name: "Big parcels" });
 
-    const resized = await runTool("store_shipping_update_profile", { storeId: "s1", profileId: "p1", condition: { key: "up to 1kg", maxWeight: 2 } });
+    const resized = await runTool("store_shipping_update_profile", { version: 1, storeId: "s1", profileId: "p1", condition: { key: "up to 1kg", maxWeight: 2 } });
     expect(resized.calls[0].body).toEqual({ conditions: [{ key: "up to 1kg", maxWeight: 2 }] });
-    await expect(runTool("store_shipping_update_profile", { storeId: "s1", profileId: "p1" })).rejects.toThrow(ToolInputError);
+    await expect(runTool("store_shipping_update_profile", { version: 1, storeId: "s1", profileId: "p1" })).rejects.toThrow(ToolInputError);
   });
 
   it("store_shipping_save_place_prices — and refuses a governorate without its code", async () => {
     const input = { level: "governorate", governorateCode: "C", prices: [{ profileId: "p1", fee: 20 }, { profileId: "p2", fee: null }] };
-    const { calls } = await runTool("store_shipping_save_place_prices", { storeId: "s1", iso: "eg", ...input });
+    const { calls } = await runTool("store_shipping_save_place_prices", { countryVersion: 1, storeId: "s1", iso: "eg", ...input });
     expect(route(calls[0])).toBe(`PUT ${base}/countries/eg/parcel-prices`);
     expect(calls[0].body).toEqual(input);
     expect(findTool("store_shipping_save_place_prices").entity!({ saved: 1, cleared: 1 }, {})).toEqual({ entityType: "shippingParcelPrice", count: 2 });
-    await expect(runTool("store_shipping_save_place_prices", { storeId: "s1", iso: "eg", level: "governorate", prices: [{ profileId: "p1", fee: 5 }] })).rejects.toThrow(ToolInputError);
+    await expect(runTool("store_shipping_save_place_prices", { countryVersion: 1, storeId: "s1", iso: "eg", level: "governorate", prices: [{ profileId: "p1", fee: 5 }] })).rejects.toThrow(ToolInputError);
   });
 
   it("store_shipping_update_parcel_price", async () => {
-    const { calls, value } = await runTool("store_shipping_update_parcel_price", { storeId: "s1", priceId: "pr1", fee: 35 });
+    const { calls, value } = await runTool("store_shipping_update_parcel_price", { version: 1, storeId: "s1", priceId: "pr1", fee: 35 });
     expect(route(calls[0])).toBe(`PUT ${base}/parcel-prices/pr1`);
     expect(calls[0].body).toEqual({ fee: 35 });
     expect(value).toEqual({ updated: true, priceId: "pr1", fee: 35 });
   });
 
   it("store_shipping_delete_country — preview reads the country", async () => {
-    const { calls } = await runTool("store_shipping_delete_country", { storeId: "s1", iso: "eg" });
+    const { calls } = await runTool("store_shipping_delete_country", { version: 1, storeId: "s1", iso: "eg" });
     expect(route(calls[0])).toBe(`DELETE ${base}/countries/eg`);
 
-    const preview = await previewTool("store_shipping_delete_country", { storeId: "s1", iso: "eg" }, { country: COUNTRY });
+    const preview = await previewTool("store_shipping_delete_country", { version: 1, storeId: "s1", iso: "eg" }, { country: COUNTRY });
     expect(preview.calls.map(route)).toEqual([`GET ${base}/countries/eg`]);
     expect(onlyReads(preview.calls)).toBe(true);
     expect(preview.text).toContain("Egypt");
   });
 
   it("store_shipping_clear_route — preview makes no request", async () => {
-    const { calls } = await runTool("store_shipping_clear_route", { storeId: "s1", rateId: "r1" });
+    const { calls } = await runTool("store_shipping_clear_route", { version: 1, storeId: "s1", rateId: "r1" });
     expect(route(calls[0])).toBe(`DELETE ${base}/routes/r1`);
 
-    const preview = await previewTool("store_shipping_clear_route", { storeId: "s1", rateId: "r1" });
+    const preview = await previewTool("store_shipping_clear_route", { version: 1, storeId: "s1", rateId: "r1" });
     expect(preview.calls).toEqual([]);
     expect(preview.text).toContain("r1");
   });
 
   it("store_shipping_delete_profile — preview reads the profile", async () => {
-    const { calls } = await runTool("store_shipping_delete_profile", { storeId: "s1", profileId: "p1" });
+    const { calls } = await runTool("store_shipping_delete_profile", { version: 1, storeId: "s1", profileId: "p1" });
     expect(route(calls[0])).toBe(`DELETE ${base}/profiles/p1`);
 
-    const preview = await previewTool("store_shipping_delete_profile", { storeId: "s1", profileId: "p1" }, PROFILE);
+    const preview = await previewTool("store_shipping_delete_profile", { version: 1, storeId: "s1", profileId: "p1" }, PROFILE);
     expect(preview.calls.map(route)).toEqual([`GET ${base}/profiles/p1`]);
     expect(onlyReads(preview.calls)).toBe(true);
     expect(preview.text).toContain("Small parcels");
@@ -230,11 +230,11 @@ describe("mcp — store-shipping toolset", () => {
   });
 
   it("store_shipping_remove_parcel_price — preview makes no request", async () => {
-    const { calls, value } = await runTool("store_shipping_remove_parcel_price", { storeId: "s1", priceId: "pr1" });
+    const { calls, value } = await runTool("store_shipping_remove_parcel_price", { version: 1, storeId: "s1", priceId: "pr1" });
     expect(route(calls[0])).toBe(`DELETE ${base}/parcel-prices/pr1`);
     expect(value).toEqual({ removed: true, priceId: "pr1" });
 
-    const preview = await previewTool("store_shipping_remove_parcel_price", { storeId: "s1", priceId: "pr1" });
+    const preview = await previewTool("store_shipping_remove_parcel_price", { version: 1, storeId: "s1", priceId: "pr1" });
     expect(preview.calls).toEqual([]);
     expect(preview.text).toContain("pr1");
   });

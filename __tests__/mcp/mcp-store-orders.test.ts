@@ -91,11 +91,11 @@ describe("@posty5/mcp — store-orders", () => {
   });
 
   it("store_order_update_status → POST …/:orderId/status with the status and the customer note", async () => {
-    const { calls } = await runTool("store_order_update_status", { storeId: S, orderId: "o1", status: "shipped", note: "On its way" }, ORDER);
+    const { calls } = await runTool("store_order_update_status", { version: 1, storeId: S, orderId: "o1", status: "shipped", note: "On its way" }, ORDER);
     expect(route(calls[0])).toBe("POST /api/store-orders/s1/o1/status");
     expect(calls[0].body).toEqual({ status: "shipped", note: "On its way" });
 
-    const { calls: withoutNote } = await runTool("store_order_update_status", { storeId: S, orderId: "o1", status: "confirmed" }, ORDER);
+    const { calls: withoutNote } = await runTool("store_order_update_status", { version: 1, storeId: S, orderId: "o1", status: "confirmed" }, ORDER);
     expect(withoutNote[0].body).toEqual({ status: "confirmed", note: "" });
   });
 

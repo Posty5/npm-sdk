@@ -74,11 +74,11 @@ describe("mcp qr-codes toolset", () => {
   });
 
   it("qr_code_update without mode sends no mode, and passes a given mode", async () => {
-    const kept = await runTool("qr_code_update", { id: "qr1", type: "url", url: "https://new.example" }, undefined, [QR_CODE, QR_CODE]);
+    const kept = await runTool("qr_code_update", { version: 1, id: "qr1", type: "url", url: "https://new.example" }, undefined, [QR_CODE, QR_CODE]);
     expect(kept.calls[1].body.mode).toBeUndefined();
     expect(JSON.stringify(kept.calls[1].body)).not.toContain('"mode"');
 
-    const switched = await runTool("qr_code_update", { id: "qr1", type: "url", url: "https://new.example", mode: "static" }, undefined, [QR_CODE, QR_CODE]);
+    const switched = await runTool("qr_code_update", { version: 1, id: "qr1", type: "url", url: "https://new.example", mode: "static" }, undefined, [QR_CODE, QR_CODE]);
     expect(switched.calls[1].body.mode).toBe("static");
   });
 
@@ -87,10 +87,10 @@ describe("mcp qr-codes toolset", () => {
     const created = await runTool("qr_code_create", { type: "url", url: "https://menu.example", templateId: "tpl1", access }, QR_CODE);
     expect(created.calls[0].body.access).toEqual(access);
 
-    const cleared = await runTool("qr_code_update", { id: "qr1", type: "url", url: "https://new.example", access: null }, undefined, [QR_CODE, QR_CODE]);
+    const cleared = await runTool("qr_code_update", { version: 1, id: "qr1", type: "url", url: "https://new.example", access: null }, undefined, [QR_CODE, QR_CODE]);
     expect(cleared.calls[1].body.access).toBeNull();
 
-    const kept = await runTool("qr_code_update", { id: "qr1", type: "url", url: "https://new.example" }, undefined, [QR_CODE, QR_CODE]);
+    const kept = await runTool("qr_code_update", { version: 1, id: "qr1", type: "url", url: "https://new.example" }, undefined, [QR_CODE, QR_CODE]);
     expect(JSON.stringify(kept.calls[1].body)).not.toContain('"access"');
   });
 
@@ -117,7 +117,7 @@ describe("mcp qr-codes toolset", () => {
   });
 
   it("qr_code_update keeps the current name and template and replaces the target", async () => {
-    const { calls } = await runTool("qr_code_update", { id: "qr1", type: "email", email: "hi@menu.example", emailSubject: "Table" }, undefined, [QR_CODE, QR_CODE]);
+    const { calls } = await runTool("qr_code_update", { version: 1, id: "qr1", type: "email", email: "hi@menu.example", emailSubject: "Table" }, undefined, [QR_CODE, QR_CODE]);
     expect(calls.map(route)).toEqual(["GET /api/qr-code/qr1", "PUT /api/qr-code/email/qr1"]);
     expect(calls[1].body).toMatchObject({
       name: "Menu",
@@ -127,13 +127,13 @@ describe("mcp qr-codes toolset", () => {
   });
 
   it("qr_code_delete deletes by id", async () => {
-    const { calls, value } = await runTool("qr_code_delete", { id: "qr1" });
+    const { calls, value } = await runTool("qr_code_delete", { version: 1, id: "qr1" });
     expect(route(calls[0])).toBe("DELETE /api/qr-code/qr1");
     expect(value).toEqual({ deleted: true, id: "qr1" });
   });
 
   it("qr_code_delete's confirmation only reads, names the code and quotes the delete price", async () => {
-    const { text, calls } = await previewTool("qr_code_delete", { id: "qr1" }, QR_CODE);
+    const { text, calls } = await previewTool("qr_code_delete", { version: 1, id: "qr1" }, QR_CODE);
     expect(calls.every((call) => call.method === "GET")).toBe(true);
     expect(text).toContain("Menu");
     expect(text).toContain("cannot be undone");

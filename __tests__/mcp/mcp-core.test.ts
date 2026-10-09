@@ -112,7 +112,7 @@ describe("@posty5/mcp — the runner", () => {
 
   it("never deletes without confirm: true — it describes the action with reads only", async () => {
     const { deps, calls, outcomes } = depsWith(LINK);
-    const result = await runCall(findTool("short_link_delete"), { id: "l1", aiModel: "m" }, undefined, deps);
+    const result = await runCall(findTool("short_link_delete"), { version: 1, id: "l1", aiModel: "m" }, undefined, deps);
     expect(calls.every((call) => call.method === "GET")).toBe(true);
     expect(result.isError).toBeUndefined();
     expect(result.structuredContent).toMatchObject({ awaitingConfirmation: true, action: expect.stringContaining("cannot be undone") });
@@ -121,7 +121,7 @@ describe("@posty5/mcp — the runner", () => {
 
   it("deletes with confirm: true", async () => {
     const { deps, calls } = depsWith({});
-    await runCall(findTool("short_link_delete"), { id: "l1", aiModel: "m", confirm: true }, undefined, deps);
+    await runCall(findTool("short_link_delete"), { version: 1, id: "l1", aiModel: "m", confirm: true }, undefined, deps);
     expect(calls.map(route)).toEqual(["DELETE /api/short-link/l1"]);
   });
 
@@ -137,7 +137,7 @@ describe("@posty5/mcp — the runner", () => {
 
   it("refuses a tool above the connection's access level without calling the API", async () => {
     const { deps, calls, outcomes } = depsWith({}, { access: "write" });
-    const result = await runCall(findTool("short_link_delete"), { id: "l1", aiModel: "m", confirm: true }, undefined, deps);
+    const result = await runCall(findTool("short_link_delete"), { version: 1, id: "l1", aiModel: "m", confirm: true }, undefined, deps);
     expect(result.isError).toBe(true);
     expect(calls).toHaveLength(0);
     expect(outcomes[0].outcome.status).toBe("denied");

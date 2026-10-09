@@ -114,3 +114,29 @@ describe("core — versioned writes against a real socket", () => {
     warn.mockRestore();
   });
 });
+
+describe("form submissions — bulk delete with versions", () => {
+  it("sends ids + versions in the body, is never retried, and returns applied/skipped/versions", async () => {
+    const calls: { url: string; config: any }[] = [];
+    const stub = {
+      createdFrom: "npmPackage",
+      delete: async (url: string, config?: any) => {
+        calls.push({ url, config });
+        return { message: "", result: { deleted: 1, applied: ["a"], skipped: [{ _id: "b", code: "VERSION_CONFLICT", currentVersion: 4 }] }, versions: {} };
+      },
+    };
+    const { HtmlHostingFormSubmissionClient } = await import("@posty5/html-hosting-form-submission");
+    const result = await new HtmlHostingFormSubmissionClient(stub as unknown as HttpClient).deleteBulk({ a: 1, b: 2 });
+    expect(calls).toEqual([{ url: "/api/html-hosting-form-submission/bulk", config: { data: { ids: ["a", "b"], versions: { a: 1, b: 2 } }, skipRetry: true } }]);
+    expect(result.applied).toEqual(["a"]);
+    expect(result.skipped[0].currentVersion).toBe(4);
+    expect(result.versions).toEqual({});
+  });
+
+  it("refuses a versions map with a bad entry before sending", async () => {
+    const { HtmlHostingFormSubmissionClient } = await import("@posty5/html-hosting-form-submission");
+    const stub = { delete: jest.fn() };
+    await expect(new HtmlHostingFormSubmissionClient(stub as unknown as HttpClient).deleteBulk({ a: -1 })).rejects.toThrow(TypeError);
+    expect(stub.delete).not.toHaveBeenCalled();
+  });
+});
