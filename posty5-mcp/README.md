@@ -66,7 +66,7 @@ The server writes the protocol to stdout and everything else to stderr.
 | `store-shipping` | — | Countries, routes, profiles, assignments |
 | `store-dropshipping` | — | Supplier catalogue, imports, product links, supplier orders |
 
-146 tools in all; `listToolsets()` and `listTools()` describe them.
+148 tools in all; `listToolsets()` and `listTools()` describe them.
 
 ## 🔐 Access levels and confirmation
 
@@ -87,6 +87,16 @@ A refused row is reported and skipped. `qr_code_create_many` with `zip: true`
 runs a bulk job and answers a **signed link to a ZIP of the images** that
 expires within minutes; `qr_code_get_bulk_job` reports a job still running and
 hands out fresh links. Webhook endpoints are not exposed through MCP.
+
+### Visit analytics
+
+`short_link_get_analytics` and `qr_code_get_analytics` (read) answer visits,
+unique visitors, a day/week/month series and breakdowns (channel, country,
+device, OS, browser, referrer, language) for one link or QR code over a date
+range. Bots are excluded and reported as `botVisits`; data starts at
+`meta.analyticsStartedAt`; breakdowns the owner's plan does not include are
+listed in `meta.locked` with the plan that unlocks them. For a static QR code
+the numbers are visits to its Posty5 page, not scans. No credits.
 
 ### Short link controls
 

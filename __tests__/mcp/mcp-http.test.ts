@@ -79,7 +79,7 @@ describe("@posty5/mcp — HTTP handler", () => {
     apiRequests.length = 0;
     const client = await connect("write-token", "legacy-client", false);
     const tools = (await client.listTools()).tools.map((tool) => tool.name);
-    expect(tools).toEqual(["account_get_current", "account_get_credits", "account_get_credit_usage", "account_get_operation_costs", "short_link_list", "short_link_get", "short_link_create", "short_link_create_many", "short_link_update"]);
+    expect(tools).toEqual(["account_get_current", "account_get_credits", "account_get_credit_usage", "account_get_operation_costs", "short_link_list", "short_link_get", "short_link_get_analytics", "short_link_create", "short_link_create_many", "short_link_update"]);
 
     const result = await client.callTool({ name: "short_link_create", arguments: { baseUrl: "https://example.com", templateId: "t1", aiModel: "claude-opus-5-5" } });
     expect(result.isError).toBeFalsy();

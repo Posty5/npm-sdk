@@ -29,7 +29,7 @@ const SIGNED = { url: "https://r2.example/zip?sig=1", expiresAt: "2026-10-06T10:
 
 describe("mcp link batch tools", () => {
   it("short-links keeps its order with short_link_create_many after short_link_create", () => {
-    expect(SHORT_LINK_TOOLS.map((tool) => tool.name)).toEqual(["short_link_list", "short_link_get", "short_link_create", "short_link_create_many", "short_link_update", "short_link_delete"]);
+    expect(SHORT_LINK_TOOLS.map((tool) => tool.name)).toEqual(["short_link_list", "short_link_get", "short_link_get_analytics", "short_link_create", "short_link_create_many", "short_link_update", "short_link_delete"]);
   });
 
   it("both create tools are write and quote a price; qr_code_get_bulk_job is read", () => {

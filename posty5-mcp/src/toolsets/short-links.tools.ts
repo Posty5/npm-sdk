@@ -5,6 +5,7 @@ import { LINK_CLOCK_PATTERN, LINK_RULE_ID_PATTERN, LINK_UTM_VALUE_PATTERN, SHORT
 import { LINK_CAMPAIGN_COLORS, LINK_DEVICE_TYPES, LINK_OS_FAMILIES, LINK_PIXEL_PROVIDERS, SHORT_LINK_STATUSES } from "../config/short-links-enums.config";
 import { defineTool, idField, pageFields, pickPage, versionField, withoutPaging } from "../core/define-tool.helper";
 import { batchIdempotencyKey, describeBatch, unwrapBulkError } from "../core/link-bulk.helper";
+import { LINK_ANALYTICS_CAVEATS, linkAnalyticsInput, toLinkAnalyticsArgs } from "../core/link-analytics.helper";
 import { withoutLinkPassword } from "../core/short-link-rules.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
@@ -174,6 +175,18 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
     description: "One short link with its full details: target, short URL, status, visits, landing page and QR code URLs, tags, campaignId, and its controls: access (hasPassword only, never the password), routing, variants, utm, pixels and health.",
     input: z.object({ id: idField(SHORT_LINK_ID) }),
     run: async ({ id }, { clients }) => withoutLinkPassword(await clients.shortLinks.get(id)),
+  }),
+  defineTool({
+    name: "short_link_get_analytics",
+    toolset: "short-links",
+    access: "read",
+    title: "Get short link analytics",
+    description: `Visits to one short link over a date range: totals (visits, unique visitors, QR scans vs clicks), a series per day/week/month, and breakdowns by channel (link click or qr scan), country, device, OS, browser, referrer host and language. ${LINK_ANALYTICS_CAVEATS} Scans of QR images downloaded before analytics started count as clicks.`,
+    input: linkAnalyticsInput(SHORT_LINK_ID),
+    run: (args, { clients }) => {
+      const { id, query } = toLinkAnalyticsArgs(args);
+      return clients.shortLinks.getAnalytics(id, query);
+    },
   }),
   defineTool({
     name: "short_link_create",

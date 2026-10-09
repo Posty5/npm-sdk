@@ -16,6 +16,7 @@ import {
 import { MCP_BULK_MAX_ROWS, QR_MCP_FILE_MAX_BYTES, QR_SOCIAL_MAX_PROFILES } from "../config/limits.config";
 import { CREATE_QR_CODE_FEATURE_PATH } from "../config/link-costs.config";
 import { batchIdempotencyKey, describeBatch, describeQrBulkJob, runQrZipJob, unwrapBulkError } from "../core/link-bulk.helper";
+import { LINK_ANALYTICS_CAVEATS, linkAnalyticsInput, toLinkAnalyticsArgs } from "../core/link-analytics.helper";
 import { defineTool, idField, pageFields, pickPage, requireFields, versionField, withoutPaging } from "../core/define-tool.helper";
 import { checkQrCodeAccess, checkQrSocialProfiles, createQrCode, resolveQrCodeMode, toQrBulkRow, updateQrCode } from "../core/qr-codes.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
@@ -183,6 +184,18 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
       "One QR code with its full details: type and target, mode (a dynamic code's image encodes qrCodeLandingPageURL), dynamicSince, template, status, scans, landing page and image URLs.",
     input: z.object({ id: idField(QR_CODE_ID) }),
     run: ({ id }, { clients }) => clients.qrCodes.get(id),
+  }),
+  defineTool({
+    name: "qr_code_get_analytics",
+    toolset: "qr-codes",
+    access: "read",
+    title: "Get QR code analytics",
+    description: `Visits that reached Posty5 through one QR code over a date range: totals, a series per day/week/month, and breakdowns by country, device, OS, browser, referrer host and language. A static code's image encodes its target directly, so its scans never reach Posty5: for static codes these are visits to the code's Posty5 page, not scans. ${LINK_ANALYTICS_CAVEATS}`,
+    input: linkAnalyticsInput(QR_CODE_ID),
+    run: (args, { clients }) => {
+      const { id, query } = toLinkAnalyticsArgs(args);
+      return clients.qrCodes.getAnalytics(id, query);
+    },
   }),
   defineTool({
     name: "qr_code_list_templates",

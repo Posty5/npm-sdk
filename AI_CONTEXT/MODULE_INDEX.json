@@ -54,7 +54,7 @@
     },
     {
       "name": "mcp",
-      "purpose": "@posty5/mcp: every SDK service as MCP tools (138 in 10 toolsets), createPosty5McpServer, listTools/listToolsets, and the posty5-mcp stdio binary. Access levels, confirm gate, aiModel attribution, idempotency. New in 1.0.0.",
+      "purpose": "@posty5/mcp: every SDK service as MCP tools (148 in 10 toolsets, incl. short_link_get_analytics / qr_code_get_analytics), createPosty5McpServer, listTools/listToolsets, and the posty5-mcp stdio binary. Access levels, confirm gate, aiModel attribution, idempotency. New in 1.0.0.",
       "primary_path": "posty5-mcp/src"
     },
     {

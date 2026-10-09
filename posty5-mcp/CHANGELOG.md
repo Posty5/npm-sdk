@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+Needs `@posty5/short-link` / `@posty5/qr-code` with `getAnalytics()` (link-qr-visit-analytics).
+
+- New read tools `short_link_get_analytics` and `qr_code_get_analytics`:
+  visit totals, series and breakdowns, `meta.locked` passed through. 148 tools.
+
 Needs `@posty5/short-link` 4.6.0.
 
 - Short link controls: `short_link_create` / `short_link_update` take `tags`,
