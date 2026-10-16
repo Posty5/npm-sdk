@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+Needs `@posty5/qr-code` 5.1.0 (`getExportUrl`, `checkScannability`) and
+`@posty5/core` 5.0.1; new dependency `@posty5/qr-design` 4.7.1 (exact), for
+the print preset list.
+
+- New read tools in `qr-codes`, after `qr_code_get`: `qr_code_render` (a
+  signed PNG / SVG / PDF download link with the print size it prints at and
+  the minutes it lasts — no image bytes) and `qr_code_check_scannability`
+  (`qrCodeId` xor `templateId`, optional print size). A plan refusal of a
+  vector or print request keeps the API's message and adds the plain-PNG
+  hint. 150 tools.
+
 Needs `@posty5/short-link` / `@posty5/qr-code` with `getAnalytics()` (link-qr-visit-analytics).
 
 - New read tools `short_link_get_analytics` and `qr_code_get_analytics`:

@@ -43,3 +43,9 @@ export const QR_MCP_FILE_MAX_BYTES = 5 * 1024 * 1024;
 
 /** Most profiles one `social` QR code lists (a static code takes one). */
 export const QR_SOCIAL_MAX_PROFILES = 12;
+
+/** Millimetres per inch, for the pixel width of a PNG at a print preset and DPI. */
+export const MM_PER_INCH = 25.4;
+
+/** Milliseconds per minute, for the minutes left on a signed download link. */
+export const MS_PER_MINUTE = 60 * 1000;

@@ -1,3 +1,5 @@
+import { QR_PRINT_DPI_DEFAULT, QR_PRINT_DPI_VALUES, QrPrintPresets, type QrPrintPresetId } from "@posty5/qr-design";
+import type { QrRenderFormat } from "@posty5/qr-code";
 import type { QRCodeMode, QrCodeFileMimeType, QrCodeReviewPlatform, QrCodeSocialPlatform, QrCodeStatusType, QrCodeTargetType, QrCodeVCardPhoneKind } from "@posty5/qr-code";
 
 /**
@@ -68,3 +70,21 @@ export const QR_CODE_REQUIRED_FIELDS: Record<QrCodeType, readonly string[]> = {
 
 /** As `QR_CODE_REQUIRED_FIELDS`, for `qr_code_update`: a `file` code without new content keeps its stored file. */
 export const QR_CODE_UPDATE_REQUIRED_FIELDS: Record<QrCodeType, readonly string[]> = { ...QR_CODE_REQUIRED_FIELDS, file: [] };
+
+/** Formats `qr_code_render` mints a link for. */
+export const QR_RENDER_FORMATS = ["png", "svg", "pdf"] as const satisfies readonly QrRenderFormat[];
+
+/** Print preset ids, read from `@posty5/qr-design` (the engine the API renders with) so the tools cannot drift. */
+export const QR_PRINT_PRESET_IDS = QrPrintPresets.map((preset) => preset.id) as [QrPrintPresetId, ...QrPrintPresetId[]];
+
+/** PNG resolutions at a print preset, from `@posty5/qr-design`. */
+export const QR_PRINT_DPIS = QR_PRINT_DPI_VALUES;
+
+/** The DPI the API uses for a PNG at a preset when none is given. */
+export const QR_PRINT_DPI_FALLBACK = QR_PRINT_DPI_DEFAULT;
+
+/** The preset the API uses for a PDF when none is given (swagger: "`pdf` defaults to flyer-5cm"). */
+export const QR_PDF_DEFAULT_PRESET: QrPrintPresetId = "flyer-5cm";
+
+/** The preset whose width comes from `customMm`. */
+export const QR_CUSTOM_PRESET: QrPrintPresetId = "custom";
