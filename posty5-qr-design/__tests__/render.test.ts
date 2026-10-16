@@ -9,6 +9,7 @@ import {
     RGBLuminanceSource,
 } from '@zxing/library';
 import { renderDesignSvg, QrCapacityError } from '../src';
+import type { IQrDesignOptions } from '../src';
 import { FIXTURE_TEXT, FIXTURES, renderFixture, sha256 } from './fixtures.helper';
 
 const GOLDEN_FILE = path.join(__dirname, 'golden.json');
