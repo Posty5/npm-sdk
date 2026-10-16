@@ -15,6 +15,7 @@ import {
 import { shouldRetryRequest } from "./retry-policy.helper";
 import { IF_MATCH_HEADER } from "./concurrency.config";
 import { ifMatchHeader, warnOnMissingVersion } from "./concurrency.helper";
+import { decodeBinaryErrorBody } from "./binary-response.helper";
 
 /**
  * Pull the filename out of a `Content-Disposition` header. The server sends it
@@ -116,7 +117,8 @@ export class HttpClient {
         if (this.config.debug) {
           console.error("[Posty5 SDK] Error:", JSON.stringify(error.response?.data || error.message));
         }
-        return Promise.reject(transformError(error));
+        // A failed `getBinary` brings its JSON error body as bytes; decode it so the API's message survives.
+        return Promise.reject(transformError(decodeBinaryErrorBody(error)));
       },
     );
   }

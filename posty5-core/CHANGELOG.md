@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.0.1
+
+### Fixed
+
+- A failed `getBinary` download now carries the API's own message. Its error
+  body arrived as bytes (the request asks for an `arraybuffer`), so a 403 plan
+  gate or a 404 surfaced as "Request failed with status code …". The response
+  interceptor decodes a JSON body before mapping the error
+  (`decodeBinaryErrorBody`, exported); a non-JSON body is left as is.
+  Required by `@posty5/qr-code` 5.1.0 (`render`).
+
 ## 5.0.0
 
 Optimistic concurrency. Released in lockstep with every `@posty5/*` package

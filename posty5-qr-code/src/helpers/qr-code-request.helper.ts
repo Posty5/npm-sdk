@@ -76,23 +76,23 @@ export function toEventQrCodeBody(data: ICreateEventQRCodeRequest): Record<strin
   return toStructuredQrCodeBody("event", { ...data, event } as IQRCodeRequest);
 }
 
-/** A `file` code's upload input: the content as a `Blob`, its MIME type and size. */
-export interface IQrCodeFileUpload {
+/** An upload input (a `file` code's content, a template logo): the content as a `Blob`, its MIME type and size. */
+export interface IQrCodeFileUpload<T extends string = QrCodeFileMimeType> {
   blob: Blob;
-  mimeType: QrCodeFileMimeType;
+  mimeType: T;
   sizeBytes: number;
 }
 
 /**
- * The content of a `file` code as a `Blob` plus the MIME type and size the
+ * The content of a `file` code (or a template logo) as a `Blob` plus the MIME type and size the
  * upload-url route asks for. A `Blob` brings its own `type` unless
  * `mimeType` is given; an `ArrayBuffer` / `Uint8Array` (Node `Buffer`)
  * requires `mimeType`. Throws `ValidationError` before any request when the
  * type is missing or the content is empty.
  */
-export function toQrCodeFileUpload(content: QrCodeFileContent, mimeType?: QrCodeFileMimeType): IQrCodeFileUpload {
+export function toQrCodeFileUpload<T extends string = QrCodeFileMimeType>(content: QrCodeFileContent, mimeType?: T): IQrCodeFileUpload<T> {
   const isBlob = typeof Blob !== "undefined" && content instanceof Blob;
-  const type = (mimeType || (isBlob ? (content as Blob).type : "")) as QrCodeFileMimeType;
+  const type = (mimeType || (isBlob ? (content as Blob).type : "")) as T;
   if (!type) {
     throw new ValidationError("file.mimeType is required when the file content is not a Blob with a type");
   }

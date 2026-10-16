@@ -67,6 +67,11 @@ import {
   IQrCodeBulkRow,
   IQrCodeExportParams,
   ICreateQrCodeBulkJobInput,
+  IQrExportOptions,
+  IQrExportUrl,
+  IQrRenderOptions,
+  IQrScannabilityInput,
+  IQRCodeScannabilityReport,
 } from "./interfaces";
 import {
   toEventQrCodeBody,
@@ -76,7 +81,8 @@ import {
   toQrCodeListQuery,
   toStructuredQrCodeBody,
 } from "./helpers/qr-code-request.helper";
-import { QrCodeBulkPathsConst, QrCodeRequestSourceConst } from "./qr-code.config";
+import { toQrExportQuery, toQrRenderQuery } from "./helpers/qr-render-query.helper";
+import { QrCodeBulkPathsConst, QrCodeRenderPathsConst, QrCodeRequestSourceConst } from "./qr-code.config";
 
 /**
  * QR Code Client for managing QR codes via Posty5 API
@@ -927,6 +933,68 @@ export class QRCodeClient {
    */
   async waitForBulkJob(id: string, options?: IWaitForBulkJobOptions): Promise<ILinkBulkJob> {
     return this.bulkJobs.wait(id, options);
+  }
+
+  /**
+   * Render one of your QR codes as PNG, SVG or PDF, as its design renders
+   * (its template wins). Scoped like `get`: an API key sees the codes it
+   * created. Plain PNG is on every plan; SVG, PDF, a print preset, a DPI or a
+   * PNG over 2048 px need a plan with vector export — otherwise
+   * `AuthorizationError` with the API's message. No credits.
+   *
+   * @param id - QR code ID
+   * @param options - `format` (`png` by default), `presetId` (+ `customMm`), `dpi`, `sizePx`, `download`
+   * @returns The file's bytes, content type and (with `download`) file name
+   *
+   * @example
+   * ```typescript
+   * const pdf = await qrCodeClient.render('qr123', { format: 'pdf', presetId: 'flyer-5cm' });
+   * writeFileSync('menu.pdf', Buffer.from(pdf.data));
+   * const png = await qrCodeClient.render('qr123', { presetId: 'business-card', dpi: 300 });
+   * ```
+   */
+  async render(id: string, options?: IQrRenderOptions): Promise<IBinaryResponse> {
+    return this.http.getBinary(`${this.basePath}/${id}${QrCodeRenderPathsConst.render}`, {
+      params: toQrRenderQuery(options),
+    });
+  }
+
+  /**
+   * A signed download link for one of your QR codes, valid for 1 hour — for
+   * places that cannot send your API key (a browser `<a download>`, an email,
+   * an agent). Same scope and plan rules as `render`, checked when the link is
+   * minted. Anyone holding the link can download the file until `expiresAt`.
+   * No credits.
+   *
+   * @example
+   * ```typescript
+   * const { url, expiresAt } = await qrCodeClient.getExportUrl('qr123', { format: 'svg' });
+   * ```
+   */
+  async getExportUrl(id: string, options?: IQrExportOptions): Promise<IQrExportUrl> {
+    const response = await this.http.get<IQrExportUrl>(`${this.basePath}/${id}${QrCodeRenderPathsConst.exportUrl}`, {
+      params: toQrExportQuery(options),
+    });
+    return response.result!;
+  }
+
+  /**
+   * Check whether a design will scan: contrast, inverted colours, logo
+   * coverage for the error-correction level, quiet zone, module size (at a
+   * print preset or a PNG size) and dot scale. Give exactly one source — a
+   * saved QR code (`qrCodeId`), a template (`templateId`, yours or public) or
+   * an unsaved design (`options` + `text`). It warns and never blocks
+   * anything. Every plan; no credits.
+   *
+   * @example
+   * ```typescript
+   * const report = await qrCodeClient.checkScannability({ qrCodeId: 'qr123', presetId: 'business-card' });
+   * if (report.verdict !== 'good') console.log(report.checks.filter((c) => c.status !== 'good'));
+   * ```
+   */
+  async checkScannability(input: IQrScannabilityInput): Promise<IQRCodeScannabilityReport> {
+    const response = await this.http.post<IQRCodeScannabilityReport>(`${this.basePath}${QrCodeRenderPathsConst.scannabilityCheck}`, input);
+    return response.result!;
   }
 
   /** POST `/api/qr-code/:type` with the body and this SDK's source fields. */

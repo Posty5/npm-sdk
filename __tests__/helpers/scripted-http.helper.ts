@@ -17,8 +17,8 @@ export function scriptedHttp(respond: (call: IScriptedHttpCall, index: number) =
     get: (url: string, config?: { params?: Record<string, unknown> }) => run({ method: "GET", url, params: config?.params }),
     post: (url: string, body?: unknown, config?: { headers?: Record<string, string> }) =>
       run({ method: "POST", url, body, headers: config?.headers }),
-    put: (url: string, body?: unknown) => run({ method: "PUT", url, body }),
-    delete: (url: string) => run({ method: "DELETE", url }),
+    put: (url: string, body?: unknown, config?: { version?: number }) => run({ method: "PUT", url, body, version: config?.version }),
+    delete: (url: string, config?: { version?: number }) => run({ method: "DELETE", url, version: config?.version }),
     getBinary: async (url: string, config?: { params?: Record<string, unknown> }): Promise<IBinaryResponse> => {
       const call: IScriptedHttpCall = { method: "GET", url, params: config?.params };
       calls.push(call);

@@ -240,6 +240,68 @@ const { url } = await qrCodes.getBulkJobResultUrl(done._id, "zip"); // images, n
 const file = await qrCodes.export({ format: "json" });
 ```
 
+## 🖨️ Design, render and print (5.1.0)
+
+`QRCodeClient` (base `/api/qr-code`):
+
+| Method | Route | Returns |
+| --- | --- | --- |
+| `render(id, { format?, presetId?, customMm?, dpi?, sizePx?, download? })` | `GET /{id}/render` | `IBinaryResponse` (PNG / SVG / PDF) |
+| `getExportUrl(id, { format?, presetId?, customMm?, dpi?, sizePx? })` | `GET /{id}/export-url` | `{ url, expiresAt }`, valid 1 hour |
+| `checkScannability({ qrCodeId } \| { templateId, text? } \| { options, text })` + `presetId?` / `sizePx?` | `POST /scannability-check` | `{ verdict, checks, symbol }` |
+
+`QRCodeTemplateClient` (base `/api/qr-code-template`):
+
+| Method | Route |
+| --- | --- |
+| `create({ name?, options })` | `POST /` |
+| `update(id, { name, options }, version)` | `PUT /` (`_id` in the body, version as `If-Match`) |
+| `get(id)` | `GET /{id}` |
+| `list({ name? }, pagination?)` | `GET /` |
+| `delete(id, version)` | `DELETE /{id}` |
+| `render(id, options?)` | `GET /{id}/render` |
+| `getDesignCatalogue()` | `GET /design-catalogue` |
+| `getLogoUploadUrl(fileType, fileSize)` | `POST /logo-upload-url` |
+| `uploadLogo(file, fileType?)` | upload URL + PUT; returns the logo URL |
+
+```typescript
+import { writeFileSync, readFileSync } from "fs";
+import { QRCodeClient, QRCodeTemplateClient } from "@posty5/qr-code";
+
+const templates = new QRCodeTemplateClient(http);
+const logo = await templates.uploadLogo(readFileSync("./logo.png"), "image/png");
+const design = await templates.create({
+  name: "Menu",
+  options: {
+    correctLevel: 2, // H
+    dotShape: "rounded",
+    eyeFrameShape: "leaf",
+    fill: { type: "linear", rotation: 45, stops: [{ offset: 0, color: "#0059F7" }, { offset: 1, color: "#1d2b64" }] },
+    frame: { id: "banner-bottom", text: "Scan for menu" },
+    logo,
+    logoSource: "upload",
+  },
+});
+
+const qrCodes = new QRCodeClient(http);
+const qr = await qrCodes.createURL({ name: "Menu", templateId: design._id, url: { url: "https://example.com/menu" } });
+const report = await qrCodes.checkScannability({ qrCodeId: qr._id, presetId: "flyer-5cm" });
+const pdf = await qrCodes.render(qr._id, { format: "pdf", presetId: "flyer-5cm" });
+writeFileSync("menu.pdf", Buffer.from(pdf.data));
+const { url, expiresAt } = await qrCodes.getExportUrl(qr._id, { format: "svg" });
+```
+
+- Plain PNG is on every plan. SVG, PDF, a print preset (`sticker-3cm`,
+  `business-card`, `flyer-5cm`, `table-tent-8cm`, `poster-15cm`, `custom`
+  20–500 mm), a DPI (150 / 300 / 600) or a PNG over 2048 px need a plan with
+  vector export; logo upload needs a paid plan too. Otherwise the API's 403
+  message arrives as `AuthorizationError`.
+- Scannability warns and never blocks: `verdict` is `good`, `warning` or
+  `poor`, and each check has an English `message` with the fix.
+- A template update replaces the whole design. Updating a v2 design without
+  `designVersion` keeps its v2 fields; send `designVersion: 1` to drop them.
+- No credits are charged except for creating a template.
+
 ## ⬆️ Upgrading to 4.4.0
 
 - **New:** `getAnalytics(id, query?)` — visits of a code's Posty5 page, per
