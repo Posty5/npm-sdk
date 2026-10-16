@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.7.1
+
+- Fix: `quietZoneColor` painted the whole symbol when `quietZone` was 0, so a
+  v2 design with a dark quiet-zone colour and no margin rendered as a solid
+  square. It now paints the margin only (EasyQRCode's rule); with no margin the
+  background is `colorLight`.
+
 ## 4.7.0
 
 First release (feature `qr-design-and-export`, contract K2). No dependency on

@@ -104,8 +104,12 @@ export const renderDesignSvg = (input: IQrDesignOptions | IQrDesign, text: strin
     const parts: string[] = [];
     parts.push(layout.frameBack);
     if (!design.backgroundTransparent) {
-        parts.push(`<path d="${rectPath(box.x, box.y, box.width, box.height)}"${paintAttrs('fill', design.quietZoneColor ?? design.colorLight)}/>`);
-        if (design.quietZoneColor && design.quietZone > 0) {
+        // The quiet-zone colour paints the margin only (EasyQRCode's rule). With
+        // no margin it must not become the code's background: a dark
+        // quietZoneColor at quietZone 0 used to fill the whole symbol black.
+        const paintedMargin = !!design.quietZoneColor && design.quietZone > 0;
+        parts.push(`<path d="${rectPath(box.x, box.y, box.width, box.height)}"${paintAttrs('fill', paintedMargin ? design.quietZoneColor! : design.colorLight)}/>`);
+        if (paintedMargin) {
             parts.push(`<path d="${rectPath(symbol.x, symbol.y, symbol.width, symbol.height)}"${paintAttrs('fill', design.colorLight)}/>`);
         }
     }
