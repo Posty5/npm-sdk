@@ -17,8 +17,8 @@
     "workspaces": [
         "posty5-core",
         "posty5-short-link",
-        "posty5-qr-code",
         "posty5-qr-design",
+        "posty5-qr-code",
         "posty5-html-hosting",
         "posty5-html-hosting-variables",
         "posty5-html-hosting-form-submission",
