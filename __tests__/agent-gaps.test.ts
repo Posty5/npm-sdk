@@ -139,6 +139,34 @@ describe("@posty5/account — routes", () => {
   });
 });
 
+describe("@posty5/account — credit transfers (read-only)", () => {
+  it("reads eligibility, the list with its filters, and one transfer", async () => {
+    const { http: stub, calls } = stubHttp({});
+    const account = new AccountClient(stub);
+
+    await account.getCreditTransferEligibility();
+    await account.listCreditTransfers({ direction: "received", status: "completed" }, { pageSize: 20 });
+    await account.getCreditTransfer("665f00000000000000000001");
+
+    expect(calls.map(route)).toEqual([
+      "GET /api/credit-transfers/eligibility",
+      "GET /api/credit-transfers",
+      "GET /api/credit-transfers/665f00000000000000000001",
+    ]);
+    expect(calls[1].params).toEqual({ direction: "received", status: "completed", pageSize: 20 });
+  });
+
+  it("offers no way to send a transfer with an API key", () => {
+    expect((AccountClient.prototype as any).sendCreditTransfer).toBeUndefined();
+  });
+
+  it("filters the credit history by the transfer kinds", async () => {
+    const { http: stub, calls } = stubHttp({});
+    await new AccountClient(stub).getCreditUsage({ kind: "transferIn" });
+    expect(calls[0].params).toEqual({ kind: "transferIn" });
+  });
+});
+
 describe("@posty5/store — stores and the order origin", () => {
   it("lists the stores the key can manage, from the facade too", async () => {
     const { http: stub, calls } = stubHttp([{ _id: "s1", name: "shop - Shop" }]);

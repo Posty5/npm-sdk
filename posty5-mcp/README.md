@@ -55,7 +55,7 @@ The server writes the protocol to stdout and everything else to stderr.
 
 | Toolset | On by default | What it covers |
 | --- | --- | --- |
-| `account` | always | Who the connection is, credits, live operation prices |
+| `account` | always | Who the connection is, credits, credit transfers (read-only), live operation prices |
 | `short-links` | ✅ | Short links, their controls (availability, password, routing, A/B split, UTM, pixels, health checks), tags and link campaigns |
 | `qr-codes` | ✅ | QR codes of every type, QR templates, download links (PNG / SVG / print PDF) and scannability checks |
 | `html-hosting` | ✅ | Hosted pages, their variables, form submissions |
@@ -66,7 +66,13 @@ The server writes the protocol to stdout and everything else to stderr.
 | `store-shipping` | — | Countries, routes, profiles, assignments |
 | `store-dropshipping` | — | Supplier catalogue, imports, product links, supplier orders |
 
-150 tools in all; `listToolsets()` and `listTools()` describe them.
+152 tools in all; `listToolsets()` and `listTools()` describe them.
+
+**Credit transfers** are read-only here: `account_get_credit_transfer_eligibility`
+(can the account send — Business plan only — how many, and can it still receive
+one on Free) and `account_list_credit_transfers` (sent and received, newest
+first, counterparty masked). Sending is done by the user in the Posty5
+dashboard; no tool sends credits.
 
 ## 🔐 Access levels and confirmation
 

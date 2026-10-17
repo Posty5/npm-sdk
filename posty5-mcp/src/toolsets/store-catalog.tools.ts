@@ -101,7 +101,7 @@ export const STORE_CATALOG_TOOLS: IToolDefinition[] = [
     access: "read",
     title: "Search products",
     description:
-      "A store's products with their price, stock, SKU and status. Filter by part of the name, slug, SKU, status, or tags (tag ids from store_tag_search). Pages with cursor.",
+      "A store's products with their price, stock, SKU and status. Filter by part of the name, slug, SKU, status, or tags (tag ids from store_tag_search). Pages with cursor. Products added by the store's demo data have isDemo: true and are removed when the store is published, unless the merchant edited them.",
     input: z.object({
       storeId: idField(STORE_ID),
       name: z.string().optional().describe("Part of the product name, any case."),

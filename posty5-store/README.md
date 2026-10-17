@@ -171,6 +171,19 @@ part, so on a multi-part order `shipped` and `delivered` are reached by the
 parts rather than set by hand. List rows carry `fulfilmentSummary`, and
 `search(storeId, { needsAttention: true })` finds orders with a paused part.
 
+### Test orders and demo data
+
+A store that has not been published yet is in **test mode**. Orders placed then carry `isTest: true`;
+records added by the store's demo data carry `isDemo: true` (orders, products, customers, tags). Both
+are removed when the owner publishes the store, so a sync that counts real sales should skip them:
+
+```ts
+const page = await store.orders.search(storeId);
+const realOrders = page.items.filter((order) => !order.isTest && !order.isDemo);
+```
+
+There is no publish method: publishing deletes data irreversibly and needs the owner's typed confirmation in the store control panel.
+
 ## Tags
 
 ```ts

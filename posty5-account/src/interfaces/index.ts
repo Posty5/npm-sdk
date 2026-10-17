@@ -54,12 +54,26 @@ export interface IAccountCreditsResponse {
   usageStats: Record<string, unknown>[];
 }
 
+/**
+ * Every kind of credit-ledger row the API returns. `transferOut` / `transferIn`
+ * are credits sent to / received from another Posty5 account (4.4.0).
+ */
+export type CreditUsageKind =
+  | "charge"
+  | "grant"
+  | "settlement"
+  | "carryOver"
+  | "adminAdjustment"
+  | "refund"
+  | "transferOut"
+  | "transferIn";
+
 /** Filters for the credit history and its summary. */
 export interface ICreditUsageFilters {
   /** e.g. `socialMediaPublisher`. */
   module?: string;
   operationType?: string;
-  kind?: "charge" | "grant" | "carryOver" | "refund";
+  kind?: CreditUsageKind;
   /** `false` lists deferred charges not yet paid. */
   settled?: boolean;
   /** Only operations charged for this store. */
@@ -93,7 +107,8 @@ export interface ICreditUsageRow {
   direction: "in" | "out";
   /** e.g. `"-50"` or `"+1000"`. */
   signedCredits: string;
-  kind: string;
+  /** One of `CreditUsageKind`; typed as a string so a kind added later never breaks a caller. */
+  kind: CreditUsageKind | (string & {});
   module: string;
   operationType: string;
   reason?: string;
@@ -132,7 +147,12 @@ export interface ICreditUsageSummary {
     operations: number;
     creditsSpent: number;
     creditsOwed: number;
+    /** Credits added in the range, including credits received by transfer. */
     creditsAdded: number;
+    /** Credits received from other Posty5 accounts in the range (4.4.0). */
+    creditsTransferredIn?: number;
+    /** Credits sent to other Posty5 accounts in the range — never counted as spent (4.4.0). */
+    creditsTransferredOut?: number;
   };
 }
 
@@ -153,4 +173,81 @@ export interface IOperationCosts {
   currency: "credits";
   operationsCount: number;
   modules: { module: string; moduleName: string; operations: IOperationCost[] }[];
+}
+
+// ─── Credit transfers (4.4.0) ────────────────────────────────────────────────
+
+/** A transfer's lifecycle. `pending` / `debited` are still completing. */
+export type CreditTransferStatus = "pending" | "debited" | "completed" | "failed" | "reversed";
+
+/** Which side of a transfer the key owner is on. */
+export type CreditTransferDirection = "sent" | "received";
+
+/** The refusal codes of `/api/credit-transfers`. */
+export type CreditTransferRefusalCode =
+  | "PLAN_REQUIRED"
+  | "PLAN_EXPIRED"
+  | "SESSION_REQUIRED"
+  | "AMOUNT_INVALID"
+  | "INSUFFICIENT"
+  | "DAILY_LIMIT"
+  | "SELF_TRANSFER"
+  | "RECIPIENT_UNAVAILABLE";
+
+/** `GET /api/credit-transfers/eligibility`. Sending itself is done from the Posty5 dashboard only. */
+export interface ICreditTransferEligibility {
+  canSend: boolean;
+  sendRefusal?: {
+    code: CreditTransferRefusalCode;
+    message: string;
+    /** The lowest plan that can send: `enterprise` (shown as Business). */
+    requiredPlan?: string;
+  };
+  spendable: number;
+  transferable: number;
+  minAmount: number;
+  maxAmount: number;
+  /** Present only when a daily cap is configured. */
+  dailyRemaining?: number;
+  canReceive: boolean;
+  /** 1 on Free; `null` when unlimited. */
+  freeReceiveLimit: number | null;
+  freeReceivesUsed: number;
+}
+
+/** The other party of a transfer, masked by the API. */
+export interface ICreditTransferCounterparty {
+  /** First name plus last initial, e.g. `Ahmed N.`; may be empty. */
+  displayName: string;
+  /** e.g. `a***d@g***.com`. */
+  emailMasked: string;
+}
+
+/** One credit transfer the key owner sent or received. */
+export interface ICreditTransfer {
+  _id: string;
+  __v: number;
+  direction: CreditTransferDirection;
+  amount: number;
+  note?: string;
+  status: CreditTransferStatus;
+  counterparty: ICreditTransferCounterparty;
+  createdAt: string;
+  completedAt?: string;
+  reversedAt?: string;
+}
+
+/** Filters for `listCreditTransfers`. */
+export interface ICreditTransferFilters {
+  direction?: "sent" | "received" | "all";
+  status?: CreditTransferStatus;
+  /** `YYYY-MM-DD`, with `toDate`. */
+  fromDate?: string;
+  toDate?: string;
+}
+
+/** A page of credit transfers (cursor-paged, like the credit history). */
+export interface ICreditTransferPage {
+  items: ICreditTransfer[];
+  pagination: Record<string, unknown>;
 }

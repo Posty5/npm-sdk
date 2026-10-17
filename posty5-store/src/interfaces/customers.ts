@@ -26,6 +26,12 @@ export interface IStoreCustomer {
   /** Whether the shopper has a Posty5 account. Provider ids and tokens are never exposed. */
   hasAccount?: boolean;
   stats?: IStoreCustomerStats;
+  /**
+   * Added by the store's demo data. Demo records are removed when the store is
+   * published (test mode → live), unless the merchant edited them. Absent on
+   * older API responses — treat as `false`.
+   */
+  isDemo?: boolean;
   [key: string]: unknown;
 }
 

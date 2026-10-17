@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CREDIT_USAGE_KINDS } from "../config/account-enums.config";
+import { CREDIT_TRANSFER_DIRECTIONS, CREDIT_TRANSFER_STATUSES, CREDIT_USAGE_KINDS } from "../config/account-enums.config";
 import { cursorFields, defineTool } from "../core/define-tool.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
@@ -31,7 +31,7 @@ export const ACCOUNT_TOOLS: IToolDefinition[] = [
     access: "read",
     title: "Credit usage history",
     description:
-      "The credit ledger, newest first: every charge, grant, carry-over and refund. Filter by module, operation, kind, store or date range (fromDate and toDate together). Pages with cursor.",
+      "The credit ledger, newest first: every charge, grant, carry-over, refund and credit transfer (transferOut sent, transferIn received). Filter by module, operation, kind, store or date range (fromDate and toDate together). Pages with cursor.",
     input: z.object({
       module: z.string().optional().describe("Module key, e.g. socialMediaPublisher."),
       operationType: z.string().optional().describe("Operation key, from account_get_operation_costs."),
@@ -43,6 +43,34 @@ export const ACCOUNT_TOOLS: IToolDefinition[] = [
       ...cursorFields(),
     }),
     run: ({ cursor, pageSize, ...filters }, { clients }) => clients.account.getCreditUsage(filters, { cursor, pageSize }),
+  }),
+  // Credit transfers — read-only: sending is done in the Posty5 dashboard by a
+  // signed-in person (owner decision D9), so there is deliberately no send tool.
+  defineTool({
+    name: "account_get_credit_transfer_eligibility",
+    toolset: "account",
+    access: "read",
+    title: "Credit transfer eligibility",
+    description:
+      "Whether this account can send credits to another Posty5 account (Business plan only), how many it can send, and whether it can still receive a transfer on the Free plan. Sending itself is done by the user in the Posty5 dashboard, not through this connection.",
+    input: z.object({}),
+    run: (_args, { clients }) => clients.account.getCreditTransferEligibility(),
+  }),
+  defineTool({
+    name: "account_list_credit_transfers",
+    toolset: "account",
+    access: "read",
+    title: "Credit transfers",
+    description:
+      "Credits this account sent to or received from other Posty5 accounts, newest first. Counterparty identities are masked. Filter by direction, status or date range (fromDate and toDate together). Pages with cursor.",
+    input: z.object({
+      direction: z.enum(CREDIT_TRANSFER_DIRECTIONS).optional().describe("sent, received or all (default)."),
+      status: z.enum(CREDIT_TRANSFER_STATUSES).optional().describe("pending and debited are still completing."),
+      fromDate: DATE_FIELD.optional().describe("YYYY-MM-DD, with toDate."),
+      toDate: DATE_FIELD.optional().describe("YYYY-MM-DD, with fromDate."),
+      ...cursorFields(),
+    }),
+    run: ({ cursor, pageSize, ...filters }, { clients }) => clients.account.listCreditTransfers(filters, { cursor, pageSize }),
   }),
   defineTool({
     name: "account_get_operation_costs",

@@ -5,4 +5,7 @@ export const ACCOUNT_PATHS = {
   creditUsage: "/api/user/current/credit-usage",
   creditUsageSummary: "/api/user/current/credit-usage/summary",
   operationCosts: "/api/plans/operation-costs",
+  /** Credit transfers between Posty5 accounts — read-only for an API key (sending is session-only). */
+  creditTransfers: "/api/credit-transfers",
+  creditTransferEligibility: "/api/credit-transfers/eligibility",
 } as const;

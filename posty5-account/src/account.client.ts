@@ -8,6 +8,10 @@ import {
   ICreditUsagePaging,
   ICreditUsageSummary,
   ICreditUsageSummaryFilters,
+  ICreditTransfer,
+  ICreditTransferEligibility,
+  ICreditTransferFilters,
+  ICreditTransferPage,
   IOperationCosts,
 } from "./interfaces";
 
@@ -53,6 +57,32 @@ export class AccountClient {
   /** The current balance, and totals over the filtered history under `range`. */
   async getCreditUsageSummary(filters?: ICreditUsageSummaryFilters): Promise<ICreditUsageSummary> {
     const response = await this.http.get<ICreditUsageSummary>(ACCOUNT_PATHS.creditUsageSummary, { params: { ...filters } });
+    return response.result!;
+  }
+
+  /**
+   * Can the key owner send credits to another Posty5 account (Business plan
+   * only), how many, and can they still receive one (a Free account can receive
+   * one transfer).
+   *
+   * Read-only: sending a transfer is done from the Posty5 dashboard by a
+   * signed-in person — an API key cannot send (the API answers 403
+   * `SESSION_REQUIRED`).
+   */
+  async getCreditTransferEligibility(): Promise<ICreditTransferEligibility> {
+    const response = await this.http.get<ICreditTransferEligibility>(ACCOUNT_PATHS.creditTransferEligibility);
+    return response.result!;
+  }
+
+  /** Credits the key owner sent to or received from other Posty5 accounts, newest first. Counterparties are masked. */
+  async listCreditTransfers(filters?: ICreditTransferFilters, paging?: ICreditUsagePaging): Promise<ICreditTransferPage> {
+    const response = await this.http.get<ICreditTransferPage>(ACCOUNT_PATHS.creditTransfers, { params: { ...filters, ...paging } });
+    return response.result!;
+  }
+
+  /** One transfer the key owner sent or received. A transfer they are not a party to is a 404. */
+  async getCreditTransfer(id: string): Promise<ICreditTransfer> {
+    const response = await this.http.get<ICreditTransfer>(`${ACCOUNT_PATHS.creditTransfers}/${encodeURIComponent(id)}`);
     return response.result!;
   }
 

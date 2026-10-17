@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Store test mode (additive, no breaking change): optional `isTest` on `IStoreOrderSummary` /
+  `IStoreOrder` (placed while the store was in test mode — never fulfilled, removed at publish) and
+  optional `isDemo` on orders, products, customers and tags (added by the demo data). Integrations that
+  sync orders should skip `isTest` ones. No publish/launch method by design: it irreversibly deletes data
+  and needs the owner's typed confirmation in the store control panel.
+
 ## 5.0.0
 
 Optimistic concurrency. Released in lockstep with every `@posty5/*` package
