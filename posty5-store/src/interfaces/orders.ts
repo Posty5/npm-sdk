@@ -52,6 +52,18 @@ export interface IStoreOrderSummary {
   createdAt: string;
   /** Dropshipping: progress across the order's parts. */
   fulfilmentSummary?: IOrderFulfilmentSummary;
+  /**
+   * Placed while the store was in test mode (not published yet). Test orders are
+   * never fulfilled and are removed when the store is published — an
+   * integration that syncs orders should skip them. Absent = `false`.
+   */
+  isTest?: boolean;
+  /**
+   * Added by the store's demo data. Demo records are removed when the store is
+   * published (test mode → live), unless the merchant edited them. Absent on
+   * older API responses — treat as `false`.
+   */
+  isDemo?: boolean;
 }
 
 /** Full order details — loosely typed, the API returns the whole document. */
@@ -72,6 +84,18 @@ export interface IStoreOrder {
   fulfilmentGroups?: IOrderFulfilmentGroup[];
   /** The supplier orders behind the parts; present only for a caller holding `suppliers.view`. */
   supplierOrders?: IStoreSupplierOrder[];
+  /**
+   * Placed while the store was in test mode (not published yet). Test orders are
+   * never fulfilled and are removed when the store is published — an
+   * integration that syncs orders should skip them. Absent = `false`.
+   */
+  isTest?: boolean;
+  /**
+   * Added by the store's demo data. Demo records are removed when the store is
+   * published (test mode → live), unless the merchant edited them. Absent on
+   * older API responses — treat as `false`.
+   */
+  isDemo?: boolean;
   [key: string]: unknown;
 }
 

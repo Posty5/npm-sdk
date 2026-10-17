@@ -1,6 +1,11 @@
+import { AuthorizationError, HttpClient, NotFoundError } from "@posty5/core";
+import { QrPrintPresets } from "@posty5/qr-design";
+import { listTools } from "../../posty5-mcp/src/catalogue";
+import { createClients } from "../../posty5-mcp/src/core/clients.factory";
+import { mapToolError } from "../../posty5-mcp/src/core/errors.helper";
 import { ToolInputError } from "../../posty5-mcp/src/core/tool-input.error";
 import { QR_CODE_TOOLS } from "../../posty5-mcp/src/toolsets/qr-codes.tools";
-import { findTool, previewTool, route, runTool } from "./mcp-test.helper";
+import { fakeCall, findTool, previewTool, route, runTool } from "./mcp-test.helper";
 
 /**
  * The qr-codes toolset (mcp-tool-catalogue-package): every tool pinned to the
@@ -20,8 +25,8 @@ const QR_CODE = {
 };
 
 describe("mcp qr-codes toolset", () => {
-  it("holds the catalogue's eight tools, in its order", () => {
-    expect(QR_CODE_TOOLS.map((tool) => tool.name)).toEqual(["qr_code_list", "qr_code_get", "qr_code_list_templates", "qr_code_create", "qr_code_create_many", "qr_code_get_bulk_job", "qr_code_update", "qr_code_delete"]);
+  it("holds the catalogue's eleven tools, in its order", () => {
+    expect(QR_CODE_TOOLS.map((tool) => tool.name)).toEqual(["qr_code_list", "qr_code_get", "qr_code_render", "qr_code_check_scannability", "qr_code_get_analytics", "qr_code_list_templates", "qr_code_create", "qr_code_create_many", "qr_code_get_bulk_job", "qr_code_update", "qr_code_delete"]);
   });
 
   it("qr_code_list sends its filters and paging as query params", async () => {
@@ -138,5 +143,72 @@ describe("mcp qr-codes toolset", () => {
     expect(text).toContain("Menu");
     expect(text).toContain("cannot be undone");
     expect(findTool("qr_code_delete").confirm?.costFeaturePath).toBe("qrCodeGenerator.deleteQrCode");
+  });
+});
+
+describe("mcp qr-codes render and scannability (QD)", () => {
+  const LINK = { url: "https://api.posty5.com/api/qr-code/build-qr/abc?format=pdf&sig=s", expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString() };
+
+  it("both are read tools: read-only, idempotent, not destructive", () => {
+    const tools = listTools().filter((tool) => ["qr_code_render", "qr_code_check_scannability"].includes(tool.name));
+    expect(tools).toHaveLength(2);
+    for (const tool of tools) {
+      expect(tool).toMatchObject({ toolset: "qr-codes", access: "read", requiresConfirm: false });
+      expect(tool.annotations).toEqual({ readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false });
+    }
+  });
+
+  it("qr_code_render mints an export link and answers it with its print size and lifetime, no bytes", async () => {
+    const { calls, value } = await runTool("qr_code_render", { qrCodeId: "qr1", format: "pdf" }, LINK);
+    expect(route(calls[0])).toBe("GET /api/qr-code/qr1/export-url");
+    expect(calls[0].params).toEqual({ format: "pdf" });
+    expect(value).toMatchObject({ url: LINK.url, expiresAt: LINK.expiresAt, format: "pdf", presetId: "flyer-5cm", sizeMm: 50 });
+    expect((value as { expiresInMinutes: number }).expiresInMinutes).toBeGreaterThanOrEqual(59);
+    expect(value).not.toHaveProperty("sizePx");
+  });
+
+  it("qr_code_render gives a PNG's pixel width at a preset and DPI", async () => {
+    const { calls, value } = await runTool("qr_code_render", { qrCodeId: "qr1", format: "png", presetId: "business-card", dpi: 600 }, LINK);
+    expect(calls[0].params).toEqual({ format: "png", presetId: "business-card", dpi: 600 });
+    expect(value).toMatchObject({ sizeMm: 25, sizePx: 591 });
+  });
+
+  it("qr_code_render takes the preset list from @posty5/qr-design and refuses mismatched sizes before any call", async () => {
+    const presetIds = (QR_CODE_TOOLS.find((tool) => tool.name === "qr_code_render")!.input.shape as any).presetId.unwrap().options;
+    expect(presetIds).toEqual(QrPrintPresets.map((preset) => preset.id));
+    await expect(runTool("qr_code_render", { qrCodeId: "qr1", format: "png", dpi: 300 })).rejects.toThrow(ToolInputError);
+    await expect(runTool("qr_code_render", { qrCodeId: "qr1", format: "svg", presetId: "flyer-5cm", dpi: 300 })).rejects.toThrow(ToolInputError);
+    await expect(runTool("qr_code_render", { qrCodeId: "qr1", format: "pdf", presetId: "custom" })).rejects.toThrow(ToolInputError);
+    await expect(runTool("qr_code_render", { qrCodeId: "qr1", format: "pdf", customMm: 40 })).rejects.toThrow(ToolInputError);
+    expect(() => findTool("qr_code_render").input.parse({ qrCodeId: "qr1", format: "png", dpi: 200 })).toThrow();
+  });
+
+  it("qr_code_render relays a plan refusal with the plain-PNG hint; a missing code maps to notFound", async () => {
+    const gate = "This feature is not available on your current plan.";
+    const throwing = (error: Error) => ({ createdFrom: "mcp", get: async () => { throw error; } }) as unknown as HttpClient;
+    const tool = findTool("qr_code_render");
+    const run = (http: HttpClient, args: Record<string, unknown>) => tool.run(tool.input.parse(args) as any, { clients: createClients(http), call: fakeCall(tool, args) });
+
+    const refused = (await run(throwing(new AuthorizationError(gate)), { qrCodeId: "qr1", format: "svg" }).catch((error) => error)) as AuthorizationError;
+    expect(refused).toBeInstanceOf(AuthorizationError);
+    expect(mapToolError(refused, false)).toMatchObject({ code: "forbidden", message: expect.stringContaining(gate) });
+    expect(refused.message).toContain('format "png"');
+
+    const missing = await run(throwing(new NotFoundError("QR Code not found")), { qrCodeId: "nope", format: "png" }).catch((error) => error);
+    expect(mapToolError(missing, false).code).toBe("notFound");
+  });
+
+  it("qr_code_check_scannability takes exactly one of qrCodeId or templateId", async () => {
+    const report = { verdict: "warning", checks: [{ code: "contrast", status: "warning", value: 4, thresholds: { warning: 4.5, poor: 3 }, messageKey: "qrScannability.contrast.warning", message: "Low contrast" }], symbol: { version: 3, size: 29, ecLevel: "M", quietZoneModules: 4 } };
+    const byQr = await runTool("qr_code_check_scannability", { qrCodeId: "qr1", presetId: "business-card" }, report);
+    expect(route(byQr.calls[0])).toBe("POST /api/qr-code/scannability-check");
+    expect(byQr.calls[0].body).toEqual({ qrCodeId: "qr1", presetId: "business-card" });
+    expect(byQr.value).toEqual(report);
+
+    const byTemplate = await runTool("qr_code_check_scannability", { templateId: "tpl1" }, report);
+    expect(byTemplate.calls[0].body).toEqual({ templateId: "tpl1" });
+
+    await expect(runTool("qr_code_check_scannability", {})).rejects.toThrow(ToolInputError);
+    await expect(runTool("qr_code_check_scannability", { qrCodeId: "qr1", templateId: "tpl1" })).rejects.toThrow(ToolInputError);
   });
 });

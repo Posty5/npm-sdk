@@ -34,56 +34,137 @@ jobs:
 
       - name: Publish posty5-core
         working-directory: ./posty5-core
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish posty5-html-hosting
         working-directory: ./posty5-html-hosting
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish posty5-html-hosting-form-submission
         working-directory: ./posty5-html-hosting-form-submission
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish posty5-html-hosting-variables
         working-directory: ./posty5-html-hosting-variables
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish posty5-qr-code
         working-directory: ./posty5-qr-code
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # New in 4.7.0 (qr-design-and-export): the QR design engine. No @posty5/core dependency.
       - name: Publish posty5-qr-design
         working-directory: ./posty5-qr-design
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish posty5-short-link
         working-directory: ./posty5-short-link
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish posty5-social-publisher-post
         working-directory: ./posty5-social-publisher-post
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish posty5-social-publisher-workspace
         working-directory: ./posty5-social-publisher-workspace
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -92,21 +173,48 @@ jobs:
       # re-run from workflow_dispatch with this step the easiest to reach.
       - name: Publish posty5-store
         working-directory: ./posty5-store
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # New in 4.3.0 (mcp-server feature): who a key is, credits, prices.
       - name: Publish posty5-account
         working-directory: ./posty5-account
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # New in 4.5.0 (link-qr-bulk-and-webhooks): endpoint client + verifyWebhookSignature.
       - name: Publish posty5-webhooks
         working-directory: ./posty5-webhooks
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -114,26 +222,15 @@ jobs:
       # After posty5-account: it depends on every package above at the versions just published.
       - name: Publish posty5-mcp
         working-directory: ./posty5-mcp
-        run: npm publish --provenance --access public
+        # A version already on npm is skipped, so a tag publishes only the
+        # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: 📧 Send publish email notification
-        if: always() # if the publish succeeds or fails
-        uses: dawidd6/action-send-mail@v18
-        with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: ${{ secrets.SMTP_PORT }}
-          username: ${{ secrets.SMTP_USER }}
-          password: ${{ secrets.SMTP_PASS }}
-          from: "Posty5 Deploy Bot <${{ secrets.SMTP_USER }}>"
-          to: ${{ secrets.NOTIFY_EMAIL }}
-          subject: |
-            [${{ github.repository }}] 📦 Publish ${{ job.status }} — ${{ github.ref_name }}
-          body: |
-            Repository: ${{ github.repository }}
-            Ref: ${{ github.ref_name }}
-            Status: ${{ job.status }}
-            Commit: ${{ github.sha }}
-            Author: ${{ github.actor }}
-            Run URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

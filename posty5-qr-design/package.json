@@ -1,6 +1,6 @@
 {
     "name": "@posty5/qr-design",
-    "version": "4.7.0",
+    "version": "4.7.1",
     "description": "Posty5 QR design engine: deterministic SVG rendering of QR designs (shapes, gradients, frames) and scannability checks, identical in Node and the browser",
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",

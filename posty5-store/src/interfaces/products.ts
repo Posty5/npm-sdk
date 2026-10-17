@@ -97,6 +97,12 @@ export interface IProductSummary {
   images?: unknown[];
   createdAt: string;
   updatedAt?: string;
+  /**
+   * Added by the store's demo data. Demo records are removed when the store is
+   * published (test mode → live), unless the merchant edited them. Absent on
+   * older API responses — treat as `false`.
+   */
+  isDemo?: boolean;
 }
 
 /** Full product document — loosely typed, the API returns every section. */

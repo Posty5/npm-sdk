@@ -35,6 +35,12 @@ export interface IStoreTag {
   autoRemoveAfterDays?: number | null;
   productsCount?: number;
   createdAt: string;
+  /**
+   * Added by the store's demo data. Demo records are removed when the store is
+   * published (test mode → live), unless the merchant edited them. Absent on
+   * older API responses — treat as `false`.
+   */
+  isDemo?: boolean;
   [key: string]: unknown;
 }
 

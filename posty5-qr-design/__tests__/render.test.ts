@@ -9,6 +9,7 @@ import {
     RGBLuminanceSource,
 } from '@zxing/library';
 import { renderDesignSvg, QrCapacityError } from '../src';
+import type { IQrDesignOptions } from '../src';
 import { FIXTURE_TEXT, FIXTURES, renderFixture, sha256 } from './fixtures.helper';
 
 const GOLDEN_FILE = path.join(__dirname, 'golden.json');
@@ -75,6 +76,16 @@ describe('renderDesignSvg', () => {
         const svg = renderDesignSvg({ ...FIXTURES[0].options, logo: 'x' }, FIXTURE_TEXT, { logoDataUri: 'javascript:alert(1)' }).svg;
         expect(svg).not.toContain('<image');
         expect(svg).not.toContain('javascript');
+    });
+
+    it('paints quietZoneColor on the margin only, never as the background of a code with no margin', () => {
+        const base: IQrDesignOptions = { designVersion: 2, width: 256, colorDark: '#000000', colorLight: '#ffffff', quietZoneColor: '#000000', dotShape: 'rounded' };
+        const noMargin = renderDesignSvg({ ...base, quietZone: 0 }, 'https://posty5.com').svg;
+        const firstPaint = /<path d="[^"]*" fill="(#[0-9a-f]{6})"/i.exec(noMargin)?.[1];
+        expect(firstPaint?.toLowerCase()).toBe('#ffffff');
+        const withMargin = renderDesignSvg({ ...base, quietZone: 20 }, 'https://posty5.com').svg;
+        expect(withMargin).toContain('fill="#000000"');
+        expect(withMargin.indexOf('fill="#000000"')).toBeLessThan(withMargin.indexOf('fill="#ffffff"'));
     });
 
     it('throws QrCapacityError when the text does not fit', () => {

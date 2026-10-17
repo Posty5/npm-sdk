@@ -55,9 +55,9 @@ The server writes the protocol to stdout and everything else to stderr.
 
 | Toolset | On by default | What it covers |
 | --- | --- | --- |
-| `account` | always | Who the connection is, credits, live operation prices |
+| `account` | always | Who the connection is, credits, credit transfers (read-only), live operation prices |
 | `short-links` | ✅ | Short links, their controls (availability, password, routing, A/B split, UTM, pixels, health checks), tags and link campaigns |
-| `qr-codes` | ✅ | QR codes of every type, and QR templates |
+| `qr-codes` | ✅ | QR codes of every type, QR templates, download links (PNG / SVG / print PDF) and scannability checks |
 | `html-hosting` | ✅ | Hosted pages, their variables, form submissions |
 | `social-publisher` | ✅ | Workspaces, connected accounts, posts to every platform |
 | `store` | with any `store-*` | The stores the connection can manage |
@@ -66,7 +66,13 @@ The server writes the protocol to stdout and everything else to stderr.
 | `store-shipping` | — | Countries, routes, profiles, assignments |
 | `store-dropshipping` | — | Supplier catalogue, imports, product links, supplier orders |
 
-148 tools in all; `listToolsets()` and `listTools()` describe them.
+152 tools in all; `listToolsets()` and `listTools()` describe them.
+
+**Credit transfers** are read-only here: `account_get_credit_transfer_eligibility`
+(can the account send — Business plan only — how many, and can it still receive
+one on Free) and `account_list_credit_transfers` (sent and received, newest
+first, counterparty masked). Sending is done by the user in the Posty5
+dashboard; no tool sends credits.
 
 ## 🔐 Access levels and confirmation
 
@@ -119,6 +125,20 @@ A link password is write-only: no result ever carries it (only
 `access.hasPassword`), and the hosted activity log drops it from the stored
 arguments. `pixelsConsentAcknowledged` is for the user to confirm, not the
 assistant.
+
+### QR downloads and scannability
+
+| Tool | Access | Input | Answer |
+| --- | --- | --- | --- |
+| `qr_code_render` | read | `qrCodeId`, `format` (`png` / `svg` / `pdf`), `presetId?` (print size), `customMm?` (with `custom`), `dpi?` (150 / 300 / 600, PNG with a preset) | `{ url, expiresAt, expiresInMinutes, format, presetId?, sizeMm?, sizePx? }` — a signed link (about 1 hour), never the image itself |
+| `qr_code_check_scannability` | read | exactly one of `qrCodeId` / `templateId`, `presetId?`, `customMm?` | `{ verdict, checks, symbol }` — `good` / `warning` / `poor`, each check with an English message |
+
+A plain PNG works on every plan; SVG, PDF, a print size or a DPI may be
+refused by the plan — the tool relays the API's message and adds that a plain
+PNG is available. `dpi` without `presetId`, `dpi` on SVG/PDF and `custom`
+without `customMm` are refused before any call. The preset list comes from
+`@posty5/qr-design`. Designs themselves stay in the dashboard and the SDKs:
+there is no template create/update tool (QD-D9). No credits.
 
 ### Dynamic QR codes
 

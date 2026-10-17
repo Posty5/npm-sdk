@@ -1,5 +1,40 @@
 # Changelog
 
+## 5.1.0 — QR design and export
+
+Additive (minor): 5.0.0's versioned writes had shipped, so the template
+`update` / `delete` below take the version like every other write. Needs the
+API's QR design and export release and `@posty5/core` 5.0.1. New dependency:
+`@posty5/qr-design` 4.7.1 (exact), for the design and report types only.
+
+### Added
+
+- `QRCodeClient.render(id, options?)` — `GET /api/qr-code/:id/render`, the
+  file as `IBinaryResponse` (PNG, SVG or PDF; `presetId`, `customMm`, `dpi`,
+  `sizePx`, `download`).
+- `QRCodeClient.getExportUrl(id, options?)` — `GET /api/qr-code/:id/export-url`,
+  a signed download link `{ url, expiresAt }` valid for 1 hour.
+- `QRCodeClient.checkScannability(input)` — `POST /api/qr-code/scannability-check`
+  for a `qrCodeId`, a `templateId` or `options` + `text` (exactly one,
+  enforced by the `IQrScannabilityInput` union).
+- `QRCodeTemplateClient.create`, `update(id, data, version)`, `get`, `list`,
+  `delete(id, version)`, `render`, `getDesignCatalogue`, `getLogoUploadUrl`,
+  `uploadLogo(file, fileType?)` (upload URL + PUT through the core's
+  `uploadToR2`; returns the logo's `fileURL`). Added to the existing class
+  beside `listUserTemplates` / `listPublicTemplates`.
+- Types: `IQrExportOptions`, `IQrRenderOptions`, `IQrExportUrl`,
+  `IQRCodeScannabilityReport` (codes include the API's `density`),
+  `IQrScannabilityInput`, `ICreateQRCodeTemplateRequest`,
+  `IUpdateQRCodeTemplateRequest`, `IQRCodeTemplateItem`,
+  `IQRCodeTemplateDetails`, `IQrDesignCatalogue`, `IQrLogoUploadTicket`,
+  `QrLogoFileType`, `QrRenderFormat`, `QrRenderDpi`; `IQrDesignOptions` and the
+  shape / frame / preset unions re-exported from `@posty5/qr-design`.
+
+Plain PNG is on every plan; SVG, PDF, a print preset, a DPI or a PNG over
+2048 px, and logo upload need a paid plan — the API's 403 message is surfaced
+unchanged as `AuthorizationError`. None of these costs credits except
+template `create`.
+
 ## 5.0.0
 
 Optimistic concurrency. Released in lockstep with every `@posty5/*` package

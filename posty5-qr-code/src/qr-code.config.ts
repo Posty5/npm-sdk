@@ -20,3 +20,20 @@ export const QrCodeBulkPathsConst = {
   bulk: "/bulk",
   export: "/export",
 } as const;
+
+/** Sub-paths of the render, export-link and scannability routes under `/api/qr-code`. */
+export const QrCodeRenderPathsConst = {
+  render: "/render",
+  exportUrl: "/export-url",
+  scannabilityCheck: "/scannability-check",
+} as const;
+
+/** Sub-paths of the design routes under `/api/qr-code-template`. */
+export const QrCodeTemplatePathsConst = {
+  render: "/render",
+  designCatalogue: "/design-catalogue",
+  logoUploadUrl: "/logo-upload-url",
+} as const;
+
+/** Value sent as `?download=` when `render` is asked for an attachment (the API accepts any value). */
+export const QrRenderDownloadFlagConst = "1";

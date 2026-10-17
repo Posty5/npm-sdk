@@ -8,6 +8,7 @@ export * from './requests';
 export * from './responses';
 export * from './templates';
 export * from './bulk';
+export * from './design';
 
 // Analytics and statistics: declared once in @posty5/core, re-exported for callers of this package
 export type {

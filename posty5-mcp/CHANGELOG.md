@@ -1,6 +1,32 @@
 # Changelog
 
-## Unreleased
+## 1.2.0
+
+Needs `@posty5/core` 5.0.1, `@posty5/qr-code` 5.1.0, `@posty5/account` 4.4.0
+and `@posty5/qr-design` 4.7.1 (all published). 152 tools.
+
+- `store_order_search` and `store_product_search` descriptions say that test-mode orders carry
+  `isTest: true` and demo records `isDemo: true`, both removed when the store is published. No publish
+  tool, by design (irreversible data deletion, owner-only, typed confirmation).
+
+Needs `@posty5/account` 4.4.0 (credit transfers).
+
+- New read tools in `account`: `account_get_credit_transfer_eligibility` and
+  `account_list_credit_transfers` (credit transfers between Posty5 accounts,
+  counterparty masked). No send tool: sending is session-only. The
+  `account_get_credit_usage` `kind` filter accepts every ledger kind, including
+  `transferOut` / `transferIn`. 152 tools.
+
+Needs `@posty5/qr-code` 5.1.0 (`getExportUrl`, `checkScannability`) and
+`@posty5/core` 5.0.1; new dependency `@posty5/qr-design` 4.7.1 (exact), for
+the print preset list.
+
+- New read tools in `qr-codes`, after `qr_code_get`: `qr_code_render` (a
+  signed PNG / SVG / PDF download link with the print size it prints at and
+  the minutes it lasts — no image bytes) and `qr_code_check_scannability`
+  (`qrCodeId` xor `templateId`, optional print size). A plan refusal of a
+  vector or print request keeps the API's message and adds the plain-PNG
+  hint. 150 tools.
 
 Needs `@posty5/short-link` / `@posty5/qr-code` with `getAnalytics()` (link-qr-visit-analytics).
 

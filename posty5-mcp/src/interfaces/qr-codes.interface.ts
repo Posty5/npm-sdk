@@ -1,4 +1,4 @@
-import type { IQRCodeAppStoreTarget, IQRCodeEventTarget, IQRCodeReviewTarget, IQRCodeSocialTarget, IQRCodeVCardTarget, IQRCodeWhatsappTarget, QrCodeFileMimeType } from "@posty5/qr-code";
+import type { IQRCodeAppStoreTarget, IQRCodeEventTarget, IQRCodeReviewTarget, IQRCodeSocialTarget, IQRCodeVCardTarget, IQRCodeWhatsappTarget, QrCodeFileMimeType, QrPrintPresetId, QrRenderDpi, QrRenderFormat } from "@posty5/qr-code";
 import type { QrCodeBulkType, QrCodeType } from "../config/qr-codes-enums.config";
 
 /**
@@ -59,4 +59,35 @@ export interface IQrBulkRowLabels {
   refId?: string;
   templateId?: string;
   fileName?: string;
+}
+
+/** The arguments of `qr_code_render`. */
+export interface IQrRenderToolArgs {
+  qrCodeId: string;
+  format: QrRenderFormat;
+  presetId?: QrPrintPresetId;
+  customMm?: number;
+  dpi?: QrRenderDpi;
+}
+
+/** What `qr_code_render` answers: a signed link the user opens, never the image itself. */
+export interface IQrRenderToolResult {
+  url: string;
+  expiresAt: string;
+  /** Whole minutes the link still works for, when the call answered. */
+  expiresInMinutes: number;
+  format: QrRenderFormat;
+  presetId?: QrPrintPresetId;
+  /** Printed width in mm, for a preset. */
+  sizeMm?: number;
+  /** PNG width in pixels, for a preset at its DPI. */
+  sizePx?: number;
+}
+
+/** The print-size arguments shared by the render and scannability tools. */
+export interface IQrPrintSizeArgs {
+  presetId?: QrPrintPresetId;
+  customMm?: number;
+  dpi?: QrRenderDpi;
+  format?: QrRenderFormat;
 }

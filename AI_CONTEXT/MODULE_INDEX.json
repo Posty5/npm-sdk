@@ -4,7 +4,7 @@
   "modules": [
     {
       "name": "core",
-      "purpose": "HttpClient, retry/error handling, common types, pagination, signed uploads, and the link analytics + statistics types and query helpers shared by short-link and qr-code (4.4.0).",
+      "purpose": "HttpClient, retry/error handling, common types, pagination, signed uploads, and the link analytics + statistics types and query helpers shared by short-link and qr-code (4.4.0). 5.0.1: a failed getBinary carries the API's JSON message (decodeBinaryErrorBody in the response interceptor).",
       "primary_path": "posty5-core/src"
     },
     {
@@ -14,7 +14,7 @@
     },
     {
       "name": "qr-code",
-      "purpose": "Seven QR types with create/update/get/list/delete. Sends qrCodeTarget only; the API builds options.text (free text still sends it). isEnableMonetization deprecated and stripped; isEnableLandingPage on requests and list (4.3.0). getAnalytics(id, query?) and statistics(query?) (4.4.0, VA). Bulk (createMany, export, bulk jobs) since 4.5.0 via core's runLinkBulkCreate/LinkBulkJobApi.",
+      "purpose": "Seven QR types with create/update/get/list/delete. Sends qrCodeTarget only; the API builds options.text (free text still sends it). isEnableMonetization deprecated and stripped; isEnableLandingPage on requests and list (4.3.0). getAnalytics(id, query?) and statistics(query?) (4.4.0, VA). Bulk (createMany, export, bulk jobs) since 4.5.0 via core's runLinkBulkCreate/LinkBulkJobApi. QR design and export (5.1.0, QD): render / getExportUrl / checkScannability on QRCodeClient; QRCodeTemplateClient gains create/update/get/list/delete/render/getDesignCatalogue/getLogoUploadUrl/uploadLogo. Design and report types re-exported from @posty5/qr-design (exact-version dependency).",
       "primary_path": "posty5-qr-code/src"
     },
     {
@@ -54,7 +54,7 @@
     },
     {
       "name": "mcp",
-      "purpose": "@posty5/mcp: every SDK service as MCP tools (148 in 10 toolsets, incl. short_link_get_analytics / qr_code_get_analytics), createPosty5McpServer, listTools/listToolsets, and the posty5-mcp stdio binary. Access levels, confirm gate, aiModel attribution, idempotency. New in 1.0.0.",
+      "purpose": "@posty5/mcp: every SDK service as MCP tools (150 in 10 toolsets, incl. short_link_get_analytics / qr_code_get_analytics, and qr_code_render / qr_code_check_scannability from QD), createPosty5McpServer, listTools/listToolsets, and the posty5-mcp stdio binary. Access levels, confirm gate, aiModel attribution, idempotency. New in 1.0.0.",
       "primary_path": "posty5-mcp/src"
     },
     {

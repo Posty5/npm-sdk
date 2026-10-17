@@ -339,7 +339,12 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
       id: idField(FORM_SUBMISSION_ID),
       version: versionField("the submission"),
       status: z.enum(FORM_SUBMISSION_STATUSES),
-      rejectedReason: z.string().optional().describe('Why, when status is "rejected".'),
+      rejectedReason: z
+        .string()
+        .optional()
+        .describe(
+          'Required when status is "rejected": one of Duplicate, Expired, Invalid, Not Eligible, Policy Violation, Fraud Suspected, Other.',
+        ),
       notes: z.string().optional().describe("A note kept with this status change."),
     }),
     annotations: { idempotent: true },

@@ -1,6 +1,6 @@
 {
     "name": "@posty5/account",
-    "version": "4.3.0",
+    "version": "4.4.0",
     "description": "Account SDK for Posty5 API: who an API key is, its plan, credits and the price list",
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",

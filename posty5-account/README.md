@@ -38,7 +38,10 @@ throws `AuthenticationError` (401). It carries no email, phone or address.
 | `getCurrent()` | `GET /api/api-key/current` | The key (`recordScope`), its owner, plan, credits and MCP settings |
 | `getCredits()` | `GET /api/user/current/credits` | Balance (`spendable` is what can be spent now) and usage counters |
 | `getCreditUsage(filters?, paging?)` | `GET /api/user/current/credit-usage` | The credit history, newest first, cursor-paged |
-| `getCreditUsageSummary(filters?)` | `GET /api/user/current/credit-usage/summary` | Totals: operations, spent, owed, added |
+| `getCreditUsageSummary(filters?)` | `GET /api/user/current/credit-usage/summary` | Totals: operations, spent, owed, added, transferred in / out |
+| `getCreditTransferEligibility()` | `GET /api/credit-transfers/eligibility` | Can the owner send credits (Business plan), how many, and can they still receive one |
+| `listCreditTransfers(filters?, paging?)` | `GET /api/credit-transfers` | Credits sent to / received from other accounts, newest first, counterparty masked |
+| `getCreditTransfer(id)` | `GET /api/credit-transfers/:id` | One transfer the owner is a party to (404 otherwise) |
 | `getOperationCosts(activeOnly = true)` | `GET /api/plans/operation-costs` | The live price list by module — public, needs no key |
 
 **Record scope.** `me.apiKey.recordScope` says what the key's lists show:
@@ -46,6 +49,15 @@ throws `AuthenticationError` (401). It carries no email, phone or address.
 owner. It is set per key in Account settings → API keys.
 
 Prices change; read them from `getOperationCosts()` rather than hard-coding them.
+
+**Credit transfers are read-only here.** A Business user sends credits from the
+Posty5 dashboard; an API key cannot send them (the API answers 403
+`SESSION_REQUIRED`). A Free account can receive one transfer.
+
+```ts
+const eligibility = await account.getCreditTransferEligibility();
+const received = await account.listCreditTransfers({ direction: "received" }, { pageSize: 20 });
+```
 
 ## 📄 License
 

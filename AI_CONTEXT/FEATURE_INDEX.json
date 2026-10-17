@@ -76,6 +76,11 @@
       "name": "File downloads (.xlsx exports and templates)",
       "owner": "core",
       "source": "posty5-core/src/http/client.ts"
+    },
+    {
+      "name": "QR design, render, print export and scannability (QD)",
+      "owner": "qr-code",
+      "source": "posty5-qr-code/src/qr-code-template.client.ts, posty5-qr-code/src/qr-code.client.ts, posty5-qr-code/src/interfaces/design.ts"
     }
   ]
 }

@@ -6,7 +6,11 @@ import {
   QR_CODE_STATUSES,
   QR_CODE_TYPES,
   QR_CODE_UPDATE_REQUIRED_FIELDS,
+  QR_CUSTOM_PRESET,
   QR_FILE_MIME_TYPES,
+  QR_PRINT_DPIS,
+  QR_PRINT_PRESET_IDS,
+  QR_RENDER_FORMATS,
   QR_REVIEW_PLATFORMS,
   QR_SOCIAL_PLATFORMS,
   QR_TEMPLATE_SCOPES,
@@ -17,13 +21,25 @@ import { MCP_BULK_MAX_ROWS, QR_MCP_FILE_MAX_BYTES, QR_SOCIAL_MAX_PROFILES } from
 import { CREATE_QR_CODE_FEATURE_PATH } from "../config/link-costs.config";
 import { batchIdempotencyKey, describeBatch, describeQrBulkJob, runQrZipJob, unwrapBulkError } from "../core/link-bulk.helper";
 import { LINK_ANALYTICS_CAVEATS, linkAnalyticsInput, toLinkAnalyticsArgs } from "../core/link-analytics.helper";
-import { defineTool, idField, pageFields, pickPage, requireFields, versionField, withoutPaging } from "../core/define-tool.helper";
+import { defineTool, idField, pageFields, pickPage, requireExactlyOne, requireFields, versionField, withoutPaging } from "../core/define-tool.helper";
+import { checkQrPrintSize, toQrRenderResult, withPngFallbackHint } from "../core/qr-render.helper";
 import { checkQrCodeAccess, checkQrSocialProfiles, createQrCode, resolveQrCodeMode, toQrBulkRow, updateQrCode } from "../core/qr-codes.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
 const QR_CODE_ID = "The QR code's _id, from qr_code_list.";
 
 const FILE_MAX_MB = QR_MCP_FILE_MAX_BYTES / (1024 * 1024);
+
+/** The print-size arguments `qr_code_render` and `qr_code_check_scannability` share. */
+const printSizeFields = {
+  presetId: z
+    .enum(QR_PRINT_PRESET_IDS)
+    .optional()
+    .describe(
+      `Print size: "sticker-3cm" 30 mm, "business-card" 25 mm, "flyer-5cm" 50 mm, "table-tent-8cm" 80 mm, "poster-15cm" 150 mm, "${QR_CUSTOM_PRESET}" (give customMm).`,
+    ),
+  customMm: z.number().min(20).max(500).optional().describe(`Printed width in mm (20-500), with presetId "${QR_CUSTOM_PRESET}" only.`),
+};
 
 /** The flat target fields of the bulk route's types; `type` says which apply (`QR_CODE_REQUIRED_FIELDS` lists the required ones). */
 const bulkTargetFields = {
@@ -186,6 +202,54 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
     run: ({ id }, { clients }) => clients.qrCodes.get(id),
   }),
   defineTool({
+    name: "qr_code_render",
+    toolset: "qr-codes",
+    access: "read",
+    title: "Get a QR code download link",
+    description:
+      "A signed download link for a QR code's image as PNG, SVG or PDF, optionally at a print size (presetId) and, for PNG, a resolution (dpi). Returns the link, not the image: give the user the url and tell them it stops working after expiresInMinutes (about an hour). " +
+      "A plain PNG works on every plan; SVG, PDF, a print size or a dpi may be refused by the user's plan — relay that message as it is. A PDF without presetId is 50 mm wide (flyer-5cm). Costs nothing.",
+    input: z.object({
+      qrCodeId: idField(QR_CODE_ID),
+      format: z.enum(QR_RENDER_FORMATS).describe('"png" (a picture), "svg" (vector, for designers) or "pdf" (vector, for printing).'),
+      ...printSizeFields,
+      dpi: z
+        .union(QR_PRINT_DPIS.map((dpi) => z.literal(dpi)) as unknown as [z.ZodLiteral<150>, z.ZodLiteral<300>, z.ZodLiteral<600>])
+        .optional()
+        .describe("PNG resolution at the print size: 150, 300 (default) or 600. Needs presetId; not for SVG or PDF."),
+    }),
+    annotations: { idempotent: true },
+    run: async (args, { clients }) => {
+      checkQrPrintSize(args);
+      const { qrCodeId, format, presetId, customMm, dpi } = args;
+      const link = await withPngFallbackHint(args, () => clients.qrCodes.getExportUrl(qrCodeId, { format, presetId, customMm, dpi }));
+      return toQrRenderResult(link, args);
+    },
+  }),
+  defineTool({
+    name: "qr_code_check_scannability",
+    toolset: "qr-codes",
+    access: "read",
+    title: "Check whether a QR code will scan",
+    description:
+      "Checks whether a QR code (qrCodeId) or a template (templateId, from qr_code_list_templates) will scan reliably: contrast, inverted colours, logo size for its error correction, quiet zone, module size at a print size, dot scale. Give exactly one of qrCodeId or templateId, and presetId to judge it at that printed size. " +
+      'Returns verdict "good", "warning" or "poor" and every check with its status and an English message. On "warning" or "poor", tell the user which check failed and its fix; do not re-create or change the QR code on your own. It never blocks anything and costs nothing.',
+    input: z.object({
+      qrCodeId: z.string().min(1).optional().describe(`${QR_CODE_ID} Give this or templateId.`),
+      templateId: z.string().min(1).optional().describe("A template _id from qr_code_list_templates (yours or public). Give this or qrCodeId."),
+      ...printSizeFields,
+    }),
+    annotations: { idempotent: true },
+    run: (args, { clients }) => {
+      const source = requireExactlyOne(args, ["qrCodeId", "templateId"]);
+      checkQrPrintSize(args);
+      const size = { ...(args.presetId ? { presetId: args.presetId } : {}), ...(args.customMm !== undefined ? { customMm: args.customMm } : {}) };
+      return source === "qrCodeId"
+        ? clients.qrCodes.checkScannability({ qrCodeId: args.qrCodeId!, ...size })
+        : clients.qrCodes.checkScannability({ templateId: args.templateId!, ...size });
+    },
+  }),
+  defineTool({
     name: "qr_code_get_analytics",
     toolset: "qr-codes",
     access: "read",
@@ -203,7 +267,7 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
     access: "read",
     title: "List QR code templates",
     description:
-      'The templates that style a QR code — every QR code needs one: its _id is the templateId qr_code_create takes. scope "user" lists the account\'s own templates, "public" Posty5\'s ready-made ones. Designing a template stays in the Posty5 dashboard.',
+      'The templates that style a QR code — every QR code needs one: its _id is the templateId qr_code_create takes. scope "user" lists the account\'s own templates, "public" Posty5\'s ready-made ones. Designing a template stays in the Posty5 dashboard. qr_code_check_scannability checks whether a template will scan.',
     input: z.object({
       scope: z.enum(QR_TEMPLATE_SCOPES).default("user").describe('"user" (default): your own templates. "public": Posty5\'s templates.'),
       term: z.string().optional().describe("Part of the template's name."),
