@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.2.0
+
+Needs `@posty5/core` 5.0.1, `@posty5/qr-code` 5.1.0, `@posty5/account` 4.4.0
+and `@posty5/qr-design` 4.7.1 (all published). 152 tools.
 
 - `store_order_search` and `store_product_search` descriptions say that test-mode orders carry
   `isTest: true` and demo records `isDemo: true`, both removed when the store is published. No publish
