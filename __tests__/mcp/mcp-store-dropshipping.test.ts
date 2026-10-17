@@ -288,14 +288,14 @@ describe("mcp — store-dropshipping toolset", () => {
       store_supplier_get_order: { storeId: "s1", supplierOrderRowId: "so1" },
       store_supplier_import: IMPORT_ARGS,
       store_supplier_link_create: { storeId: "s1", productId: "p1", integrationId: "i1", supplierProductId: "sp1", variants: [{ supplierVariantId: "v1" }] },
-      store_supplier_link_update: { storeId: "s1", linkId: "l1", applyPriceRuleNow: true },
+      store_supplier_link_update: { version: 1, storeId: "s1", linkId: "l1", applyPriceRuleNow: true },
       store_supplier_link_sync: { storeId: "s1", linkId: "l1" },
-      store_supplier_order_retry: { storeId: "s1", supplierOrderRowId: "so1" },
-      store_supplier_link_delete: { storeId: "s1", linkId: "l1" },
+      store_supplier_order_retry: { version: 1, storeId: "s1", supplierOrderRowId: "so1" },
+      store_supplier_link_delete: { version: 1, storeId: "s1", linkId: "l1" },
       store_supplier_order_submit: { storeId: "s1", orderId: "o1", groupKey: "supplier:i1" },
-      store_supplier_order_pay: { storeId: "s1", supplierOrderRowId: "so1" },
-      store_supplier_order_cancel: { storeId: "s1", supplierOrderRowId: "so1" },
-      store_fulfilment_group_fulfil_manually: { storeId: "s1", orderId: "o1", groupKey: "supplier:i1" },
+      store_supplier_order_pay: { version: 1, storeId: "s1", supplierOrderRowId: "so1" },
+      store_supplier_order_cancel: { version: 1, storeId: "s1", supplierOrderRowId: "so1" },
+      store_fulfilment_group_fulfil_manually: { orderVersion: 1, storeId: "s1", orderId: "o1", groupKey: "supplier:i1" },
     };
     try {
       expect(Object.keys(minimalArgs)).toEqual(STORE_DROPSHIPPING_TOOLS.map((tool) => tool.name));

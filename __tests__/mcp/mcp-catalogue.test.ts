@@ -35,6 +35,7 @@ const EXPECTED_COUNTS: Record<string, number> = {
 const CONFIRM_TOOLS = [
   "short_link_create_many",
   "short_link_delete",
+  "short_link_campaign_delete",
   "qr_code_create_many",
   "qr_code_delete",
   "html_page_delete",

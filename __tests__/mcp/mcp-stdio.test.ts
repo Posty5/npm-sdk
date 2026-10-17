@@ -89,7 +89,7 @@ describe("@posty5/mcp — the stdio binary", () => {
 
     const list = await client.request("tools/list");
     const names = list.result.tools.map((tool: { name: string }) => tool.name);
-    expect(names).toEqual(["account_get_current", "account_get_credits", "account_get_credit_usage", "account_get_operation_costs", "short_link_list", "short_link_get", "short_link_get_analytics", "short_link_create", "short_link_create_many", "short_link_update"]);
+    expect(names).toEqual(["account_get_current", "account_get_credits", "account_get_credit_usage", "account_get_operation_costs", "short_link_list", "short_link_get", "short_link_get_analytics", "short_link_create", "short_link_create_many", "short_link_update", "short_link_set_rules", "short_link_list_tags", "short_link_check_health", "short_link_campaign_list", "short_link_campaign_get", "short_link_campaign_create", "short_link_campaign_update"]);
 
     const call = await client.request("tools/call", { name: "short_link_create", arguments: { baseUrl: "https://example.com", templateId: "t1", aiModel: "claude-opus-5-5" } });
     expect(call.result.isError).toBeFalsy();
