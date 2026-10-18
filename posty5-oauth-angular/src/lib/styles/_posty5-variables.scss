@@ -1,0 +1,117 @@
+// Design tokens of @posty5/oauth-angular.
+//
+// These SASS variables are only the DEFAULTS behind the public CSS custom
+// properties (`--posty5-btn-*`, `--posty5-callback-*`). Apps never edit this
+// file: they set the custom properties (see README "CSS variables"). The
+// palette follows the Posty5 dashboard (`dashboard/src/assets/sass/components/
+// _variables.custom.scss`): $primary #0059F7, $primary-light #F0F5FF,
+// $danger #E11D48.
+
+// ---------------------------------------------------------------- colours
+
+// Posty5 blue ($primary). Background of the `filled` theme, logo colour of the
+// `outline` theme, default focus-ring colour. White text on it is 5.6:1 (AA).
+$posty5-blue: #0059f7;
+// Hover background of the `filled` theme: Posty5 blue one step darker so the
+// change is visible while white text stays above 6:1.
+$posty5-blue-hover: #004bd1;
+// Text and logo on the filled themes ($primary-inverse).
+$posty5-white: #ffffff;
+// Background of the `outline` theme.
+$posty5-outline-bg: #ffffff;
+// Text of the `outline` theme: near-black, 16:1 on white.
+$posty5-outline-color: #1f1f1f;
+// Border of the `outline` theme: mid grey, 4.5:1 on white so the button edge
+// is visible for low-vision users (WCAG 1.4.11 non-text contrast >= 3:1).
+$posty5-outline-border: #747775;
+// Hover background of the `outline` theme ($primary-light).
+$posty5-outline-hover-bg: #f0f5ff;
+// Background of the `filledDark` theme: near-black for dark pages.
+$posty5-dark-bg: #131314;
+// Text of the `filledDark` theme: light grey, 14:1 on the dark background.
+$posty5-dark-color: #e3e3e3;
+// Border of the `filledDark` theme: grey, 5.9:1 on the dark background.
+$posty5-dark-border: #8e918f;
+// Hover background of the `filledDark` theme: one step lighter than the base.
+$posty5-dark-hover-bg: #2a2a2c;
+// Avatar fallback (initial letter) background: Posty5 blue at the light tint,
+// with Posty5 blue text on it (5.2:1).
+$posty5-avatar-bg: #f0f5ff;
+// Error text of the callback component ($danger), 4.6:1 on white.
+$posty5-danger: #e11d48;
+// Track of the callback spinner: Posty5 blue at 0.2 opacity.
+$posty5-spinner-track: rgba(0, 89, 247, 0.2);
+
+// ---------------------------------------------------------------- type
+
+// System font stack so the button matches the host app without a web font.
+$posty5-font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Noto Sans Arabic', sans-serif;
+// Weight of the button label (medium, like Google's GSI button).
+$posty5-font-weight: 500;
+// Line height inside the button.
+$posty5-line-height: 1.2;
+// Size of the e-mail line on the personalised button, relative to the label.
+$posty5-email-font-size: 0.8em;
+// Opacity of the e-mail line on the personalised button.
+$posty5-email-opacity: 0.8;
+
+// ---------------------------------------------------------------- sizes
+// Height / inline padding / font size / logo size / avatar size / gap per size.
+// `large` is the default: 44px keeps the touch target above 40px.
+
+$posty5-large-height: 44px;
+$posty5-large-padding: 16px;
+$posty5-large-font-size: 15px;
+$posty5-large-icon-size: 22px;
+$posty5-large-avatar-size: 28px;
+$posty5-large-gap: 12px;
+
+$posty5-medium-height: 40px;
+$posty5-medium-padding: 12px;
+$posty5-medium-font-size: 14px;
+$posty5-medium-icon-size: 20px;
+$posty5-medium-avatar-size: 24px;
+$posty5-medium-gap: 10px;
+
+$posty5-small-height: 32px;
+$posty5-small-padding: 10px;
+$posty5-small-font-size: 13px;
+$posty5-small-icon-size: 18px;
+$posty5-small-avatar-size: 20px;
+$posty5-small-gap: 8px;
+
+// ---------------------------------------------------------------- shape
+
+// Corner radius of the `rectangular` and `square` shapes.
+$posty5-radius: 4px;
+// Corner radius of the `pill` shape (any value above half the height).
+$posty5-radius-pill: 9999px;
+// Corner radius of the `circle` shape and of the avatar.
+$posty5-radius-round: 50%;
+// Border width of every theme (the filled theme draws it transparent so all
+// themes have the same box size).
+$posty5-border-width: 1px;
+
+// ---------------------------------------------------------------- states
+
+// Focus ring: 2px Posty5 blue, 2px away from the button (visible on white and
+// on the blue `filled` background).
+$posty5-focus-ring-width: 2px;
+$posty5-focus-ring-offset: 2px;
+// Opacity of a disabled button.
+$posty5-disabled-opacity: 0.5;
+// Opacity while the sign-in is starting (button busy, not yet navigated).
+$posty5-busy-opacity: 0.8;
+// Hover / focus transitions.
+$posty5-transition: 150ms ease-in-out;
+
+// ---------------------------------------------------------------- callback
+
+// Size and stroke of the callback spinner.
+$posty5-spinner-size: 32px;
+$posty5-spinner-stroke: 3px;
+$posty5-spinner-duration: 800ms;
+// Space between the spinner and the message.
+$posty5-callback-gap: 12px;
+// Padding around the callback block.
+$posty5-callback-padding: 24px;

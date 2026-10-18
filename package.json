@@ -28,7 +28,8 @@
         "posty5-account",
         "posty5-webhooks",
         "posty5-oauth",
-        "posty5-mcp"
+        "posty5-mcp",
+        "posty5-oauth-angular"
     ],
     "devDependencies": {
         "@types/jest": "^29.5.11",

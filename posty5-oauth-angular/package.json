@@ -1,0 +1,54 @@
+{
+    "name": "@posty5/oauth-angular",
+    "version": "1.0.0",
+    "description": "Login with Posty5 for Angular: a ready, fully customisable \"Continue with Posty5\" button, PKCE sign-in, callback handling and in-browser ID-token verification (OpenID Connect). Standalone APIs, SSR-safe.",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Posty5/npm-sdk.git"
+    },
+    "homepage": "https://github.com/Posty5/npm-sdk#readme",
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "ng-packagr -p ng-package.json -c tsconfig.lib.json",
+        "pack:dist": "npm pack ./dist --pack-destination ./dist-pack",
+        "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+    },
+    "keywords": [
+        "posty5",
+        "angular",
+        "oauth",
+        "oauth2",
+        "openid-connect",
+        "oidc",
+        "login",
+        "sign-in",
+        "sign-in-button",
+        "continue-with-posty5",
+        "pkce",
+        "sso",
+        "ssr"
+    ],
+    "author": "Posty5",
+    "license": "MIT",
+    "peerDependencies": {
+        "@angular/common": ">=17.3.0 <21.0.0",
+        "@angular/core": ">=17.3.0 <21.0.0"
+    },
+    "dependencies": {
+        "tslib": "^2.6.0"
+    },
+    "sideEffects": false,
+    "devDependencies": {
+        "@angular/common": "~18.2.13",
+        "@angular/compiler": "~18.2.13",
+        "@angular/compiler-cli": "~18.2.13",
+        "@angular/core": "~18.2.13",
+        "@angular/platform-browser": "~18.2.13",
+        "@types/jasmine": "~5.1.4",
+        "ng-packagr": "~18.2.1",
+        "rxjs": "~7.8.1",
+        "typescript": "~5.5.4"
+    }
+}

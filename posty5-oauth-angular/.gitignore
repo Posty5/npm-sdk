@@ -1,0 +1,6 @@
+# Build output of ng-packagr
+dist/
+# npm pack tarballs of dist (for test-installing in another repo)
+dist-pack/
+out-tsc/
+node_modules/

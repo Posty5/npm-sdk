@@ -1,0 +1,16 @@
+@if (!hideDefaultUi()) {
+    @switch (status()) {
+        @case ('pending') {
+            <div class="posty5-callback__pending" role="status" aria-live="polite">
+                <span class="posty5-callback__spinner" aria-hidden="true"></span>
+                <span class="posty5-callback__message">{{ labels().callback_pending }}</span>
+            </div>
+        }
+        @case ('failed') {
+            <div class="posty5-callback__error" role="alert">
+                <span class="posty5-callback__message">{{ errorMessage() }}</span>
+            </div>
+        }
+    }
+}
+<ng-content />
