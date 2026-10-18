@@ -1,0 +1,60 @@
+{
+    "name": "@posty5/oauth",
+    "version": "1.0.0",
+    "description": "Login with Posty5: OAuth 2.0 / OpenID Connect helper for back ends (PKCE, code exchange, ID-token verification, userinfo)",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Posty5/npm-sdk.git"
+    },
+    "homepage": "https://github.com/Posty5/npm-sdk#readme",
+    "publishConfig": {
+        "access": "public"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "test": "jest",
+        "typecheck": "tsc --noEmit",
+        "lint": "eslint src --ext .ts",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "posty5",
+        "oauth",
+        "oauth2",
+        "openid-connect",
+        "oidc",
+        "login",
+        "sso",
+        "pkce",
+        "typescript"
+    ],
+    "author": "Posty5",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@typescript-eslint/eslint-plugin": "^6.0.0",
+        "@typescript-eslint/parser": "^6.0.0",
+        "eslint": "^8.0.0",
+        "typescript": "^5.3.0",
+        "tsup": "^8.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
