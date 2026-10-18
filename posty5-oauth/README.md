@@ -76,12 +76,43 @@ endpoint (the access token lives one hour; there are no refresh tokens).
 to sign in to Posty5 again; pass `maxAgeSeconds` to `exchangeCode` to enforce
 it on `auth_time`. `prompt: 'consent'` shows the consent screen again.
 
+### Signed login link (no session store)
+
+```ts
+// GET /login — one call, nothing to keep on the server
+const link = await posty5.createLoginLink({ returnTo: '/dashboard', data: { plan: 'pro' } });
+res.cookie('p5_binding', link.binding, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 10 * 60 * 1000 });
+res.redirect(link.url);
+
+// GET /auth/posty5/callback
+const { claims, returnTo, data } = await posty5.handleLoginCallback(req.query, { binding: req.cookies.p5_binding });
+res.clearCookie('p5_binding');
+```
+
+The link's `state` is encrypted and signed with a key derived from your client secret: nobody can read or change
+`returnTo` / `data`, and it expires (10 minutes by default). The cookie binds it to the browser that asked.
+
+## Your app's users
+
+Attach an API key to the app (Studio → Developers Kit → OAuth apps → API keys), then from your back end:
+
+```ts
+import { Posty5AppUsersClient } from '@posty5/oauth';
+
+const users = new Posty5AppUsersClient({ apiKey: process.env.POSTY5_API_KEY! });
+const page = await users.list({ search: 'ahmed', pageSize: 50 }); // { items, nextCursor, hasMore, totalCount }
+const user = await users.get(page.items[0].sub);                    // or null
+```
+
+Each user carries only what they granted your app: `sub` always, `name` / `picture` with `profile`,
+`email` / `emailVerified` with `email`.
+
 ## Errors
 
 `Posty5OAuthError.code`: `config_invalid`, `discovery_failed`, `jwks_failed`,
 `authorization_error` (user cancelled → `providerError: 'access_denied'`),
 `state_mismatch`, `token_error` (`providerError` e.g. `invalid_grant`),
-`id_token_invalid`, `userinfo_failed`.
+`id_token_invalid`, `userinfo_failed`, `api_error` (users client).
 
 ## Other languages
 

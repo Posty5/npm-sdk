@@ -7,7 +7,8 @@ export type Posty5OAuthErrorCode =
     | 'state_mismatch'
     | 'token_error'
     | 'id_token_invalid'
-    | 'userinfo_failed';
+    | 'userinfo_failed'
+    | 'api_error';
 
 export type Posty5OAuthScope = 'openid' | 'profile' | 'email';
 
@@ -119,4 +120,90 @@ export interface IJsonWebKey {
     n?: string;
     e?: string;
     [member: string]: unknown;
+}
+
+/** `createLoginLink(options)` */
+export interface ICreateLoginLinkOptions {
+    /** Where your app sends the user after sign-in (kept inside the sealed state). Keep it short. */
+    returnTo?: string;
+    /** Small JSON-serialisable data to get back in `handleLoginCallback` (sealed, not readable by anyone). */
+    data?: unknown;
+    scope?: string;
+    prompt?: 'consent' | 'login' | 'login consent';
+    maxAge?: number;
+    /** How long the link stays valid (default 600 s, max 3600 s). */
+    ttlSeconds?: number;
+}
+
+/** What `createLoginLink` answers. */
+export interface ILoginLink {
+    /** Send the browser here. */
+    url: string;
+    /**
+     * Random value binding the link to this browser: set it as an HttpOnly,
+     * Secure, SameSite=Lax cookie and pass it back to `handleLoginCallback`.
+     * Only its hash is inside the link.
+     */
+    binding: string;
+    /** When the link stops working (seconds since the epoch). */
+    expiresAt: number;
+}
+
+export interface IHandleLoginCallbackOptions {
+    /** The `binding` cookie set when the link was created. */
+    binding: string;
+    maxAgeSeconds?: number;
+}
+
+/** What `handleLoginCallback` answers. */
+export interface ILoginCallbackResult extends IPosty5TokenResult {
+    returnTo?: string;
+    data?: unknown;
+}
+
+/** The sealed `state` payload (internal). */
+export interface ISealedLoginState {
+    v: number;
+    n: string;
+    cv: string;
+    b: string;
+    exp: number;
+    rt?: string;
+    d?: unknown;
+}
+
+/** `new Posty5AppUsersClient(options)` */
+export interface IPosty5AppUsersClientOptions {
+    /** An API key ATTACHED to your OAuth app (Studio → Developers Kit → OAuth apps → API keys). Server side only. */
+    apiKey: string;
+    /** Defaults to `https://api.posty5.com`. */
+    baseUrl?: string;
+    fetch?: typeof fetch;
+}
+
+/** One user of your app, limited to what they granted. */
+export interface IPosty5AppUser {
+    sub: string;
+    name?: string;
+    picture?: string;
+    email?: string;
+    emailVerified?: boolean;
+    scopes: Posty5OAuthScope[];
+    grantedAt: string;
+    lastUsedAt?: string | null;
+}
+
+export interface IListAppUsersOptions {
+    search?: string;
+    pageSize?: number;
+    cursor?: string;
+}
+
+export interface IAppUsersPage {
+    items: IPosty5AppUser[];
+    nextCursor: string | null;
+    previousCursor: string | null;
+    hasMore: boolean;
+    totalCount: number;
+    pageSize: number;
 }

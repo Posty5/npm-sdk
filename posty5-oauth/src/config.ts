@@ -15,4 +15,19 @@ export const Posty5OAuthConfig = {
     /** Random bytes behind state, nonce and the PKCE verifier. */
     randomBytes: 32,
     requestTimeoutMs: 10_000,
+    /** `createLoginLink` sealed states (AES-256-GCM, key = HKDF-SHA256 of the client secret). */
+    loginLink: {
+        version: 1,
+        hkdfSalt: 'posty5-oauth-login-link',
+        hkdfInfo: 'state-v1',
+        ivBytes: 12,
+        tagBytes: 16,
+        defaultTtlSeconds: 10 * 60,
+        maxTtlSeconds: 60 * 60,
+        /** Posty5 accepts a `state` of at most 512 characters. */
+        maxStateLength: 512,
+    },
+    /** `Posty5AppUsersClient`: the Posty5 API base and its users route. */
+    apiBaseUrl: 'https://api.posty5.com',
+    appUsersPath: '/api/oauth-users',
 } as const;

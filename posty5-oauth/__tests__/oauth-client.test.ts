@@ -121,3 +121,49 @@ describe('Posty5OAuthClient', () => {
         await expect(client().getUserInfo('at')).resolves.toMatchObject({ sub: 'pairwise-sub' });
     });
 });
+
+describe('createLoginLink / handleLoginCallback (sealed state)', () => {
+    it('round-trips returnTo and data, bound to the browser', async () => {
+        const c = client({ access_token: 'at', id_token: '', token_type: 'Bearer', expires_in: 3600 });
+        const link = await c.createLoginLink({ returnTo: '/after', data: { a: 1 } });
+        const url = new URL(link.url);
+        const state = url.searchParams.get('state')!;
+        expect(state.length).toBeLessThanOrEqual(512);
+        expect(state).not.toContain('/after');
+        // A token whose nonce is the one sealed in the link.
+        const nonce = url.searchParams.get('nonce')!;
+        const c2 = client({ access_token: 'at', id_token: sign(claims({ nonce })), token_type: 'Bearer', expires_in: 3600 });
+        const result = await c2.handleLoginCallback({ code: 'c', state }, { binding: link.binding });
+        expect(result).toMatchObject({ returnTo: '/after', data: { a: 1 } });
+        expect(result.claims.sub).toBe('pairwise-sub');
+    });
+
+    it('refuses another browser, a tampered state and a cancelled sign-in', async () => {
+        const c = client();
+        const link = await c.createLoginLink();
+        const state = new URL(link.url).searchParams.get('state')!;
+        await expect(c.handleLoginCallback({ code: 'c', state }, { binding: 'other' })).rejects.toMatchObject({ code: 'state_mismatch' });
+        await expect(c.handleLoginCallback({ code: 'c', state: state.slice(0, -2) + 'AA' }, { binding: link.binding })).rejects.toMatchObject({ code: 'state_mismatch' });
+        await expect(c.handleLoginCallback({ error: 'access_denied', state }, { binding: link.binding })).rejects.toMatchObject({ code: 'authorization_error', providerError: 'access_denied' });
+    });
+});
+
+describe('Posty5AppUsersClient', () => {
+    it('lists and gets users with the API key', async () => {
+        const { Posty5AppUsersClient } = require('../src');
+        const calls: any[] = [];
+        const fetchStub = (async (url: string, init: any) => {
+            calls.push({ url, init });
+            if (url.includes('/api/oauth-users/missing')) return json({ message: 'User not found' }, 404);
+            if (url.includes('/api/oauth-users/')) return json({ result: { sub: 's1', scopes: ['openid'] } });
+            return json({ result: { items: [{ sub: 's1', scopes: ['openid'] }], pagination: { nextCursor: 'n', previousCursor: null, hasMore: true, totalCount: 2, pageSize: 1 } } });
+        }) as any;
+        const users = new Posty5AppUsersClient({ apiKey: 'k', baseUrl: 'https://api.test', fetch: fetchStub });
+        const page = await users.list({ search: 'a', pageSize: 1 });
+        expect(page).toMatchObject({ nextCursor: 'n', hasMore: true, totalCount: 2 });
+        expect(calls[0].url).toBe('https://api.test/api/oauth-users?search=a&pageSize=1');
+        expect(calls[0].init.headers['x-api-key']).toBe('k');
+        await expect(users.get('s1')).resolves.toMatchObject({ sub: 's1' });
+        await expect(users.get('missing')).resolves.toBeNull();
+    });
+});

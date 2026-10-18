@@ -1,8 +1,13 @@
 import { Posty5OAuthConfig } from './config';
 import { Posty5OAuthError } from './errors';
 import { basicAuthHeader, createPkcePair, decodeJwt, normalizeIssuer, nowSeconds, randomUrlSafe, safeEqual, verifyRs256 } from './helper';
+import { bindingHash, sealState, unsealState } from './sealed-state.helper';
 import type {
     IBuildAuthorizationUrlOptions,
+    ICreateLoginLinkOptions,
+    IHandleLoginCallbackOptions,
+    ILoginCallbackResult,
+    ILoginLink,
     ICallbackParams,
     IExchangeCodeOptions,
     IJsonWebKey,
@@ -164,6 +169,51 @@ export class Posty5OAuthClient {
             }
         }
         return payload as IPosty5IdTokenClaims;
+    }
+
+    /**
+     * A ready sign-in link, no session store needed: nonce, PKCE verifier,
+     * `returnTo`, `data` and expiry travel inside `state`, sealed with a key
+     * derived from your client secret (AES-256-GCM). Set `binding` as a cookie
+     * on the browser that gets the link and give it back to
+     * `handleLoginCallback` — that binds the link to this browser.
+     */
+    async createLoginLink(options: ICreateLoginLinkOptions = {}): Promise<ILoginLink> {
+        const c = Posty5OAuthConfig.loginLink;
+        const ttl = Math.min(Math.max(1, options.ttlSeconds ?? c.defaultTtlSeconds), c.maxTtlSeconds);
+        const { codeVerifier, codeChallenge } = createPkcePair();
+        const nonce = randomUrlSafe();
+        const binding = randomUrlSafe();
+        const expiresAt = nowSeconds() + ttl;
+        const state = sealState(this.clientSecret, {
+            v: c.version,
+            n: nonce,
+            cv: codeVerifier,
+            b: bindingHash(binding),
+            exp: expiresAt,
+            ...(options.returnTo ? { rt: options.returnTo } : {}),
+            ...(options.data !== undefined ? { d: options.data } : {}),
+        });
+        const url = await this.buildAuthorizationUrl({ state, nonce, codeChallenge, scope: options.scope, prompt: options.prompt, maxAge: options.maxAge });
+        return { url, binding, expiresAt };
+    }
+
+    /**
+     * The callback of a `createLoginLink` link: unseals and checks the state
+     * (expiry, browser binding), turns `error=access_denied` into
+     * `Posty5OAuthError('authorization_error')`, exchanges the code and
+     * verifies the ID token. Answers the tokens plus your `returnTo` and `data`.
+     */
+    async handleLoginCallback(params: ICallbackParams, options: IHandleLoginCallbackOptions): Promise<ILoginCallbackResult> {
+        if (!params?.state) throw new Posty5OAuthError('state_mismatch', 'The callback has no state');
+        const sealed = unsealState(this.clientSecret, String(params.state));
+        if (!options?.binding || !safeEqual(bindingHash(options.binding), sealed.b)) {
+            throw new Posty5OAuthError('state_mismatch', 'The login link was opened in another browser');
+        }
+        if (params.error) throw new Posty5OAuthError('authorization_error', params.error_description || params.error, { providerError: String(params.error) });
+        if (!params.code) throw new Posty5OAuthError('authorization_error', 'The callback has no code', { providerError: 'invalid_request' });
+        const tokens = await this.exchangeCode({ code: String(params.code), codeVerifier: sealed.cv, nonce: sealed.n, maxAgeSeconds: options.maxAgeSeconds });
+        return { ...tokens, returnTo: sealed.rt, data: sealed.d };
     }
 
     /** The userinfo claims for an access token. */
