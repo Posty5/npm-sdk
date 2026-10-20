@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.2.0
+
+Needs the API release where an API key's OAuth access is set on the key
+(`oauthAccess`: none / all / selected apps) and `GET /api/oauth-users` accepts `?clientId=`.
+
+### Added
+
+- `Posty5AppUsersClient({ apiKey, clientId? })`: optional `clientId` (the app's `p5c_…` client id), sent as the
+  `clientId` query parameter of `list()` and `get()`. Required when the API key can read more than one of your
+  OAuth apps (Posty5 answers 400 without it); optional when it can read exactly one. Trimmed; empty counts as
+  not set; a non-string throws `config_invalid`.
+
+### Changed
+
+- Docs: which OAuth apps an API key may read is now set on the key (Studio → Developers Kit → API keys → Edit →
+  OAuth access), not attached on the OAuth app's page. A 403 `api_error` means the key has no access to the app.
+  Without `clientId` the client behaves exactly as in 1.1.0.
+
 ## 1.1.0
 
 ### Added

@@ -174,8 +174,18 @@ export interface ISealedLoginState {
 
 /** `new Posty5AppUsersClient(options)` */
 export interface IPosty5AppUsersClientOptions {
-    /** An API key ATTACHED to your OAuth app (Studio → Developers Kit → OAuth apps → API keys). Server side only. */
+    /**
+     * An API key allowed to read your OAuth apps. Which apps a key may read is set on the key itself
+     * (Studio → Developers Kit → API keys → Edit → OAuth access: all your apps, or selected ones). Server side only.
+     */
     apiKey: string;
+    /**
+     * The client id (`p5c_…`) of the OAuth app whose users to read, sent as the `clientId` query parameter
+     * of every request. Required when the API key can read more than one of your OAuth apps (Posty5 answers
+     * 400 without it); optional when it can read exactly one, which is then used. Trimmed; an empty value
+     * counts as not set.
+     */
+    clientId?: string;
     /** Defaults to `https://api.posty5.com`. */
     baseUrl?: string;
     fetch?: typeof fetch;

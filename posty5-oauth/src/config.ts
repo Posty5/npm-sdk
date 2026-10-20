@@ -30,4 +30,6 @@ export const Posty5OAuthConfig = {
     /** `Posty5AppUsersClient`: the Posty5 API base and its users route. */
     apiBaseUrl: 'https://api.posty5.com',
     appUsersPath: '/api/oauth-users',
+    /** Query parameter naming the OAuth app (its client id) when the API key can read several. */
+    appUsersClientIdParam: 'clientId',
 } as const;

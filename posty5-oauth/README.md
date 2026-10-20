@@ -94,15 +94,30 @@ The link's `state` is encrypted and signed with a key derived from your client s
 
 ## Your app's users
 
-Attach an API key to the app (Studio → Developers Kit → OAuth apps → API keys), then from your back end:
+Which OAuth apps an API key may read is set on the key itself: Studio → Developers Kit → API keys →
+Create / Edit → **OAuth access** — *None*, *All my OAuth apps*, or *Selected apps*. (Keys are no longer
+attached from the OAuth app's page.) Then from your back end:
 
 ```ts
 import { Posty5AppUsersClient } from '@posty5/oauth';
 
-const users = new Posty5AppUsersClient({ apiKey: process.env.POSTY5_API_KEY! });
+const users = new Posty5AppUsersClient({
+    apiKey: process.env.POSTY5_API_KEY!,
+    clientId: process.env.POSTY5_CLIENT_ID, // p5c_… — the app whose users to read
+});
 const page = await users.list({ search: 'ahmed', pageSize: 50 }); // { items, nextCursor, hasMore, totalCount }
 const user = await users.get(page.items[0].sub);                    // or null
 ```
+
+`clientId` is sent as the `clientId` query parameter of both calls. It is **required** when the key can read
+more than one of your OAuth apps, and optional when it can read exactly one (that app is used, so code written
+before 1.2.0 keeps working). Failures are `Posty5OAuthError` with `code: 'api_error'`, Posty5's message and
+`status`:
+
+| `status` | Why |
+| --- | --- |
+| 400 | The key can read more than one OAuth app and no `clientId` was given. |
+| 403 | The key has no OAuth access (allow it in Studio → Developers Kit → API keys → Edit), has no access to the app `clientId` names, or that app is disabled or not yours. |
 
 Each user carries only what they granted your app: `sub` always, `name` / `picture` with `profile`,
 `email` / `emailVerified` with `email`.

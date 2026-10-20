@@ -166,4 +166,65 @@ describe('Posty5AppUsersClient', () => {
         await expect(users.get('s1')).resolves.toMatchObject({ sub: 's1' });
         await expect(users.get('missing')).resolves.toBeNull();
     });
+
+    it('sends clientId as a query parameter on list and get when set (trimmed)', async () => {
+        const { Posty5AppUsersClient } = require('../src');
+        const calls: any[] = [];
+        const fetchStub = (async (url: string, init: any) => {
+            calls.push({ url, init });
+            if (url.includes('/api/oauth-users/')) return json({ result: { sub: 's1', scopes: ['openid'] } });
+            return json({ result: { items: [], pagination: {} } });
+        }) as any;
+        const users = new Posty5AppUsersClient({ apiKey: 'k', clientId: '  p5c_abc  ', baseUrl: 'https://api.test', fetch: fetchStub });
+        await users.list({ search: 'a' });
+        await users.get('s1');
+        expect(calls[0].url).toBe('https://api.test/api/oauth-users?search=a&clientId=p5c_abc');
+        expect(calls[1].url).toBe('https://api.test/api/oauth-users/s1?clientId=p5c_abc');
+    });
+
+    it('omits clientId when not set or blank (1.1.0 behaviour)', async () => {
+        const { Posty5AppUsersClient } = require('../src');
+        const calls: any[] = [];
+        const fetchStub = (async (url: string) => {
+            calls.push(url);
+            if (url.includes('/api/oauth-users/')) return json({ result: { sub: 's1' } });
+            return json({ result: { items: [], pagination: {} } });
+        }) as any;
+        for (const clientId of [undefined, '', '   ']) {
+            const users = new Posty5AppUsersClient({ apiKey: 'k', clientId, baseUrl: 'https://api.test', fetch: fetchStub });
+            await users.list();
+            await users.get('s1');
+        }
+        expect(calls.every((url) => !url.includes('clientId'))).toBe(true);
+        expect(calls[0]).toBe('https://api.test/api/oauth-users');
+        expect(calls[1]).toBe('https://api.test/api/oauth-users/s1');
+    });
+
+    it('rejects a non-string clientId', () => {
+        const { Posty5AppUsersClient } = require('../src');
+        let error: any;
+        try {
+            new Posty5AppUsersClient({ apiKey: 'k', clientId: 42 as any, fetch: (async () => json({})) as any });
+        } catch (e) {
+            error = e;
+        }
+        expect(error).toMatchObject({ code: 'config_invalid' });
+    });
+
+    it('surfaces the 400 (clientId required) and 403 (no access) as api_error with status', async () => {
+        const { Posty5AppUsersClient } = require('../src');
+        const many = new Posty5AppUsersClient({
+            apiKey: 'k',
+            baseUrl: 'https://api.test',
+            fetch: (async () => json({ message: "This API key can read more than one OAuth app: send the app's clientId as a query parameter" }, 400)) as any,
+        });
+        await expect(many.list()).rejects.toMatchObject({ code: 'api_error', status: 400, message: expect.stringContaining('clientId') });
+        const denied = new Posty5AppUsersClient({
+            apiKey: 'k',
+            clientId: 'p5c_other',
+            baseUrl: 'https://api.test',
+            fetch: (async () => json({ message: 'This API key has no access to that OAuth app' }, 403)) as any,
+        });
+        await expect(denied.get('s1')).rejects.toMatchObject({ code: 'api_error', status: 403 });
+    });
 });
