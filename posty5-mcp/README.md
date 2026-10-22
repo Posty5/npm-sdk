@@ -94,6 +94,14 @@ runs a bulk job and answers a **signed link to a ZIP of the images** that
 expires within minutes; `qr_code_get_bulk_job` reports a job still running and
 hands out fresh links. Webhook endpoints are not exposed through MCP.
 
+### Date filters on lists
+
+`short_link_list`, `qr_code_list`, `html_page_list` and `social_post_list`
+take `fromDate` / `toDate` (`YYYY-MM-DD`) to list what was created in a date
+window — "the QR codes I created last week" is one call. The API applies the
+window only when both are sent, in whole UTC days; a malformed date is refused
+before any call. The store lists and the account history take the same pair.
+
 ### Visit analytics
 
 `short_link_get_analytics` and `qr_code_get_analytics` (read) answer visits,

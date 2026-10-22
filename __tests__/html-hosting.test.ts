@@ -1,6 +1,7 @@
 import { HttpClient } from "@posty5/core";
 import { HtmlHostingClient } from "@posty5/html-hosting";
 import { TEST_CONFIG, createdResources } from "./setup";
+import { stubHttp } from "./helpers/stub-http.helper";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -14,6 +15,20 @@ function getFile() {
   //const file = new File([blob], "contact_form.html", { type: "text/html" });
   return blob;
 }
+describe("HTML Hosting SDK — list query (offline)", () => {
+  it("list sends the fromDate / toDate created-at window as given, other filters unchanged", async () => {
+    const { http, calls } = stubHttp({ items: [], pagination: {} });
+
+    await new HtmlHostingClient(http).list({ tag: "t", sourceType: "file", fromDate: "2026-10-01", toDate: "2026-10-07" }, { page: 1, pageSize: 10 });
+
+    expect(calls[0]).toEqual({
+      method: "GET",
+      url: "/api/html-hosting",
+      params: { tag: "t", sourceType: "file", fromDate: "2026-10-01", toDate: "2026-10-07", page: 1, pageSize: 10 },
+    });
+  });
+});
+
 describe("HTML Hosting SDK", () => {
   let httpClient: HttpClient;
   let client: HtmlHostingClient;

@@ -858,6 +858,9 @@ Search and filter QR codes with advanced pagination and filtering options.
   - `refId` (string, optional): Filter by reference ID
   - `isEnableLandingPage` (boolean, optional): Filter by landing page on/off
   - `createdFrom` (string, optional): Filter by creation source
+  - `fromDate` / `toDate` (string, optional): Created-at window, `YYYY-MM-DD`.
+    Applied only when both are sent (one alone filters nothing), in whole UTC days.
+    `export()` sends them, but the export endpoint ignores the window.
 
   An API-key call only ever lists the codes created with that key. Each item
   carries `numberOfVisitors`, `status`, `isEnableLandingPage`, `pageInfo` and
@@ -945,6 +948,11 @@ campaignQRs.items.forEach((qr) => {
 });
 
 console.log(`Campaign landing-page visits: ${totalVisits}`);
+```
+
+```typescript
+// QR codes created in a date window (both bounds, YYYY-MM-DD, whole UTC days)
+const lastWeekQRs = await qrCodes.list({ fromDate: "2026-10-01", toDate: "2026-10-07" });
 ```
 
 ```typescript

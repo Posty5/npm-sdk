@@ -258,7 +258,8 @@ export class ShortLinkClient {
 
     /**
      * Export the caller's short links as a CSV or JSON file, with the same
-     * filters as `list`. Every CSV cell is injection-hardened by the API.
+     * filters as `list`, the `fromDate` / `toDate` created-at window included.
+     * Every CSV cell is injection-hardened by the API.
      * @param params - List filters plus `format` (`csv` by default)
      * @returns The file's bytes, content type and file name
      */

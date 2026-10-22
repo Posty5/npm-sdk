@@ -1,5 +1,21 @@
 # Changelog
 
+## 5.2.0 — List date filters
+
+Additive (minor): optional fields only, no behaviour change for existing
+calls. Needs the API release with the list date filters (redesign-dashboards
+API-03); against an older API the fields are ignored.
+
+### Added
+
+- `IListParams.fromDate` / `toDate` (`YYYY-MM-DD`): `list()` sends them as
+  query params to filter on the creation date. The API applies the window only
+  when both are sent (a lone bound filters nothing) and rounds it to whole UTC
+  days. The SDK does not check the pair; the API decides.
+- `export()` sends the window too, but the export endpoint does not apply it
+  yet: the file holds every matching code whatever its creation date. The
+  `export()` doc comment says so.
+
 ## 5.1.0 — QR design and export
 
 Additive (minor): 5.0.0's versioned writes had shipped, so the template

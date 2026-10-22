@@ -98,6 +98,18 @@ describe("Short Link SDK — payloads (offline)", () => {
     expect(calls[0].params).toEqual({ "pageInfo.title": "New" });
   });
 
+  it("list sends the fromDate / toDate created-at window as given, other filters unchanged", async () => {
+    const { http, calls } = stubHttp({ items: [], pagination: {} });
+
+    await new ShortLinkClient(http).list({ tag: "t", status: "approved", fromDate: "2026-10-01", toDate: "2026-10-07" }, { page: 1, pageSize: 10 });
+
+    expect(calls[0]).toEqual({
+      method: "GET",
+      url: "/api/short-link",
+      params: { tag: "t", status: "approved", fromDate: "2026-10-01", toDate: "2026-10-07", page: 1, pageSize: 10 },
+    });
+  });
+
   it("getAnalytics calls GET /api/short-link/:id/analytics with the serialized query (VA)", async () => {
     const answer = {
       totals: { visits: 3, uniqueVisitors: 2, botVisits: 1 },

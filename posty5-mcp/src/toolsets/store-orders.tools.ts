@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ORDER_CREATED_FROM, ORDER_SOURCE_FILTERS, ORDER_SOURCES, ORDER_STATUSES } from "../config/store-orders-enums.config";
 import { ORDER_MAX_ITEMS, ORDER_STATISTICS_MAX_DAYS } from "../config/store-orders-limits.config";
 import { cursorFields, defineTool, idField, versionField } from "../core/define-tool.helper";
-import { dateField } from "../core/store-date-field.helper";
+import { dateField } from "../core/date-field.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
 const STORE_ID = "The store's _id, from store_list.";
@@ -149,11 +149,14 @@ export const STORE_ORDER_TOOLS: IToolDefinition[] = [
     access: "read",
     title: "Search customers",
     description:
-      "The people who have ordered from a store, with their order count and spend there. Filter by one term across name, phone and email, or by whether they have a Posty5 account. Pages with cursor. Contains shoppers' personal data.",
+      "The people who have ordered from a store, with their order count and spend there, and how each signs in at that store (accountKind: store = an email and password account at this store, posty5 = Continue with Posty5, guest = has only ordered; emailVerified for account holders). Filter by one term across name, phone and email, or by whether they are linked to a Posty5 account. Pages with cursor. Contains shoppers' personal data.",
     input: z.object({
       storeId: idField(STORE_ID),
       text: z.string().optional().describe("One term matched across name, phone and email."),
-      hasAccount: z.boolean().optional().describe("true: only shoppers with a Posty5 account; false: only guests."),
+      hasAccount: z
+        .boolean()
+        .optional()
+        .describe("true: only shoppers linked to a Posty5 account; false: everyone else — guests and shoppers with only a store (email and password) account. Each row's accountKind tells those apart."),
       ...cursorFields(),
     }),
     annotations: { openWorld: true },
@@ -164,7 +167,7 @@ export const STORE_ORDER_TOOLS: IToolDefinition[] = [
     toolset: "store-orders",
     access: "read",
     title: "Get a customer",
-    description: "One customer's profile and their figures for this store: order count, total spent, first and last order. Contains personal data.",
+    description: "One customer's profile and their figures for this store: order count, total spent, first and last order, and how they sign in there (accountKind, emailVerified). Contains personal data.",
     input: z.object({
       storeId: idField(STORE_ID),
       customerId: idField(CUSTOMER_ID),

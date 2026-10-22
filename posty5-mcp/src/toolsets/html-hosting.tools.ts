@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { FORM_SUBMISSION_STATUSES, HTML_PAGE_SOURCE_TYPES, HTML_PAGE_STATUSES, HTML_VARIABLE_KEY_PREFIX, INLINE_HTML_FILE_NAME } from "../config/html-hosting-enums.config";
 import { INLINE_HTML_MAX_BYTES } from "../config/limits.config";
+import { dateField } from "../core/date-field.helper";
 import { defineTool, idField, pageFields, pickPage, versionField, withoutPaging } from "../core/define-tool.helper";
 import { inlineHtmlBlob } from "../core/html-hosting.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
@@ -51,7 +52,7 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
     toolset: "html-hosting",
     access: "read",
     title: "List HTML pages",
-    description: "Hosted HTML pages, newest first, with their URL, source (file or GitHub), status, visits and form submission count. Filter by name, short code, tag, refId, status or source.",
+    description: "Hosted HTML pages, newest first, with their URL, source (file or GitHub), status, visits and form submission count. Filter by name, short code, tag, refId, status or source, or by creation date (fromDate and toDate together).",
     input: z.object({
       name: z.string().optional().describe("Part of the page's name."),
       htmlHostingId: z.string().optional().describe("The page's short code (its URL's last part)."),
@@ -60,6 +61,8 @@ export const HTML_HOSTING_TOOLS: IToolDefinition[] = [
       status: z.enum(HTML_PAGE_STATUSES).optional(),
       sourceType: z.enum(HTML_PAGE_SOURCE_TYPES).optional(),
       autoSaveInGoogleSheet: z.boolean().optional().describe("Only pages that do (true) or do not (false) save form submissions to Google Sheets."),
+      fromDate: dateField("Created on or after, YYYY-MM-DD; applied only with toDate.").optional(),
+      toDate: dateField("Created on or before, YYYY-MM-DD; applied only with fromDate.").optional(),
       ...pageFields(),
     }),
     run: (args, { clients }) => clients.htmlPages.list(withoutPaging(args), pickPage(args)),

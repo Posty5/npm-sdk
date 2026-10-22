@@ -210,4 +210,17 @@ export interface IListParams {
      * @deprecated Never accepted by the API; ignored by this SDK and removed in 5.0.0.
      */
     isEnableMonetization?: boolean;
+    /**
+     * Created on or after this day, `YYYY-MM-DD`. Applied only together with
+     * `toDate` (and vice versa): the API ignores a lone bound, and this SDK
+     * does not check the pair. Matched on the creation date, in whole UTC days
+     * (the API rounds `fromDate` to the start of its UTC day).
+     */
+    fromDate?: string;
+    /**
+     * Created on or before this day, `YYYY-MM-DD`. Applied only together with
+     * `fromDate` (and vice versa); the API rounds `toDate` to the end of its
+     * UTC day. `export()` filters on it too.
+     */
+    toDate?: string;
 }

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Storefront customer accounts (additive, no breaking change): optional `accountKind`
+  (`StoreCustomerAccountKind`: `store` = an email + password account at this store, `posty5` = signs
+  in with Posty5, `guest` = only ever ordered) and `emailVerified` on `IStoreCustomer` (customer
+  search rows and the profile). The `hasAccount` filter is unchanged but now documented precisely:
+  `true` = linked to a Posty5 account, `false` = everyone else, including store-account holders.
 - Store test mode (additive, no breaking change): optional `isTest` on `IStoreOrderSummary` /
   `IStoreOrder` (placed while the store was in test mode — never fulfilled, removed at publish) and
   optional `isDemo` on orders, products, customers and tags (added by the demo data). Integrations that

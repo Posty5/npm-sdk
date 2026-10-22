@@ -40,4 +40,8 @@ export interface ISocialPostListFilters {
   tag?: string;
   refId?: string;
   platform?: (typeof SOCIAL_POST_PLATFORMS)[number];
+  /** Created on or after, `YYYY-MM-DD`; applied by the API only with `toDate`. */
+  fromDate?: string;
+  /** Created on or before, `YYYY-MM-DD`; applied by the API only with `fromDate`. */
+  toDate?: string;
 }

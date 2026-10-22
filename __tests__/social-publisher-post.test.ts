@@ -1,6 +1,7 @@
 import { HttpClient } from "@posty5/core";
 import { SocialPublisherPostClient } from "@posty5/social-publisher-post";
 import { TEST_CONFIG, createdResources } from "./setup";
+import { stubHttp } from "./helpers/stub-http.helper";
 import * as fs from "fs";
 import * as path from "path";
 function getVideo() {
@@ -18,6 +19,20 @@ function getThumb() {
   const file = new File([blob], "thumb.jpg", { type: "image/jpeg" });
   return file;
 }
+describe("Social Publisher Post SDK — list query (offline)", () => {
+  it("list sends the fromDate / toDate created-at window as given, other filters unchanged", async () => {
+    const { http, calls } = stubHttp({ items: [], pagination: {} });
+
+    await new SocialPublisherPostClient(http).list({ workspaceId: "ws1", currentStatus: "done", fromDate: "2026-10-01", toDate: "2026-10-07" }, { page: 1, pageSize: 10 });
+
+    expect(calls[0]).toEqual({
+      method: "GET",
+      url: "/api/social-publisher-post",
+      params: { workspaceId: "ws1", currentStatus: "done", fromDate: "2026-10-01", toDate: "2026-10-07", page: 1, pageSize: 10 },
+    });
+  });
+});
+
 describe("Social Publisher Post SDK", () => {
   let httpClient: HttpClient;
   let client!: SocialPublisherPostClient;

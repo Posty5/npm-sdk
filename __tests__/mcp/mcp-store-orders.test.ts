@@ -111,6 +111,15 @@ describe("@posty5/mcp — store-orders", () => {
     expect(calls[0].params).toEqual({ text: "sara", hasAccount: "false", pageSize: 5 });
   });
 
+  it("store_customer_search says hasAccount is the Posty5 link, not any account, and names accountKind", () => {
+    const tool = findTool("store_customer_search");
+    expect(tool.description).toContain("accountKind");
+    expect(tool.description).not.toContain("whether they have a Posty5 account");
+    const hasAccount = (tool.input as unknown as { shape: Record<string, { description?: string }> }).shape.hasAccount;
+    expect(hasAccount.description).toContain("store (email and password) account");
+    expect(hasAccount.description).not.toContain("only guests");
+  });
+
   it("store_customer_get → GET /api/store-customers/:storeId/:customerId", async () => {
     const { calls } = await runTool("store_customer_get", { storeId: S, customerId: "c1" });
     expect(route(calls[0])).toBe("GET /api/store-customers/s1/c1");

@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.3.0 — List date filters
+
+Needs `@posty5/short-link` 5.1.0, `@posty5/qr-code` 5.2.0,
+`@posty5/html-hosting` 5.1.0 and `@posty5/social-publisher-post` 5.1.0 (the
+list date filters), and the API release with the list date filters
+(redesign-dashboards API-03). 152 tools; no tool added or removed.
+
+- `short_link_list`, `qr_code_list`, `html_page_list` and `social_post_list`
+  take `fromDate` / `toDate` (`YYYY-MM-DD`, applied only as a pair, whole UTC
+  days) and their descriptions say so.
+- One shared date field: `core/store-date-field.helper.ts` is now
+  `core/date-field.helper.ts`, and the account tools use it instead of their
+  own `DATE_FIELD`. Same pattern and message (`YYYY-MM-DD`); no schema change
+  for the store or account tools.
+- `store_customer_search` / `store_customer_get` descriptions name each
+  customer's `accountKind` (store, posty5 or guest) and `emailVerified`
+  (storefront customer accounts), and `hasAccount: false` is described as
+  "everyone else — guests and store-account holders", not "only guests".
+
 ## 1.2.0
 
 Needs `@posty5/core` 5.0.1, `@posty5/qr-code` 5.1.0, `@posty5/account` 4.4.0

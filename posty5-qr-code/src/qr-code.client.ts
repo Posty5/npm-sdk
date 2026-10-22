@@ -769,6 +769,9 @@ export class QRCodeClient {
    *   { status: 'approved', tag: 'marketing' },
    *   { page: 1, pageSize: 20 }
    * );
+   *
+   * // Codes created in a date window (both bounds, YYYY-MM-DD, UTC days)
+   * const lastWeek = await qrCodeClient.list({ fromDate: '2026-10-01', toDate: '2026-10-07' });
    * ```
    */
   async list(params?: IListParams, pagination?: IPaginationParams): Promise<IPaginationResponse<IQRCode>> {
@@ -891,6 +894,10 @@ export class QRCodeClient {
   /**
    * Export the caller's QR codes as a CSV or JSON file, with the same filters
    * as `list`. Every CSV cell is injection-hardened by the API.
+   *
+   * Exception: the export endpoint does not apply the `fromDate` / `toDate`
+   * created-at window. They are sent, but the file holds every matching code
+   * whatever its creation date.
    * @param params - List filters plus `format` (`csv` by default)
    * @returns The file's bytes, content type and file name
    */

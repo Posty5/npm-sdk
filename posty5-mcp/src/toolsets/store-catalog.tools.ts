@@ -4,7 +4,7 @@ import { PRODUCT_CREATE_STATUSES, PRODUCT_SECTIONS, PRODUCT_STATUSES, TAG_STATUS
 import { ADD_PRODUCT_FEATURE_PATH, AI_PRODUCT_CONTENT_FEATURE_PATH, CLONE_ADD_PRODUCT_MULTIPLIER } from "../config/store-catalog-costs.config";
 import { PRODUCT_MAX_IMAGES, PRODUCT_MAX_TAGS, PRODUCT_REORDER_MAX_ITEMS, TAG_ASSIGN_MAX_PRODUCTS, TAG_RESOLVE_MAX_LIMIT } from "../config/store-catalog-limits.config";
 import { cursorFields, defineTool, idField, requireAtLeastOne, versionField } from "../core/define-tool.helper";
-import { dateField } from "../core/store-date-field.helper";
+import { dateField } from "../core/date-field.helper";
 import { saveProductSection } from "../core/store-product-sections.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 

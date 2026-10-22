@@ -1,5 +1,18 @@
 # Changelog
 
+## 5.1.0 — List date filters
+
+Additive (minor): optional fields only, no behaviour change for existing
+calls. No API release needed: the post list has always accepted the filter,
+but no SDK exposed it until now.
+
+### Added
+
+- `IListParams.fromDate` / `toDate` (`YYYY-MM-DD`): `list()` sends them as
+  query params to filter on the creation date. The API applies the window only
+  when both are sent (a lone bound filters nothing) and rounds it to whole UTC
+  days. The SDK does not check the pair; the API decides.
+
 ## 5.0.0
 
 Optimistic concurrency. Released in lockstep with every `@posty5/*` package
