@@ -35,6 +35,15 @@ This monorepo contains the following packages:
 | [@posty5/social-publisher-workspace](./posty5-social-publisher-workspace)     | Social publisher workspace client | 1.0.2   | `npm install @posty5/social-publisher-workspace`   |
 | [@posty5/social-publisher-post](./posty5-social-publisher-post)               | Social publisher post client      | 1.0.2   | `npm install @posty5/social-publisher-post`        |
 
+**Removed:** `@posty5/store` (and the store toolsets of `@posty5/mcp`, from
+2.0.0). The Online Store Builder is now StorVilo, a separate platform; use
+`@storvilo/sdk` and `@storvilo/mcp`. Release step for the owner, not run by
+any change here:
+
+```bash
+npm deprecate @posty5/store "Moved to @storvilo/sdk"
+```
+
 ---
 
 ## 🚀 Quick Start

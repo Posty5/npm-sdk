@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.0.0 — The store tools moved to StorVilo
+
+**Breaking.** The Online Store Builder left Posty5 and is now StorVilo, a
+separate platform (owner decision D22, 2026-10-26). Its MCP tools moved to
+**`@storvilo/mcp`**; this package no longer has them. 73 tools (152 before).
+
+- Removed the toolsets `store`, `store-catalog`, `store-orders`,
+  `store-shipping` and `store-dropshipping` and their 79 tools. A connection
+  that names one of them gets the remaining toolsets only (unknown names were
+  always dropped), and `resolveToolsets` no longer adds `store`.
+- Removed the `storeId` argument of `account_get_credit_usage`.
+- Dropped the `@posty5/store` dependency; needs `@posty5/account` 5.0.0 (the
+  credit-history filters without `storeId`).
+- The server instructions no longer mention online stores, store IDs,
+  supplier payments, orders or supplier pages.
+
+**Release steps (owner, not done by this change):**
+
+- Publish `@posty5/account` 5.0.0 before this package.
+- Deprecate the removed store SDK, which is not published again:
+
+  ```bash
+  npm deprecate @posty5/store "Moved to @storvilo/sdk"
+  ```
+
 ## 1.3.0 — List date filters
 
 Needs `@posty5/short-link` 5.1.0, `@posty5/qr-code` 5.2.0,

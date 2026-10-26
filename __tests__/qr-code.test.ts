@@ -8,7 +8,7 @@ const templateId = "698a268af42b052d15e8f93c";
  * `@posty5/qr-code`.
  *
  * The offline part pins the payloads with a stub standing in for `HttpClient`
- * (the pattern `store-suppliers.test.ts` uses): the API builds the encoded
+ * (`helpers/stub-http.helper.ts`): the API builds the encoded
  * text from `qrCodeTarget`, so structured types send no `options.text`, and
  * `isEnableMonetization` never leaves the SDK. The live part runs against the
  * API in `setup.ts` and only when `POSTY5_API_KEY` is set; its truth-pass

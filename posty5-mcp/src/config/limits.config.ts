@@ -7,9 +7,6 @@ export const INLINE_HTML_MAX_BYTES = 1024 * 1024;
 /** Largest tool result text, in bytes; past it the result says how to narrow the request. */
 export const RESULT_MAX_BYTES = 256 * 1024;
 
-/** Most products one `store_product_bulk_create` call may carry. */
-export const BULK_CREATE_MAX_ITEMS = 50;
-
 /** How long a write's result is remembered under its idempotency key, in milliseconds. */
 export const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
 

@@ -156,3 +156,24 @@ Do not invent historical rationale. Record evidence-based current decisions and 
   Only a 409 with `code: VERSION_CONFLICT` becomes `ConflictError`, so the tus
   upload's offset 409 is untouched. Deletes stay `Promise<void>`: the API
   sends no version for a document that no longer exists.
+
+## 2026-10-26 — The Online Store Builder left Posty5 (StorVilo)
+
+- **Owner decision D22** (`.agent/tasks/storvilo-separation/plan.md`, phase P9
+  in `.agent/tasks/remove-online-store/plan.md`): the store is StorVilo, a
+  separate platform with its own SDK (`@storvilo/sdk`) and MCP server
+  (`@storvilo/mcp`).
+- **Removed:** the `posty5-store` workspace (`@posty5/store`), its publish
+  step and its tests; the five store toolsets of `@posty5/mcp` (79 tools; 73
+  remain), their configs, helpers, interfaces and suites, the `store` client
+  of `createClients`, the store-list rule of `resolveToolsets`, and the
+  now-unused `requireAtLeastOne` / `BULK_CREATE_MAX_ITEMS`; the `storeId`
+  credit-history filter of `@posty5/account` and of `account_get_credit_usage`
+  (the dotnet SDK drops its `StoreId` in the same pass).
+- **Versions:** `@posty5/mcp` 2.0.0 and `@posty5/account` 5.0.0, both breaking.
+  `@posty5/core` only lost a doc comment (no release needed).
+- **Not published here.** `@posty5/store` is deprecated by the owner at release
+  (`npm deprecate @posty5/store "Moved to @storvilo/sdk"`, written in
+  `posty5-mcp/CHANGELOG.md` and the root README).
+- Earlier entries that mention the store (D09, 2026-10-05) describe what was
+  true then.

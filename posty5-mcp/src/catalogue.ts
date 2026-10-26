@@ -12,11 +12,6 @@ import { HTML_HOSTING_TOOLS } from "./toolsets/html-hosting.tools";
 import { QR_CODE_TOOLS } from "./toolsets/qr-codes.tools";
 import { SHORT_LINK_TOOLS } from "./toolsets/short-links.tools";
 import { SOCIAL_PUBLISHER_TOOLS } from "./toolsets/social-publisher.tools";
-import { STORE_CATALOG_TOOLS } from "./toolsets/store-catalog.tools";
-import { STORE_DROPSHIPPING_TOOLS } from "./toolsets/store-dropshipping.tools";
-import { STORE_ORDER_TOOLS } from "./toolsets/store-orders.tools";
-import { STORE_SHIPPING_TOOLS } from "./toolsets/store-shipping.tools";
-import { STORE_TOOLS } from "./toolsets/store.tools";
 
 export const CATALOGUE: readonly IToolDefinition[] = [
   ...ACCOUNT_TOOLS,
@@ -24,11 +19,6 @@ export const CATALOGUE: readonly IToolDefinition[] = [
   ...QR_CODE_TOOLS,
   ...HTML_HOSTING_TOOLS,
   ...SOCIAL_PUBLISHER_TOOLS,
-  ...STORE_TOOLS,
-  ...STORE_CATALOG_TOOLS,
-  ...STORE_ORDER_TOOLS,
-  ...STORE_SHIPPING_TOOLS,
-  ...STORE_DROPSHIPPING_TOOLS,
 ];
 
 /** Every tool, optionally narrowed by toolset and access level, in catalogue order. */

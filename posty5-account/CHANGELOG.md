@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.0.0
+
+**Breaking.** The Online Store Builder left Posty5 and is now StorVilo (owner
+decision D22, 2026-10-26).
+
+- `ICreditUsageFilters` loses `storeId` (only operations charged for one
+  store); `ICreditUsageSummaryFilters` is now the same type as
+  `ICreditUsageFilters`.
+
 ## 4.4.0
 
 - Credit transfers (read-only): `getCreditTransferEligibility`,

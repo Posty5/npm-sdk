@@ -13,27 +13,6 @@
 4. Run the narrow check, then the project build/typecheck.
 5. Record any check that could not run and why.
 
-## Store dropshipping tests
-
-`__tests__/store-suppliers.test.ts` has an offline part (a stub stands in for
-`HttpClient` and pins every route, verb, body and encoding) and a live part that
-runs only when `POSTY5_API_KEY` and `POSTY5_TEST_STORE_ID` are set.
-`POSTY5_TEST_SUPPLIER_INTEGRATION_ID` (a **test-mode** connection),
-`POSTY5_TEST_SUPPLIER_PRODUCT_ID` and `POSTY5_TEST_PRODUCT_ID` enable the
-balance/test/browse/preview reads, the automation round trip (restored in
-`finally`) and the link → update → sync → unlink round trip. Guarded, each
-skipped visibly without its variable:
-
-| Variable | Enables |
-| --- | --- |
-| `POSTY5_TEST_ALLOW_CHARGES=true` | `importProducts` of one draft (charges credits; the product is deleted afterwards). |
-| `POSTY5_TEST_ORDER_ID` + `POSTY5_TEST_GROUP_KEY` | `submitGroup`, `retry`, `pay` on a part of the test-mode connection; each must answer `testMode`. |
-| `POSTY5_TEST_ALLOW_PART_TAKEOVER=true` (with the two above) | `cancel` then `fulfilGroupManually` — ends the fixture part's supplier flow, so re-make it afterwards. |
-
-The live part never connects, disconnects or writes a credential.
-The offline part imports `@posty5/store` from its build, so run
-`npm run build:all` first.
-
 ## Short-link and QR-code tests
 
 `__tests__/short-link.test.ts` and `__tests__/qr-code.test.ts` follow the same

@@ -17,9 +17,7 @@ export interface IPosty5Config {
     headers?: Record<string, string>;
     /**
      * The `createdFrom` label stamped on records this client creates (default
-     * `"npmPackage"`). A free label the API stores for your own filtering;
-     * store manual orders accept only the values the API lists and fall back
-     * to the default otherwise.
+     * `"npmPackage"`). A free label the API stores for your own filtering.
      */
     createdFrom?: string;
     /** Retries after a retryable failure (default 3; `0` disables). POST and PATCH are never retried once the server has answered; a versioned write (`If-Match`) is never retried at all. */

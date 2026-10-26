@@ -6,7 +6,6 @@ import type { QRCodeClient, QRCodeTemplateClient } from "@posty5/qr-code";
 import type { LinkCampaignClient, ShortLinkClient } from "@posty5/short-link";
 import type { SocialPublisherPostClient } from "@posty5/social-publisher-post";
 import type { SocialPublisherAccountClient, SocialPublisherWorkspaceClient } from "@posty5/social-publisher-workspace";
-import type { StoreClient } from "@posty5/store";
 
 /** The SDK clients a tool runs against — built per call over that call's HttpClient. */
 export interface IPosty5Clients {
@@ -21,5 +20,4 @@ export interface IPosty5Clients {
   workspaces: SocialPublisherWorkspaceClient;
   socialAccounts: SocialPublisherAccountClient;
   posts: SocialPublisherPostClient;
-  store: StoreClient;
 }

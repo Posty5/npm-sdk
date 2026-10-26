@@ -43,29 +43,6 @@ if (!TEST_CONFIG.apiKey) {
   console.log(`🌐 Base URL: ${TEST_CONFIG.baseUrl}\n`);
 }
 
-/**
- * Store dropshipping fixtures (`store-suppliers.test.ts`). Every live store test
- * skips when `storeId` is empty, so a missing fixture is visible, not a failure.
- * The integration must be a `test`-mode connection so no money can move.
- */
-export const STORE_TEST_CONFIG = {
-  storeId: process.env.POSTY5_TEST_STORE_ID || "",
-  supplierIntegrationId: process.env.POSTY5_TEST_SUPPLIER_INTEGRATION_ID || "",
-  supplierProductId: process.env.POSTY5_TEST_SUPPLIER_PRODUCT_ID || "",
-  productId: process.env.POSTY5_TEST_PRODUCT_ID || "",
-  /** An order with a supplier part on the test-mode connection (group actions). */
-  orderId: process.env.POSTY5_TEST_ORDER_ID || "",
-  /** That part's key, `supplier:<integrationId>`. */
-  groupKey: process.env.POSTY5_TEST_GROUP_KEY || "",
-  /** `true` lets the import test run: it charges credits and creates (then deletes) a draft. */
-  allowCharges: process.env.POSTY5_TEST_ALLOW_CHARGES === "true",
-  /**
-   * `true` lets cancel and fulfil-manually run on the fixture part. Each ends the
-   * part's supplier flow, so the fixture must be re-made before the next run.
-   */
-  allowPartTakeover: process.env.POSTY5_TEST_ALLOW_PART_TAKEOVER === "true",
-};
-
 // Global test timeout
 jest.setTimeout(30000);
 

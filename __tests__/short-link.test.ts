@@ -8,7 +8,7 @@ const templateId = "698a268af42b052d15e8f93c";
  * `@posty5/short-link`.
  *
  * The offline part pins the payloads with a stub standing in for `HttpClient`
- * (the pattern `store-suppliers.test.ts` uses). The live part runs against the
+ * (`helpers/stub-http.helper.ts`). The live part runs against the
  * API in `setup.ts` and only when `POSTY5_API_KEY` is set; its S13 block
  * (deep links, landing page kept on update) needs the API's link-qr truth
  * pass deployed there.

@@ -48,7 +48,7 @@ export class AccountClient {
     return response.result!;
   }
 
-  /** The owner's credit history, newest first — including what store staff spent. */
+  /** The owner's credit history, newest first — including what staff members spent. */
   async getCreditUsage(filters?: ICreditUsageFilters, paging?: ICreditUsagePaging): Promise<ICreditUsagePage> {
     const response = await this.http.get<ICreditUsagePage>(ACCOUNT_PATHS.creditUsage, { params: { ...filters, ...paging } });
     return response.result!;

@@ -30,13 +30,12 @@ export const ACCOUNT_TOOLS: IToolDefinition[] = [
     access: "read",
     title: "Credit usage history",
     description:
-      "The credit ledger, newest first: every charge, grant, carry-over, refund and credit transfer (transferOut sent, transferIn received). Filter by module, operation, kind, store or date range (fromDate and toDate together). Pages with cursor.",
+      "The credit ledger, newest first: every charge, grant, carry-over, refund and credit transfer (transferOut sent, transferIn received). Filter by module, operation, kind or date range (fromDate and toDate together). Pages with cursor.",
     input: z.object({
       module: z.string().optional().describe("Module key, e.g. socialMediaPublisher."),
       operationType: z.string().optional().describe("Operation key, from account_get_operation_costs."),
       kind: z.enum(CREDIT_USAGE_KINDS).optional(),
       settled: z.boolean().optional().describe("false lists deferred charges not yet paid."),
-      storeId: z.string().optional().describe("Only operations charged for this store (from store_list)."),
       fromDate: dateField("YYYY-MM-DD, with toDate.").optional(),
       toDate: dateField("YYYY-MM-DD, with fromDate.").optional(),
       ...cursorFields(),
