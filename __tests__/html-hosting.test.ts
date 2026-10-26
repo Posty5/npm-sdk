@@ -44,7 +44,8 @@ describeLive("HTML Hosting SDK", () => {
       debug: true,
     });
     client = new HtmlHostingClient(httpClient);
-    console.log("🚀 Starting HTML Hosting SDK Tests", httpClient);
+    // Never log the client itself: its config holds the API key.
+    console.log("🚀 Starting HTML Hosting SDK Tests");
   });
 
   describe("CREATE - With File Upload", () => {
