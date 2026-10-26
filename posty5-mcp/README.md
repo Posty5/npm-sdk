@@ -209,9 +209,11 @@ import { createPosty5McpNodeHandler } from "@posty5/mcp";
 
 const handler = createPosty5McpNodeHandler({
   sessionSecret: process.env.SESSION_SECRET!,
+  allowedOrigins: [], // no browser origin may call; desktop and server clients send none
   resolve: async (req) => (await isValid(req)) ? { options: { access: "read", connection: () => ({ apiKey: "…" }) } } : { refusal: { status: 401, message: "Create a new MCP link." } },
 });
-http.createServer((req, res) => void handler(req, res)).listen(3021);
+// Loopback only: on every interface, anyone on the network could call it.
+http.createServer((req, res) => void handler(req, res)).listen(3021, "127.0.0.1");
 ```
 
 One handler serves the 2026-07-28 protocol and, statelessly, the 2025 era.
@@ -220,6 +222,13 @@ options allow. A 2025-era client names itself only at `initialize`; the
 handler hands that identity back as a signed `Mcp-Session-Id`, which the
 client echoes, so its later tool calls are attributed to it on any process.
 Express: pass `req.body` as the third argument.
+
+Security: `resolve` is the only gate, so it must authenticate every request
+(never hand out a fixed key unchecked). Listen on `127.0.0.1` unless the
+server is meant to be public, and set `allowedOrigins` so a web page cannot
+reach a local server through DNS rebinding. A host's own errors (from
+`beforeToolCall` or `connection()`) reach `afterToolCall` as
+`outcome.errorMessage`; the model only reads a fixed sentence.
 
 Output: CommonJS and ES modules, with type definitions; the binary is CommonJS.
 

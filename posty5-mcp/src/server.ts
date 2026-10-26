@@ -4,12 +4,14 @@ import { DEFAULT_ACCESS } from "./config/access.config";
 import { PACKAGE_VERSION, SERVER_INSTRUCTIONS, SERVER_NAME, SERVER_TITLE } from "./config/instructions.config";
 import { TOOLS_LIST_CACHE_TTL_MS } from "./config/limits.config";
 import { createToolHttpClient, requireConnectionApiKey } from "./core/http-client.factory";
+import { idempotencyScopeOf } from "./core/idempotency-scope.helper";
 import { MemoryIdempotencyStore } from "./core/memory-idempotency.store";
 import { runTool } from "./core/tool-runner";
 import { buildInputSchema, toAnnotations } from "./core/tool-schema.helper";
 import { resolveToolsets, selectTools } from "./core/toolset-selection.helper";
 import type { IPosty5McpOptions } from "./interfaces/options.interface";
 import type { IRawClientInfo, IToolRunnerDeps } from "./interfaces/runner.interface";
+import type { IToolCallContext } from "./interfaces/tool.interface";
 
 /**
  * The MCP client making a request: on 2026-07-28 requests it travels in each
@@ -30,10 +32,17 @@ function clientInfoOf(server: McpServer, ctx: ServerContext, fallback: IRawClien
  */
 export function createPosty5McpServer(options: IPosty5McpOptions = {}): McpServer {
   const access = options.access ?? DEFAULT_ACCESS;
+  // Each call's idempotency scope, known once its connection is resolved.
+  const scopes = new WeakMap<IToolCallContext, string>();
   const deps: IToolRunnerDeps = {
     access,
     connectionModel: options.connectionModel,
-    createHttpClient: (call) => createToolHttpClient(options.connection ? requireConnectionApiKey(options.connection(call)) : { apiKey: options.apiKey, baseUrl: options.baseUrl }, call),
+    createHttpClient: (call) => {
+      const connection = options.connection ? requireConnectionApiKey(options.connection(call)) : { apiKey: options.apiKey, baseUrl: options.baseUrl };
+      scopes.set(call, idempotencyScopeOf(connection.apiKey));
+      return createToolHttpClient(connection, call);
+    },
+    idempotencyScope: (call) => scopes.get(call),
     hooks: options.hooks ?? {},
     idempotencyStore: options.idempotencyStore ?? new MemoryIdempotencyStore(),
   };

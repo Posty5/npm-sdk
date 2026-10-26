@@ -7,11 +7,12 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { createMcpHandler } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
-import { HTTP_MAX_REQUEST_BYTES, HTTP_REFUSAL_RPC_CODE, LEGACY_SESSION_HEADER, RESOLVED_OPTIONS_KEY } from "../config/http.config";
+import { HTTP_MAX_REQUEST_BYTES, HTTP_REFUSAL_RPC_CODE, LEGACY_SESSION_HEADER, ORIGIN_REFUSED_MESSAGE, RESOLVED_OPTIONS_KEY } from "../config/http.config";
 import type { IPosty5McpHttpOptions, IPosty5McpHttpRefusal, Posty5McpNodeHandler } from "../interfaces/http.interface";
 import type { IPosty5McpOptions } from "../interfaces/options.interface";
 import { createPosty5McpServer } from "../server";
 import { decodeLegacySession, encodeLegacySession, identityFromClientInfo, type ILegacyClientIdentity } from "./legacy-session.helper";
+import { isAllowedOrigin } from "./origin.helper";
 import { identityFromUserAgent } from "./user-agent.helper";
 
 function writeRefusal(res: ServerResponse, refusal: IPosty5McpHttpRefusal): void {
@@ -62,6 +63,9 @@ export function createPosty5McpNodeHandler(http: IPosty5McpHttpOptions): Posty5M
   return async (req, res, parsedBody) => {
     const declaredLength = Number(req.headers["content-length"] || 0);
     if (declaredLength > maxBytes) return writeRefusal(res, { status: 413, message: "The request is too large." });
+    if (http.allowedOrigins && !isAllowedOrigin(req.headers.origin, http.allowedOrigins)) {
+      return writeRefusal(res, { status: 403, message: ORIGIN_REFUSED_MESSAGE });
+    }
 
     const resolution = await http.resolve(req);
     if ("refusal" in resolution) return writeRefusal(res, resolution.refusal);

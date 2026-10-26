@@ -1,4 +1,6 @@
 import { AuthenticationError, AuthorizationError, NetworkError, NotFoundError, RateLimitError, ServerError, ValidationError } from "@posty5/core";
+import { CLIENT_FAILED_MESSAGE, HOOK_FAILED_MESSAGE } from "../../posty5-mcp/src/config/tool-errors.config";
+import { idempotencyScopeOf } from "../../posty5-mcp/src/core/idempotency-scope.helper";
 import { MISSING_CONNECTION_API_KEY_MESSAGE } from "../../posty5-mcp/src/config/agent-identity.config";
 import { requireConnectionApiKey } from "../../posty5-mcp/src/core/http-client.factory";
 import { RESULT_MAX_BYTES } from "../../posty5-mcp/src/config/limits.config";
@@ -168,5 +170,42 @@ describe("connection API key", () => {
     expect(() => requireConnectionApiKey({ apiKey: "   " })).toThrow(MISSING_CONNECTION_API_KEY_MESSAGE);
     expect(() => requireConnectionApiKey(undefined as never)).toThrow(MISSING_CONNECTION_API_KEY_MESSAGE);
     expect(requireConnectionApiKey({ apiKey: "k1", baseUrl: "https://api.example.com" })).toEqual({ apiKey: "k1", baseUrl: "https://api.example.com" });
+  });
+});
+
+describe("host failures and shared stores", () => {
+  it("never shows the model a host error's text; the host log still gets it", async () => {
+    const { deps, outcomes } = depsWith({});
+    deps.hooks.beforeToolCall = () => {
+      throw new Error("redis://admin:s3cret@cache.internal down");
+    };
+    const refused = await runCall(findTool("short_link_list"), {}, undefined, deps);
+    expect(JSON.stringify(refused)).not.toContain("s3cret");
+    expect(JSON.stringify(refused)).toContain(HOOK_FAILED_MESSAGE);
+    expect(outcomes[0].outcome.errorMessage).toContain("s3cret");
+
+    const broken = depsWith({}, {
+      createHttpClient: () => {
+        throw new Error("vault token tk-123 expired");
+      },
+    });
+    const failed = await runCall(findTool("short_link_list"), {}, undefined, broken.deps);
+    expect(JSON.stringify(failed)).not.toContain("tk-123");
+    expect(JSON.stringify(failed)).toContain(CLIENT_FAILED_MESSAGE);
+    expect(broken.outcomes[0].outcome.errorMessage).toContain("tk-123");
+  });
+
+  it("scopes idempotency keys by connection, so a shared store never replays another key holder's result", async () => {
+    const store = new MemoryIdempotencyStore();
+    const a = depsWith(LINK, { idempotencyStore: store, idempotencyScope: () => idempotencyScopeOf("key-a") });
+    const b = depsWith(LINK, { idempotencyStore: store, idempotencyScope: () => idempotencyScopeOf("key-b") });
+    const args = { baseUrl: "https://example.com", templateId: "t1", aiModel: "m", idempotencyKey: "shared-key-1" };
+    await runCall(findTool("short_link_create"), args, undefined, a.deps);
+    await runCall(findTool("short_link_create"), args, undefined, b.deps);
+    expect(a.calls).toHaveLength(1);
+    expect(b.calls).toHaveLength(1);
+    expect(b.outcomes[0].outcome.replayed).toBeUndefined();
+    expect(idempotencyScopeOf("key-a")).not.toContain("key-a");
+    expect(idempotencyScopeOf("key-a")).toBe(idempotencyScopeOf("key-a"));
   });
 });

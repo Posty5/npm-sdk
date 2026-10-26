@@ -19,6 +19,13 @@ export const TOOLS_LIST_CACHE_TTL_MS = 5 * 60 * 1000;
 /** Most idempotency results the in-process store keeps before forgetting the oldest. */
 export const MEMORY_IDEMPOTENCY_MAX_ENTRIES = 1000;
 
+/**
+ * Hex characters of the API-key hash that scopes idempotency keys
+ * (`<scope>:<tool>:<idempotencyKey>`), so a store shared by several
+ * connections never replays one key holder's result to another.
+ */
+export const IDEMPOTENCY_SCOPE_HEX_LENGTH = 16;
+
 /** Length bounds of an `idempotencyKey`. */
 export const IDEMPOTENCY_KEY_MIN_LENGTH = 8;
 export const IDEMPOTENCY_KEY_MAX_LENGTH = 128;

@@ -32,6 +32,14 @@ separate platform (owner decision D22, 2026-10-26). Its MCP tools moved to
 - Tool ids can no longer rewrite the API route: needs `@posty5/core` ^5.0.2 and the SDK packages that encode ids
   (`html-hosting-variables` / `html-hosting-form-submission` / `social-publisher-workspace` ^5.0.1).
 - `zod` floor raised to `^4.6.7` (memory-exhaustion advisory GHSA-mrhx-c7xc-m3w5).
+- A host error from `beforeToolCall` or `connection()` no longer reaches the model (it could carry tokens or
+  internal URLs): the model reads a fixed sentence, `afterToolCall` gets the real text as `outcome.errorMessage`.
+- Idempotency keys are scoped by connection: the store sees `<scope>:<tool>:<idempotencyKey>`, the scope a
+  short SHA-256 of the API key, so a store shared by several connections never replays one key holder's result
+  to another. Results stored under the old `<tool>:<key>` form are not replayed after upgrading.
+- `createPosty5McpNodeHandler({ allowedOrigins })` (optional): a browser request from an unlisted `Origin` is
+  refused with 403 before `resolve` runs, the DNS-rebinding guard; requests without `Origin` are unaffected.
+  The README example now listens on `127.0.0.1` and sets it.
 
 ## 1.3.0 — List date filters
 
