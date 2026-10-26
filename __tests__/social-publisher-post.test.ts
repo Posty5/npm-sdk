@@ -33,7 +33,9 @@ describe("Social Publisher Post SDK — list query (offline)", () => {
   });
 });
 
-describe("Social Publisher Post SDK", () => {
+const describeLive = TEST_CONFIG.apiKey ? describe : describe.skip;
+
+describeLive("Social Publisher Post SDK", () => {
   let httpClient: HttpClient;
   let client!: SocialPublisherPostClient;
   let createdId: string;

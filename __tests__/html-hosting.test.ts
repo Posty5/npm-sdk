@@ -29,7 +29,9 @@ describe("HTML Hosting SDK — list query (offline)", () => {
   });
 });
 
-describe("HTML Hosting SDK", () => {
+const describeLive = TEST_CONFIG.apiKey ? describe : describe.skip;
+
+describeLive("HTML Hosting SDK", () => {
   let httpClient: HttpClient;
   let client: HtmlHostingClient;
   let createdIdWithFile: string;
