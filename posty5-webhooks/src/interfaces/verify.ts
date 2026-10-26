@@ -6,7 +6,7 @@ export interface IVerifyWebhookSignatureInput {
   headers: Record<string, string | string[] | undefined>;
   /** The endpoint's signing secret (`whsec_...`). */
   secret: string;
-  /** Largest accepted clock difference, in seconds (default 300). */
+  /** Largest accepted clock difference, in seconds (default 300; a non-finite or negative value falls back to it). */
   toleranceSeconds?: number;
   /** "Now" in unix seconds, for tests (default the system clock). */
   nowSeconds?: number;

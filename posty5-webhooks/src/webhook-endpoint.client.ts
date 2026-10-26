@@ -32,7 +32,7 @@ export class WebhookEndpointClient {
 
   /** One endpoint. */
   async get(id: string): Promise<IWebhookEndpoint> {
-    const response = await this.http.get<IWebhookEndpoint>(`${this.basePath}/${id}`);
+    const response = await this.http.get<IWebhookEndpoint>(`${this.basePath}/${encodeURIComponent(id)}`);
     return response.result!;
   }
 
@@ -51,24 +51,24 @@ export class WebhookEndpointClient {
 
   /** Change an endpoint; the plan gates are re-checked. */
   async update(id: string, data: IUpdateWebhookEndpointRequest): Promise<IWebhookEndpoint> {
-    const response = await this.http.put<IWebhookEndpoint>(`${this.basePath}/${id}`, data);
+    const response = await this.http.put<IWebhookEndpoint>(`${this.basePath}/${encodeURIComponent(id)}`, data);
     return response.result!;
   }
 
   /** Delete an endpoint; queued deliveries are abandoned. */
   async delete(id: string): Promise<void> {
-    await this.http.delete(`${this.basePath}/${id}`);
+    await this.http.delete(`${this.basePath}/${encodeURIComponent(id)}`);
   }
 
   /** Issue a new secret (answered once). The old one keeps signing alongside it for 24 h. */
   async rotateSecret(id: string): Promise<IRotateWebhookSecretResponse> {
-    const response = await this.http.post<IRotateWebhookSecretResponse>(`${this.basePath}/${id}/rotate-secret`);
+    const response = await this.http.post<IRotateWebhookSecretResponse>(`${this.basePath}/${encodeURIComponent(id)}/rotate-secret`);
     return response.result!;
   }
 
   /** Send a `webhook.test` event; answers the delivery to poll. */
   async sendTest(id: string): Promise<IWebhookDelivery> {
-    const response = await this.http.post<IWebhookDelivery>(`${this.basePath}/${id}/test`);
+    const response = await this.http.post<IWebhookDelivery>(`${this.basePath}/${encodeURIComponent(id)}/test`);
     return response.result!;
   }
 
@@ -78,7 +78,7 @@ export class WebhookEndpointClient {
     params?: IListWebhookDeliveriesParams,
     pagination?: IPaginationParams,
   ): Promise<IPaginationResponse<IWebhookDelivery>> {
-    const response = await this.http.get<IPaginationResponse<IWebhookDelivery>>(`${this.basePath}/${id}/deliveries`, {
+    const response = await this.http.get<IPaginationResponse<IWebhookDelivery>>(`${this.basePath}/${encodeURIComponent(id)}/deliveries`, {
       params: { ...params, ...pagination },
     });
     return response.result!;
@@ -86,7 +86,7 @@ export class WebhookEndpointClient {
 
   /** Deliver a past delivery's payload again, as a new attempt chain. */
   async redeliver(id: string, deliveryId: string): Promise<IWebhookDelivery> {
-    const response = await this.http.post<IWebhookDelivery>(`${this.basePath}/${id}/deliveries/${deliveryId}/redeliver`);
+    const response = await this.http.post<IWebhookDelivery>(`${this.basePath}/${encodeURIComponent(id)}/deliveries/${encodeURIComponent(deliveryId)}/redeliver`);
     return response.result!;
   }
 

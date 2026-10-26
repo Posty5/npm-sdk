@@ -11,6 +11,13 @@ export const WEBHOOK_HEADERS = {
   signature: "webhook-signature",
 } as const;
 
+/**
+ * Fewest key bytes a signing secret may decode to. Standard Webhooks secrets
+ * are 24–64 bytes; an empty or mangled secret decodes to (almost) nothing,
+ * and an HMAC under an empty key is one anyone can compute.
+ */
+export const WEBHOOK_MIN_SECRET_BYTES = 16;
+
 /** Prefix of a signing secret; the rest is base64. */
 export const WEBHOOK_SECRET_PREFIX = "whsec_";
 

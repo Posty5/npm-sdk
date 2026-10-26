@@ -1,6 +1,6 @@
 {
     "name": "@posty5/webhooks",
-    "version": "4.5.0",
+    "version": "4.5.1",
     "description": "Posty5 webhooks: manage webhook endpoints and verify signed deliveries (Standard Webhooks)",
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",
