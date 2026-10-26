@@ -48,17 +48,17 @@ export class LinkBulkJobApi {
     }
 
     async get(id: string): Promise<ILinkBulkJob> {
-        const response = await this.http.get<ILinkBulkJob>(`${LINK_BULK_JOBS_PATH}/${id}`);
+        const response = await this.http.get<ILinkBulkJob>(`${LINK_BULK_JOBS_PATH}/${encodeURIComponent(id)}`);
         return response.result!;
     }
 
     async getResultUrl(id: string, file: LinkBulkJobFile): Promise<ILinkBulkJobResultUrl> {
-        const response = await this.http.get<ILinkBulkJobResultUrl>(`${LINK_BULK_JOBS_PATH}/${id}/result-url`, { params: { file } });
+        const response = await this.http.get<ILinkBulkJobResultUrl>(`${LINK_BULK_JOBS_PATH}/${encodeURIComponent(id)}/result-url`, { params: { file } });
         return response.result!;
     }
 
     async cancel(id: string): Promise<ILinkBulkJob> {
-        const response = await this.http.post<ILinkBulkJob>(`${LINK_BULK_JOBS_PATH}/${id}/cancel`);
+        const response = await this.http.post<ILinkBulkJob>(`${LINK_BULK_JOBS_PATH}/${encodeURIComponent(id)}/cancel`);
         return response.result!;
     }
 

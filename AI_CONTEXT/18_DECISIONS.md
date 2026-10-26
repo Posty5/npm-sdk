@@ -177,3 +177,14 @@ Do not invent historical rationale. Record evidence-based current decisions and 
   `posty5-mcp/CHANGELOG.md` and the root README).
 - Earlier entries that mention the store (D09, 2026-10-05) describe what was
   true then.
+
+## 2026-10-26 — Security pass (core 5.0.2)
+
+- The API key is held outside the `HttpClient` instance (module `WeakMap`, not a `#private`
+  field: `#private` would land in the `.d.ts`, which ES5-target consumers reject) and is
+  redacted from wrapped axios errors; cross-origin redirects drop it.
+- Path ids are encoded at each call site with `encodeURIComponent`, not through a new core
+  helper: the packages take `@posty5/core` as a `^5.0.0` peer, so a new export would force a
+  peer bump. The `.`/`..` guard lives in `HttpClient` (core only).
+- `@posty5/webhooks` 4.5.1 throws `TypeError` for a secret under 16 bytes (Posty5 issues 32);
+  `axios` floor `^1.20.0`, MCP `zod` floor `^4.6.7` (npm audit).

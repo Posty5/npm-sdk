@@ -3,7 +3,10 @@
 ## Rules and trust boundaries
 
 - API keys are sent through X-API-Key and must never appear in debug output or committed test configuration.
-- Debug mode currently logs response data; consumers and maintainers must treat it as sensitive.
+- Debug mode currently logs response data; consumers and maintainers must treat it as sensitive. It logs only the message of a failed request, never the axios error (its config holds the key).
+- `HttpClient` keeps the key in a module `WeakMap`, not on the instance, so inspecting or serializing a client never shows it; `transformError` redacts it from the axios error kept as `details.originalError` (`redactApiKey`).
+- A redirect that leaves the base URL's origin drops `X-API-Key` (`apiKeyRedirectGuard`); a plain-`http:` non-loopback `baseUrl` warns.
+- Every id interpolated into a request path goes through `encodeURIComponent`, and `HttpClient` refuses a `.`/`..` segment (`INVALID_PATH`): an id must never rewrite the route it is sent to.
 - Only retry safe/network/idempotent requests unless an operation explicitly guarantees idempotency.
 - Signed upload URLs and local File/Blob inputs are security and compatibility boundaries.
 - Public types and exports are part of the semver contract.

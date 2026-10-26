@@ -1,5 +1,22 @@
 # Changelog
 
+## 5.0.2
+
+### Security
+
+- The API key no longer leaks through errors: a `NetworkError` (and any wrapped axios error) kept the axios
+  error as `details.originalError`, whose `config.headers` held `X-API-Key` — `JSON.stringify(error)` or an
+  error reporter wrote it out. The header is now redacted and the raw request object hidden (`redactApiKey`).
+- `console.log(client)` / `util.inspect` / `JSON.stringify` of an `HttpClient` no longer show the API key.
+- Debug logging (`debug: true`) no longer prints whole axios errors (with the key) — only their message.
+- A redirect to another origin no longer carries `X-API-Key` (the redirect library strips only `Authorization`
+  and `Cookie`).
+- A request path with a `.` or `..` segment (plain or `%2e`) is refused with `Posty5Error` code `INVALID_PATH`
+  before it is sent; link bulk-job and link-analytics paths encode their ids.
+- A plain-`http:` `baseUrl` that is not loopback logs a warning: the key would travel unencrypted.
+- `axios` floor raised to `^1.20.0` (and so `follow-redirects` ^1.16.0): fixes every axios advisory in
+  `npm audit`, including the cross-domain custom-header leak in `follow-redirects`.
+
 ## 5.0.1
 
 ### Fixed

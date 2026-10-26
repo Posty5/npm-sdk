@@ -4,6 +4,7 @@ import { IBinaryResponse, IHttpClientConfig, IPosty5Config, IRequestConfig } fro
 import { transformError } from "../errors";
 import { IResponse } from "../interface";
 import {
+  API_KEY_HEADER_NAME,
   CLIENT_HEADER_NAME,
   DEFAULT_BASE_URL,
   DEFAULT_CREATED_FROM,
@@ -16,6 +17,7 @@ import { shouldRetryRequest } from "./retry-policy.helper";
 import { IF_MATCH_HEADER } from "./concurrency.config";
 import { ifMatchHeader, warnOnMissingVersion } from "./concurrency.helper";
 import { decodeBinaryErrorBody } from "./binary-response.helper";
+import { apiKeyRedirectGuard, assertNoDotSegments, isInsecureBaseUrl } from "./request-safety.helper";
 
 /**
  * Pull the filename out of a `Content-Disposition` header. The server sends it
@@ -34,6 +36,13 @@ function parseFileName(disposition?: string): string | undefined {
 }
 
 /**
+ * Each client's API key, kept outside the instance so `console.log(client)`,
+ * `util.inspect` and `JSON.stringify` never show it. (Not a `#private` field:
+ * that would put `#private` in the typings, which ES5-target consumers reject.)
+ */
+const apiKeys = new WeakMap<HttpClient, string | undefined>();
+
+/**
  * HTTP Client for making requests to the Posty5 API
  */
 export class HttpClient {
@@ -41,14 +50,21 @@ export class HttpClient {
   private config: IHttpClientConfig;
 
   constructor(config: IPosty5Config = {}) {
+    const { apiKey, ...publicConfig } = config;
+    apiKeys.set(this, apiKey);
+
     // Merge user config with internal defaults
     this.config = {
       timeout: DEFAULT_TIMEOUT_MS,
       maxRetries: DEFAULT_MAX_RETRIES,
       retryDelay: DEFAULT_RETRY_DELAY_MS,
-      ...config,
+      ...publicConfig,
       baseUrl: config.baseUrl || process.env.POSTY5_BASE_URL || DEFAULT_BASE_URL,
     };
+
+    if (isInsecureBaseUrl(this.config.baseUrl!)) {
+      console.warn(`[Posty5 SDK] baseUrl ${this.config.baseUrl} is plain http: the API key travels unencrypted. Use https.`);
+    }
 
     // Create axios instance
     this.axiosInstance = axios.create({
@@ -59,6 +75,8 @@ export class HttpClient {
         [CLIENT_HEADER_NAME]: SDK_CLIENT_ID,
         ...this.config.headers,
       },
+      // A redirect to another origin must not carry the API key along.
+      beforeRedirect: apiKeyRedirectGuard(this.config.baseUrl!),
     });
 
     // Configure retry logic
@@ -75,11 +93,12 @@ export class HttpClient {
     this.axiosInstance.interceptors.request.use(
       (config) => {
         // Add API key if provided
-        if (this.config.apiKey) {
-          config.headers["X-API-Key"] = this.config.apiKey;
+        const apiKey = apiKeys.get(this);
+        if (apiKey) {
+          config.headers[API_KEY_HEADER_NAME] = apiKey;
         } else {
           if (process.env.POSTY5_API_KEY) {
-            config.headers["X-API-Key"] = process.env.POSTY5_API_KEY;
+            config.headers[API_KEY_HEADER_NAME] = process.env.POSTY5_API_KEY;
           }
         }
 
@@ -95,7 +114,7 @@ export class HttpClient {
       },
       (error) => {
         if (this.config.debug) {
-          console.log("[Posty5 SDK] Request Error:", error);
+          console.log("[Posty5 SDK] Request Error:", error?.message);
         }
         return Promise.reject(transformError(error));
       },
@@ -132,14 +151,14 @@ export class HttpClient {
    * Set or update the API key
    */
   public setApiKey(apiKey: string): void {
-    this.config.apiKey = apiKey;
+    apiKeys.set(this, apiKey);
   }
 
   /**
    * Clear authentication credentials
    */
   public clearAuth(): void {
-    this.config.apiKey = undefined;
+    apiKeys.set(this, undefined);
   }
 
   /**
@@ -147,6 +166,7 @@ export class HttpClient {
    */
   public async get<T = any>(url: string, config?: IRequestConfig): Promise<IResponse<T>> {
     try {
+      assertNoDotSegments(url);
       const response: AxiosResponse<IResponse<T>> = await this.axiosInstance.get(url, this.buildConfig(config));
       return response.data;
     } catch (error) {
@@ -159,6 +179,7 @@ export class HttpClient {
    */
   public async post<T = any>(url: string, data?: any, config?: IRequestConfig): Promise<IResponse<T>> {
     try {
+      assertNoDotSegments(url);
       const response: AxiosResponse<IResponse<T>> = await this.axiosInstance.post(url, data, this.buildConfig(config));
       return response.data;
     } catch (error) {
@@ -171,6 +192,7 @@ export class HttpClient {
    */
   public async put<T = any>(url: string, data?: any, config?: IRequestConfig): Promise<IResponse<T>> {
     try {
+      assertNoDotSegments(url);
       const response: AxiosResponse<IResponse<T>> = await this.axiosInstance.put(url, data, this.buildConfig(config));
       return response.data;
     } catch (error) {
@@ -183,11 +205,12 @@ export class HttpClient {
    */
   public async patch<T = any>(url: string, data?: any, config?: IRequestConfig): Promise<IResponse<T>> {
     try {
+      assertNoDotSegments(url);
       const response: AxiosResponse<IResponse<T>> = await this.axiosInstance.patch(url, data, this.buildConfig(config));
       return response.data;
     } catch (error) {
       if (this.config.debug) {
-        console.log("[Posty5 SDK] PATCH Request Error:", error);
+        console.log("[Posty5 SDK] PATCH Request Error:", (error as Error)?.message);
       }
       throw transformError(error);
     }
@@ -198,11 +221,12 @@ export class HttpClient {
    */
   public async delete<T = any>(url: string, config?: IRequestConfig): Promise<IResponse<T>> {
     try {
+      assertNoDotSegments(url);
       const response: AxiosResponse<IResponse<T>> = await this.axiosInstance.delete(url, this.buildConfig(config));
       return response.data;
     } catch (error) {
       if (this.config.debug) {
-        console.log("[Posty5 SDK] DELETE Request Error:", error);
+        console.log("[Posty5 SDK] DELETE Request Error:", (error as Error)?.message);
       }
       throw transformError(error);
     }
@@ -217,6 +241,7 @@ export class HttpClient {
    */
   public async getBinary(url: string, config?: IRequestConfig): Promise<IBinaryResponse> {
     try {
+      assertNoDotSegments(url);
       const response = await this.axiosInstance.get(url, {
         ...this.buildConfig(config),
         responseType: "arraybuffer",
