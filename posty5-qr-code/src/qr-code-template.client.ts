@@ -95,7 +95,7 @@ export class QRCodeTemplateClient {
 
   /** One of your templates with its design and `__v`. Owner only. */
   async get(id: string): Promise<IQRCodeTemplateDetails> {
-    const response = await this.http.get<IQRCodeTemplateDetails>(`${this.basePath}/${id}`);
+    const response = await this.http.get<IQRCodeTemplateDetails>(`${this.basePath}/${encodeURIComponent(id)}`);
     return response.result!;
   }
 
@@ -110,7 +110,7 @@ export class QRCodeTemplateClient {
   /** Delete one of your templates. Refused while QR codes still use it. */
   async delete(id: string, version: number): Promise<void> {
     assertVersion(version);
-    await this.http.delete(`${this.basePath}/${id}`, { version });
+    await this.http.delete(`${this.basePath}/${encodeURIComponent(id)}`, { version });
   }
 
   /**
@@ -126,7 +126,7 @@ export class QRCodeTemplateClient {
    * ```
    */
   async render(id: string, options?: IQrRenderOptions): Promise<IBinaryResponse> {
-    return this.http.getBinary(`${this.basePath}/${id}${QrCodeTemplatePathsConst.render}`, {
+    return this.http.getBinary(`${this.basePath}/${encodeURIComponent(id)}${QrCodeTemplatePathsConst.render}`, {
       params: toQrRenderQuery(options),
     });
   }

@@ -16,6 +16,10 @@ API-03); against an older API the fields are ignored.
   yet: the file holds every matching code whatever its creation date. The
   `export()` doc comment says so.
 
+### Security
+
+- Ids are percent-encoded (`encodeURIComponent`) before they go into a request path. An id such as `../webhook-endpoints` or `x?y=1` used to rewrite the route (axios resolves `..`), so a caller passing user input as an id could reach a different API endpoint with its own API key. Valid ids are unchanged on the wire.
+
 ## 5.1.0 — QR design and export
 
 Additive (minor): 5.0.0's versioned writes had shipped, so the template

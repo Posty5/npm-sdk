@@ -47,7 +47,7 @@ export class SocialPublisherWorkspaceClient {
    * @param id - Workspace ID
    */
   async get(id: string): Promise<IWorkspaceResponse> {
-    const response = await this.http.get<IWorkspaceResponse>(`${this.basePath}/${id}`);
+    const response = await this.http.get<IWorkspaceResponse>(`${this.basePath}/${encodeURIComponent(id)}`);
     return response.result!;
   }
 
@@ -64,7 +64,7 @@ export class SocialPublisherWorkspaceClient {
    * ```
    */
   async getForNewPost(id: string): Promise<IWorkspaceForNewPostResponse> {
-    const response = await this.http.get<IWorkspaceForNewPostResponse>(`${this.basePath}/${id}/for-new-post`);
+    const response = await this.http.get<IWorkspaceForNewPostResponse>(`${this.basePath}/${encodeURIComponent(id)}/for-new-post`);
     return response.result!;
   }
 
@@ -127,7 +127,7 @@ export class SocialPublisherWorkspaceClient {
     assertVersion(version);
     // Step 1: Update workspace and get upload config
     const response = await this.http.put<IUpdateWorkspaceResponse>(
-      `${this.basePath}/${id}`,
+      `${this.basePath}/${encodeURIComponent(id)}`,
       {
         ...data,
         hasImage: !!logo,
@@ -152,6 +152,6 @@ export class SocialPublisherWorkspaceClient {
    */
   async delete(id: string, version: number): Promise<void> {
     assertVersion(version);
-    await this.http.delete<IDeleteWorkspaceResponse>(`${this.basePath}/${id}`, { version });
+    await this.http.delete<IDeleteWorkspaceResponse>(`${this.basePath}/${encodeURIComponent(id)}`, { version });
   }
 }

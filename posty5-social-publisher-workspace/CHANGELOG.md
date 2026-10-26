@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.0.1
+
+### Security
+
+- Ids are percent-encoded (`encodeURIComponent`) before they go into a request path. An id such as `../webhook-endpoints` or `x?y=1` used to rewrite the route (axios resolves `..`), so a caller passing user input as an id could reach a different API endpoint with its own API key. Valid ids are unchanged on the wire.
+
 ## 5.0.0
 
 Optimistic concurrency. Released in lockstep with every `@posty5/*` package

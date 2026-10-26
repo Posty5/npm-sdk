@@ -74,7 +74,7 @@ export class SocialPublisherPostClient {
    * @param id - Post ID
    */
   async getStatus(id: string): Promise<ISocialPublisherPostStatusResponse> {
-    const response = await this.http.get<ISocialPublisherPostStatusResponse>(`${this.basePath}/${id}/status`);
+    const response = await this.http.get<ISocialPublisherPostStatusResponse>(`${this.basePath}/${encodeURIComponent(id)}/status`);
     return response.result!;
   }
 
@@ -110,7 +110,7 @@ export class SocialPublisherPostClient {
    */
   async removePost(id: string, version: number): Promise<IRemovePostResponse> {
     assertVersion(version);
-    const response = await this.http.post<IRemovePostResponse>(`${this.basePath}/${id}/remove`, {}, { version });
+    const response = await this.http.post<IRemovePostResponse>(`${this.basePath}/${encodeURIComponent(id)}/remove`, {}, { version });
     return withVersion(response, id);
   }
 
@@ -119,7 +119,7 @@ export class SocialPublisherPostClient {
    * @param id - Current Post ID
    */
   async getNextAndPrevious(id: string): Promise<ISocialPublisherPostNextPreviousResponse> {
-    const response = await this.http.get<ISocialPublisherPostNextPreviousResponse>(`${this.basePath}/${id}/next-previous`);
+    const response = await this.http.get<ISocialPublisherPostNextPreviousResponse>(`${this.basePath}/${encodeURIComponent(id)}/next-previous`);
     return response.result!;
   }
 
@@ -129,7 +129,7 @@ export class SocialPublisherPostClient {
    * @param id - Optional ID for updating/retrying? (Based on route :id?)
    */
   private async createToWorkspaceByFile(data: ICreateSocialPublisherPostRequest, id?: string): Promise<string> {
-    const url = id ? `${this.basePath}/short-video/workspace/by-file/${id}` : `${this.basePath}/short-video/workspace/by-file`;
+    const url = id ? `${this.basePath}/short-video/workspace/by-file/${encodeURIComponent(id)}` : `${this.basePath}/short-video/workspace/by-file`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
       createdFrom: this.http.createdFrom,
@@ -143,7 +143,7 @@ export class SocialPublisherPostClient {
    * @param id - Optional ID for updating/retrying? (Based on route :id?)
    */
   private async createToWorkspaceByURL(data: ICreateSocialPublisherPostRequest, id?: string): Promise<string> {
-    const url = id ? `${this.basePath}/short-video/workspace/by-url/${id}` : `${this.basePath}/short-video/workspace/by-url`;
+    const url = id ? `${this.basePath}/short-video/workspace/by-url/${encodeURIComponent(id)}` : `${this.basePath}/short-video/workspace/by-url`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
       createdFrom: this.http.createdFrom,
@@ -157,7 +157,7 @@ export class SocialPublisherPostClient {
    * @param id - Optional ID for updating/retrying?
    */
   private async createToAccountByFile(data: ICreateSocialPublisherAccountPostRequest, id?: string): Promise<string> {
-    const url = id ? `${this.basePath}/short-video/account/by-file/${id}` : `${this.basePath}/short-video/account/by-file`;
+    const url = id ? `${this.basePath}/short-video/account/by-file/${encodeURIComponent(id)}` : `${this.basePath}/short-video/account/by-file`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
       createdFrom: this.http.createdFrom,
@@ -171,7 +171,7 @@ export class SocialPublisherPostClient {
    * @param id - Optional ID for updating/retrying?
    */
   private async createToAccountByURL(data: ICreateSocialPublisherAccountPostRequest, id?: string): Promise<string> {
-    const url = id ? `${this.basePath}/short-video/account/by-url/${id}` : `${this.basePath}/short-video/account/by-url`;
+    const url = id ? `${this.basePath}/short-video/account/by-url/${encodeURIComponent(id)}` : `${this.basePath}/short-video/account/by-url`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
       createdFrom: this.http.createdFrom,
@@ -196,7 +196,7 @@ export class SocialPublisherPostClient {
    * ```
    */
   async createImagePostToWorkspace(data: ICreateImagePostToWorkspaceRequest, id?: string): Promise<string> {
-    const url = id ? `${this.basePath}/image/workspace/${id}` : `${this.basePath}/image/workspace`;
+    const url = id ? `${this.basePath}/image/workspace/${encodeURIComponent(id)}` : `${this.basePath}/image/workspace`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
       createdFrom: this.http.createdFrom,
@@ -210,7 +210,7 @@ export class SocialPublisherPostClient {
    * platforms in the request are ignored.
    */
   async createImagePostToAccount(data: ICreateImagePostToAccountRequest, id?: string): Promise<string> {
-    const url = id ? `${this.basePath}/image/account/${id}` : `${this.basePath}/image/account`;
+    const url = id ? `${this.basePath}/image/account/${encodeURIComponent(id)}` : `${this.basePath}/image/account`;
     const response = await this.http.post<{ _id: string }>(url, {
       ...data,
       createdFrom: this.http.createdFrom,
@@ -692,7 +692,7 @@ export class SocialPublisherPostClient {
     const target = isFile ? "by-file" : "by-url";
     const id = postId ?? thumb?.postId;
     const url = id
-      ? `${this.basePath}/long-video/workspace/${target}/${id}`
+      ? `${this.basePath}/long-video/workspace/${target}/${encodeURIComponent(id)}`
       : `${this.basePath}/long-video/workspace/${target}`;
 
     const response = await this.http.post<IPublishLongVideoResult>(url, { ...body, createdFrom: this.http.createdFrom });
@@ -752,7 +752,7 @@ export class SocialPublisherPostClient {
     const target = isFile ? "by-file" : "by-url";
     const id = postId ?? thumb?.postId;
     const url = id
-      ? `${this.basePath}/long-video/account/${target}/${id}`
+      ? `${this.basePath}/long-video/account/${target}/${encodeURIComponent(id)}`
       : `${this.basePath}/long-video/account/${target}`;
 
     const response = await this.http.post<IPublishLongVideoResult>(url, { ...body, createdFrom: this.http.createdFrom });
@@ -784,7 +784,7 @@ export class SocialPublisherPostClient {
     // The edit route takes the schedule flat (`scheduleType` + `scheduledAt`), not
     // the `schedule` object the create routes take, and refuses `scheduledAt` with "now".
     const response = await this.http.put<{ _id: string }>(
-      `${this.basePath}/${id}`,
+      `${this.basePath}/${encodeURIComponent(id)}`,
       {
         ...(data.schedule === "now"
           ? { scheduleType: "now" }
@@ -817,7 +817,7 @@ export class SocialPublisherPostClient {
       throw new Error("id is required");
     }
     assertVersion(version);
-    await this.http.delete(`${this.basePath}/${id}`, { version });
+    await this.http.delete(`${this.basePath}/${encodeURIComponent(id)}`, { version });
   }
 
   /**

@@ -76,7 +76,7 @@ export class ShortLinkClient {
      * @returns Short Link full details, including `androidUrl` / `iosUrl`
      */
     async get(id: string): Promise<IGetShortLinkResponse> {
-        const response = await this.http.get<IGetShortLinkResponse>(`${this.basePath}/${id}`);
+        const response = await this.http.get<IGetShortLinkResponse>(`${this.basePath}/${encodeURIComponent(id)}`);
         return response.result!;
     }
 
@@ -105,7 +105,7 @@ export class ShortLinkClient {
      */
     async update(id: string, data: IUpdateShortLinkRequest, version: number): Promise<IUpdateShortLinkResponse> {
         assertVersion(version);
-        const response = await this.http.put<IUpdateShortLinkResponse>(`${this.basePath}/${id}`, toShortLinkBody(data), { version });
+        const response = await this.http.put<IUpdateShortLinkResponse>(`${this.basePath}/${encodeURIComponent(id)}`, toShortLinkBody(data), { version });
         return withVersion(response, id);
     }
 
@@ -116,7 +116,7 @@ export class ShortLinkClient {
      */
     async delete(id: string, version: number): Promise<void> {
         assertVersion(version);
-        await this.http.delete<IDeleteShortLinkResponse>(`${this.basePath}/${id}`, { version });
+        await this.http.delete<IDeleteShortLinkResponse>(`${this.basePath}/${encodeURIComponent(id)}`, { version });
     }
 
     /**
@@ -137,7 +137,7 @@ export class ShortLinkClient {
      * @param id - Short Link ID
      */
     async checkHealth(id: string): Promise<void> {
-        await this.http.post(`${this.basePath}/${id}${ShortLinkControlsPathsConst.healthCheck}`, {});
+        await this.http.post(`${this.basePath}/${encodeURIComponent(id)}${ShortLinkControlsPathsConst.healthCheck}`, {});
     }
 
     /**

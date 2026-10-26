@@ -731,7 +731,7 @@ export class QRCodeClient {
    * ```
    */
   async get(id: string): Promise<IGetQRCodeResponse> {
-    const response = await this.http.get<IGetQRCodeResponse>(`${this.basePath}/${id}`);
+    const response = await this.http.get<IGetQRCodeResponse>(`${this.basePath}/${encodeURIComponent(id)}`);
     return response.result!;
   }
 
@@ -747,7 +747,7 @@ export class QRCodeClient {
    */
   async delete(id: string, version: number): Promise<void> {
     assertVersion(version);
-    await this.http.delete<IDeleteQRCodeResponse>(`${this.basePath}/${id}`, { version });
+    await this.http.delete<IDeleteQRCodeResponse>(`${this.basePath}/${encodeURIComponent(id)}`, { version });
   }
 
   /**
@@ -961,7 +961,7 @@ export class QRCodeClient {
    * ```
    */
   async render(id: string, options?: IQrRenderOptions): Promise<IBinaryResponse> {
-    return this.http.getBinary(`${this.basePath}/${id}${QrCodeRenderPathsConst.render}`, {
+    return this.http.getBinary(`${this.basePath}/${encodeURIComponent(id)}${QrCodeRenderPathsConst.render}`, {
       params: toQrRenderQuery(options),
     });
   }
@@ -979,7 +979,7 @@ export class QRCodeClient {
    * ```
    */
   async getExportUrl(id: string, options?: IQrExportOptions): Promise<IQrExportUrl> {
-    const response = await this.http.get<IQrExportUrl>(`${this.basePath}/${id}${QrCodeRenderPathsConst.exportUrl}`, {
+    const response = await this.http.get<IQrExportUrl>(`${this.basePath}/${encodeURIComponent(id)}${QrCodeRenderPathsConst.exportUrl}`, {
       params: toQrExportQuery(options),
     });
     return response.result!;
@@ -1019,7 +1019,7 @@ export class QRCodeClient {
     // `version` travels as `If-Match`, never inside the body.
     assertVersion(version);
     const response = await this.http.put<IUpdateQRCodeResponse>(
-      `${this.basePath}/${type}/${id}`,
+      `${this.basePath}/${type}/${encodeURIComponent(id)}`,
       {
         ...body,
         ...QrCodeRequestSourceConst,
