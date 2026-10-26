@@ -55,6 +55,33 @@ export function nowSeconds(): number {
     return Math.floor(Date.now() / 1000);
 }
 
+/**
+ * Whether a provider URL is safe to send codes, secrets and keys to: `https:`,
+ * or `http:` on this machine only. Over plain http a network attacker could
+ * swap the JWKS and have forged ID tokens accepted.
+ */
+export function isSecureUrl(value: unknown): boolean {
+    try {
+        const url = new URL(String(value));
+        if (url.protocol === 'https:') return true;
+        return url.protocol === 'http:' && (Posty5OAuthConfig.loopbackHostnames as readonly string[]).includes(url.hostname.toLowerCase());
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Whether `returnTo` is a path on your own site (`/after`, `/a?b=1`). An
+ * absolute URL, a protocol-relative `//host` or `/\host`, or a control
+ * character (browsers drop tabs and newlines, so `/<tab>/host` becomes
+ * `//host`) would turn the callback into an open redirect.
+ */
+export function isSafeReturnTo(value: unknown): boolean {
+    if (typeof value !== 'string' || !value.startsWith('/')) return false;
+    if (value[1] === '/' || value[1] === '\\') return false;
+    return !/[\u0000-\u001f\u007f]/.test(value);
+}
+
 /** The issuer without a trailing slash. */
 export function normalizeIssuer(issuer: string): string {
     return String(issuer || '').replace(/\/+$/, '');

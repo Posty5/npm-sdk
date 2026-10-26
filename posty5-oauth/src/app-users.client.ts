@@ -1,5 +1,6 @@
 import { Posty5OAuthConfig } from './config';
 import { Posty5OAuthError } from './errors';
+import { isSecureUrl } from './helper';
 import type { IAppUsersPage, IListAppUsersOptions, IPosty5AppUser, IPosty5AppUsersClientOptions } from './interfaces';
 
 /**
@@ -30,6 +31,7 @@ export class Posty5AppUsersClient {
         }
         this.clientId = options.clientId?.trim() || null;
         this.baseUrl = String(options.baseUrl || Posty5OAuthConfig.apiBaseUrl).replace(/\/+$/, '');
+        if (!isSecureUrl(this.baseUrl)) throw new Posty5OAuthError('config_invalid', 'baseUrl must be an https URL (http only on localhost)');
         const fetchImpl = options.fetch || (globalThis as any).fetch;
         if (typeof fetchImpl !== 'function') throw new Posty5OAuthError('config_invalid', 'No fetch available: use Node 18+ or pass options.fetch');
         this.fetchImpl = fetchImpl;

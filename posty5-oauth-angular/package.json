@@ -1,6 +1,6 @@
 {
     "name": "@posty5/oauth-angular",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Login with Posty5 for Angular: a ready, fully customisable \"Continue with Posty5\" button, PKCE sign-in, callback handling and in-browser ID-token verification (OpenID Connect). Standalone APIs, SSR-safe.",
     "repository": {
         "type": "git",

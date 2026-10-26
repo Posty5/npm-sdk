@@ -2,6 +2,12 @@
 
 All notable changes to `@posty5/oauth-angular` are documented here.
 
+## 1.0.1 — Security
+
+- The `issuer` and the endpoints its discovery document names must be `https:` (`http:` only on `localhost` /
+  `127.0.0.1` / `[::1]`); otherwise `config_invalid` / `discovery_failed`. Over plain http a network attacker
+  could swap the JWKS and have forged ID tokens accepted.
+
 ## 1.0.0 — 2026-10-18
 
 First release: Login with Posty5 for Angular (17.3 to 20, standalone, SSR-safe).

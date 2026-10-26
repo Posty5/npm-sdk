@@ -1,6 +1,6 @@
 import { Posty5OAuthConfig } from './config';
 import { Posty5OAuthError } from './errors';
-import { basicAuthHeader, createPkcePair, decodeJwt, normalizeIssuer, nowSeconds, randomUrlSafe, safeEqual, verifyRs256 } from './helper';
+import { basicAuthHeader, createPkcePair, decodeJwt, isSafeReturnTo, isSecureUrl, normalizeIssuer, nowSeconds, randomUrlSafe, safeEqual, verifyRs256 } from './helper';
 import { bindingHash, sealState, unsealState } from './sealed-state.helper';
 import type {
     IBuildAuthorizationUrlOptions,
@@ -53,6 +53,7 @@ export class Posty5OAuthClient {
         this.clientSecret = options.clientSecret;
         this.redirectUri = options.redirectUri;
         this.issuer = normalizeIssuer(options.issuer || Posty5OAuthConfig.defaultIssuer);
+        if (!isSecureUrl(this.issuer)) throw new Posty5OAuthError('config_invalid', 'issuer must be an https URL (http only on localhost)');
         const fetchImpl = options.fetch || (globalThis as any).fetch;
         if (typeof fetchImpl !== 'function') throw new Posty5OAuthError('config_invalid', 'No fetch available: use Node 18+ or pass options.fetch');
         this.fetchImpl = fetchImpl;
@@ -80,6 +81,7 @@ export class Posty5OAuthClient {
         if (normalizeIssuer(body?.issuer) !== this.issuer) throw new Posty5OAuthError('discovery_failed', 'The discovery document names another issuer');
         for (const field of ['authorization_endpoint', 'token_endpoint', 'jwks_uri', 'userinfo_endpoint']) {
             if (typeof body?.[field] !== 'string') throw new Posty5OAuthError('discovery_failed', `The discovery document has no ${field}`);
+            if (!isSecureUrl(body[field])) throw new Posty5OAuthError('discovery_failed', `The discovery document's ${field} is not https`);
         }
         this.metadata = { value: body as IPosty5ProviderMetadata, at: Date.now() };
         return this.metadata.value;
@@ -180,6 +182,9 @@ export class Posty5OAuthClient {
      */
     async createLoginLink(options: ICreateLoginLinkOptions = {}): Promise<ILoginLink> {
         const c = Posty5OAuthConfig.loginLink;
+        if (options.returnTo && !isSafeReturnTo(options.returnTo)) {
+            throw new Posty5OAuthError('config_invalid', 'returnTo must be a path on your site, starting with a single "/"');
+        }
         const ttl = Math.min(Math.max(1, options.ttlSeconds ?? c.defaultTtlSeconds), c.maxTtlSeconds);
         const { codeVerifier, codeChallenge } = createPkcePair();
         const nonce = randomUrlSafe();

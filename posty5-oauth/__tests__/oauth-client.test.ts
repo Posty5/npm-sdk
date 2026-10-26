@@ -1,5 +1,5 @@
 import { createHash, createSign, generateKeyPairSync, KeyObject } from 'node:crypto';
-import { Posty5OAuthClient, Posty5OAuthError } from '../src';
+import { Posty5AppUsersClient, Posty5OAuthClient, Posty5OAuthError } from '../src';
 
 const ISSUER = 'https://issuer.test';
 const CLIENT_ID = 'p5c_testclient';
@@ -234,5 +234,32 @@ describe('Posty5AppUsersClient', () => {
             fetch: (async () => json({ message: 'This API key has no access to that OAuth app' }, 403)) as any,
         });
         await expect(denied.get('s1')).rejects.toMatchObject({ code: 'api_error', status: 403 });
+    });
+});
+
+describe('transport and redirect safety', () => {
+    const base = { clientId: CLIENT_ID, clientSecret: CLIENT_SECRET, redirectUri: REDIRECT };
+
+    it('requires an https issuer, allowing http on localhost only', () => {
+        expect(() => new Posty5OAuthClient({ ...base, issuer: 'http://issuer.test', fetch: (async () => json({})) as any })).toThrow(Posty5OAuthError);
+        expect(() => new Posty5OAuthClient({ ...base, issuer: 'http://localhost:3000', fetch: (async () => json({})) as any })).not.toThrow();
+    });
+
+    it('refuses a discovery document that points an endpoint at plain http', async () => {
+        const fetchStub = (async () => json({ ...discovery, jwks_uri: 'http://evil.test/jwks' })) as any;
+        const c = new Posty5OAuthClient({ ...base, issuer: ISSUER, fetch: fetchStub });
+        await expect(c.discover()).rejects.toMatchObject({ code: 'discovery_failed' });
+    });
+
+    it('requires an https baseUrl for the app users client', () => {
+        expect(() => new Posty5AppUsersClient({ apiKey: 'k', baseUrl: 'http://api.test' })).toThrow(Posty5OAuthError);
+    });
+
+    it('accepts only a same-site path as returnTo', async () => {
+        const c = client();
+        await expect(c.createLoginLink({ returnTo: '/after?x=1' })).resolves.toHaveProperty('url');
+        for (const returnTo of ['https://evil.test', '//evil.test', '/\\evil.test', '/\t/evil.test', 'after']) {
+            await expect(c.createLoginLink({ returnTo })).rejects.toMatchObject({ code: 'config_invalid' });
+        }
     });
 });

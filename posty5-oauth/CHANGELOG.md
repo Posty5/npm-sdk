@@ -22,6 +22,13 @@ Needs the API release where an API key's OAuth access is set on the key
 
 - `handleLoginCallback` refuses a sealed state shorter than a full IV and 16-byte GCM tag, and the decipher pins
   `authTagLength: 16` (Node otherwise accepts a tag cut to 4 bytes; DEP0182).
+- **Behaviour change:** `createLoginLink({ returnTo })` accepts only a path on your own site (one leading `/`, no
+  `//`, `/\` or control characters) and throws `config_invalid` otherwise. An absolute URL there made the
+  callback an open redirect for apps that redirect to the `returnTo` they get back. An empty value is still
+  treated as absent.
+- **Behaviour change:** the `issuer`, the endpoints its discovery document names, and `Posty5AppUsersClient`'s
+  `baseUrl` must be `https:` (`http:` only on `localhost` / `127.0.0.1` / `[::1]`); otherwise `config_invalid` /
+  `discovery_failed`. Over plain http a network attacker could swap the JWKS and have forged ID tokens accepted.
 
 ## 1.1.0
 

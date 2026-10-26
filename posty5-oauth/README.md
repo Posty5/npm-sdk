@@ -91,6 +91,8 @@ res.clearCookie('p5_binding');
 
 The link's `state` is encrypted and signed with a key derived from your client secret: nobody can read or change
 `returnTo` / `data`, and it expires (10 minutes by default). The cookie binds it to the browser that asked.
+`returnTo` must be a path on your site (`/dashboard`); an absolute URL throws `config_invalid`, so the callback
+can never redirect off-site. The issuer and its endpoints must be `https:` (`http:` is accepted on localhost only).
 
 ## Your app's users
 

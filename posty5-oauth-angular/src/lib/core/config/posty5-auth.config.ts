@@ -2,6 +2,8 @@
 export const Posty5AuthDefaults = {
     /** Production issuer. The test tier is `https://test-api.posty5.com`. */
     issuer: 'https://api.posty5.com',
+    /** Hosts the issuer and its endpoints may use over plain `http:` (local development); everything else must be `https:`. */
+    loopbackHostnames: ['localhost', '127.0.0.1', '[::1]'],
     discoveryPath: '/.well-known/openid-configuration',
     scope: 'openid profile email',
     requiredScope: 'openid',

@@ -25,6 +25,21 @@ export function toEpochSeconds(epochMs: number): number {
     return Math.floor(epochMs / Posty5AuthDefaults.msPerSecond);
 }
 
+/**
+ * Whether a provider URL may receive the code and verifier: `https:`, or
+ * `http:` on this machine only. Over plain http a network attacker could swap
+ * the JWKS and have forged ID tokens accepted.
+ */
+export function isSecureUrl(value: unknown): boolean {
+    try {
+        const url = new URL(String(value));
+        if (url.protocol === 'https:') return true;
+        return url.protocol === 'http:' && (Posty5AuthDefaults.loopbackHostnames as readonly string[]).includes(url.hostname.toLowerCase());
+    } catch {
+        return false;
+    }
+}
+
 /** Apply the defaults and check what each mode needs. Throws `config_invalid`. */
 export function resolveAuthConfig(config: IPosty5AuthConfig): IPosty5ResolvedAuthConfig {
     if (!config || !config.mode) throw new Posty5AuthError('config_invalid', 'providePosty5Auth: mode is required');
@@ -46,6 +61,9 @@ export function resolveAuthConfig(config: IPosty5AuthConfig): IPosty5ResolvedAut
         locale: config.locale || null,
         labels: config.labels || {},
     };
+    if (!isSecureUrl(resolved.issuer)) {
+        throw new Posty5AuthError('config_invalid', 'providePosty5Auth: issuer must be an https URL (http only on localhost)');
+    }
     if (resolved.mode === 'startUrl') {
         if (!resolved.startUrl) throw new Posty5AuthError('config_invalid', 'providePosty5Auth: startUrl mode needs startUrl');
         return resolved;
@@ -70,6 +88,7 @@ export function assertProviderMetadata(body: unknown, issuer: string): IPosty5Pr
     }
     for (const field of ['authorization_endpoint', 'token_endpoint', 'jwks_uri', 'userinfo_endpoint']) {
         if (typeof metadata[field] !== 'string') throw new Posty5AuthError('discovery_failed', `The discovery document has no ${field}`);
+        if (!isSecureUrl(metadata[field])) throw new Posty5AuthError('discovery_failed', `The discovery document's ${field} is not https`);
     }
     return metadata;
 }

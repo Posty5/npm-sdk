@@ -124,7 +124,11 @@ export interface IJsonWebKey {
 
 /** `createLoginLink(options)` */
 export interface ICreateLoginLinkOptions {
-    /** Where your app sends the user after sign-in (kept inside the sealed state). Keep it short. */
+    /**
+     * Where your app sends the user after sign-in (kept inside the sealed
+     * state). A path on your own site, starting with a single `/`; an absolute
+     * or protocol-relative URL throws `config_invalid` (open redirect).
+     */
     returnTo?: string;
     /** Small JSON-serialisable data to get back in `handleLoginCallback` (sealed, not readable by anyone). */
     data?: unknown;

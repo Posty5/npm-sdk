@@ -73,6 +73,11 @@ describe('posty5-auth.helper', () => {
             expectAuthError(() => resolveAuthConfig({ mode: 'codeHandler', clientId: 'p5c_x', redirectUri: 'https://a/cb', codeHandlerUrl: '' }), 'config_invalid');
         });
 
+        it('requires an https issuer, allowing http on localhost only', () => {
+            expectAuthError(() => resolveAuthConfig({ mode: 'browser', clientId: 'p5c_x', redirectUri: 'https://a/cb', issuer: 'http://api.posty5.com' }), 'config_invalid');
+            expect(resolveAuthConfig({ mode: 'browser', clientId: 'p5c_x', redirectUri: 'https://a/cb', issuer: 'http://localhost:3000' }).issuer).toBe('http://localhost:3000');
+        });
+
         it('requires openid in the scope', () => {
             expectAuthError(() => resolveAuthConfig({ mode: 'browser', clientId: 'p5c_x', redirectUri: 'https://a/cb', scope: 'profile email' }), 'config_invalid');
         });
@@ -240,6 +245,10 @@ describe('posty5-auth.helper', () => {
         it('refuses another issuer or a missing endpoint', () => {
             expectAuthError(() => assertProviderMetadata({ ...metadata, issuer: 'https://evil.example' }, issuer), 'discovery_failed');
             expectAuthError(() => assertProviderMetadata({ ...metadata, jwks_uri: undefined }, issuer), 'discovery_failed');
+        });
+
+        it('refuses an endpoint over plain http', () => {
+            expectAuthError(() => assertProviderMetadata({ ...metadata, jwks_uri: 'http://evil.example/jwks' }, issuer), 'discovery_failed');
         });
     });
 

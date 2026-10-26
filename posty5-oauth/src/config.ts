@@ -27,6 +27,8 @@ export const Posty5OAuthConfig = {
         /** Posty5 accepts a `state` of at most 512 characters. */
         maxStateLength: 512,
     },
+    /** Hosts that may be reached over plain `http:` (local development); everything else must be `https:`. */
+    loopbackHostnames: ['localhost', '127.0.0.1', '[::1]'],
     /** `Posty5AppUsersClient`: the Posty5 API base and its users route. */
     apiBaseUrl: 'https://api.posty5.com',
     appUsersPath: '/api/oauth-users',
