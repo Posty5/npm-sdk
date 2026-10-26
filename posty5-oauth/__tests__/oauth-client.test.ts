@@ -146,6 +146,14 @@ describe('createLoginLink / handleLoginCallback (sealed state)', () => {
         await expect(c.handleLoginCallback({ code: 'c', state: state.slice(0, -2) + 'AA' }, { binding: link.binding })).rejects.toMatchObject({ code: 'state_mismatch' });
         await expect(c.handleLoginCallback({ error: 'access_denied', state }, { binding: link.binding })).rejects.toMatchObject({ code: 'authorization_error', providerError: 'access_denied' });
     });
+
+    it('refuses a state cut short of a full IV and 16-byte tag', async () => {
+        const c = client();
+        const link = await c.createLoginLink();
+        const state = new URL(link.url).searchParams.get('state')!;
+        const truncated = Buffer.from(state, 'base64url').subarray(0, 12 + 4).toString('base64url');
+        await expect(c.handleLoginCallback({ code: 'c', state: truncated }, { binding: link.binding })).rejects.toMatchObject({ code: 'state_mismatch' });
+    });
 });
 
 describe('Posty5AppUsersClient', () => {

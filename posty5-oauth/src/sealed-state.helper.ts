@@ -33,10 +33,12 @@ export function unsealState(clientSecret: string, state: string): ISealedLoginSt
     let payload: ISealedLoginState;
     try {
         const raw = Buffer.from(String(state || ''), 'base64url');
+        // A full IV and tag or nothing: Node would otherwise accept a GCM tag cut down to 4 bytes.
+        if (raw.length <= c.ivBytes + c.tagBytes) throw new Error('truncated');
         const iv = raw.subarray(0, c.ivBytes);
         const tag = raw.subarray(c.ivBytes, c.ivBytes + c.tagBytes);
         const body = raw.subarray(c.ivBytes + c.tagBytes);
-        const decipher = createDecipheriv('aes-256-gcm', stateKey(clientSecret), iv);
+        const decipher = createDecipheriv('aes-256-gcm', stateKey(clientSecret), iv, { authTagLength: c.tagBytes });
         decipher.setAuthTag(tag);
         payload = JSON.parse(Buffer.concat([decipher.update(body), decipher.final()]).toString('utf8'));
     } catch {

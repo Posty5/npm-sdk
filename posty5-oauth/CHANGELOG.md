@@ -18,6 +18,11 @@ Needs the API release where an API key's OAuth access is set on the key
   OAuth access), not attached on the OAuth app's page. A 403 `api_error` means the key has no access to the app.
   Without `clientId` the client behaves exactly as in 1.1.0.
 
+### Security
+
+- `handleLoginCallback` refuses a sealed state shorter than a full IV and 16-byte GCM tag, and the decipher pins
+  `authTagLength: 16` (Node otherwise accepts a tag cut to 4 bytes; DEP0182).
+
 ## 1.1.0
 
 ### Added
