@@ -25,6 +25,14 @@ separate platform (owner decision D22, 2026-10-26). Its MCP tools moved to
   npm deprecate @posty5/store "Moved to @storvilo/sdk"
   ```
 
+### Security
+
+- A host's `connection()` that returns no API key now fails the call with a fixed message instead of letting the
+  SDK fall back to the host process's own `POSTY5_API_KEY` (the call would have run as the operator's account).
+- Tool ids can no longer rewrite the API route: needs `@posty5/core` ^5.0.2 and the SDK packages that encode ids
+  (`html-hosting-variables` / `html-hosting-form-submission` / `social-publisher-workspace` ^5.0.1).
+- `zod` floor raised to `^4.6.7` (memory-exhaustion advisory GHSA-mrhx-c7xc-m3w5).
+
 ## 1.3.0 — List date filters
 
 Needs `@posty5/short-link` 5.1.0, `@posty5/qr-code` 5.2.0,

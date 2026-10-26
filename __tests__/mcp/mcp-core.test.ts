@@ -1,4 +1,6 @@
 import { AuthenticationError, AuthorizationError, NetworkError, NotFoundError, RateLimitError, ServerError, ValidationError } from "@posty5/core";
+import { MISSING_CONNECTION_API_KEY_MESSAGE } from "../../posty5-mcp/src/config/agent-identity.config";
+import { requireConnectionApiKey } from "../../posty5-mcp/src/core/http-client.factory";
 import { RESULT_MAX_BYTES } from "../../posty5-mcp/src/config/limits.config";
 import { encodeAgentHeader, normaliseAgentText, normaliseModel, resolveModel } from "../../posty5-mcp/src/core/agent-origin.helper";
 import { mapToolError } from "../../posty5-mcp/src/core/errors.helper";
@@ -157,5 +159,14 @@ describe("@posty5/mcp — the runner", () => {
       throw new Error("log down");
     };
     await expect(runCall(findTool("short_link_list"), {}, undefined, deps)).resolves.toMatchObject({ structuredContent: { items: [] } });
+  });
+});
+
+describe("connection API key", () => {
+  it("refuses a host connection with no API key instead of falling back to POSTY5_API_KEY", () => {
+    expect(() => requireConnectionApiKey({ apiKey: "" })).toThrow(MISSING_CONNECTION_API_KEY_MESSAGE);
+    expect(() => requireConnectionApiKey({ apiKey: "   " })).toThrow(MISSING_CONNECTION_API_KEY_MESSAGE);
+    expect(() => requireConnectionApiKey(undefined as never)).toThrow(MISSING_CONNECTION_API_KEY_MESSAGE);
+    expect(requireConnectionApiKey({ apiKey: "k1", baseUrl: "https://api.example.com" })).toEqual({ apiKey: "k1", baseUrl: "https://api.example.com" });
   });
 });

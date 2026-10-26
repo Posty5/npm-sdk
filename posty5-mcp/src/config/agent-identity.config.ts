@@ -28,3 +28,10 @@ export const AGENT_MODEL_UNKNOWN = "unknown";
 
 /** Reported when the given model did not look like a model id. */
 export const AGENT_MODEL_INVALID = "invalid";
+
+/**
+ * What a call answers when the host's `connection()` hands back no API key.
+ * Fixed text: without the check the SDK would fall back to the host process's
+ * own `POSTY5_API_KEY` and run the call as the operator's account.
+ */
+export const MISSING_CONNECTION_API_KEY_MESSAGE = "The connection has no Posty5 API key.";

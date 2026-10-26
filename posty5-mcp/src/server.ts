@@ -3,7 +3,7 @@ import { CATALOGUE } from "./catalogue";
 import { DEFAULT_ACCESS } from "./config/access.config";
 import { PACKAGE_VERSION, SERVER_INSTRUCTIONS, SERVER_NAME, SERVER_TITLE } from "./config/instructions.config";
 import { TOOLS_LIST_CACHE_TTL_MS } from "./config/limits.config";
-import { createToolHttpClient } from "./core/http-client.factory";
+import { createToolHttpClient, requireConnectionApiKey } from "./core/http-client.factory";
 import { MemoryIdempotencyStore } from "./core/memory-idempotency.store";
 import { runTool } from "./core/tool-runner";
 import { buildInputSchema, toAnnotations } from "./core/tool-schema.helper";
@@ -33,7 +33,7 @@ export function createPosty5McpServer(options: IPosty5McpOptions = {}): McpServe
   const deps: IToolRunnerDeps = {
     access,
     connectionModel: options.connectionModel,
-    createHttpClient: (call) => createToolHttpClient(options.connection ? options.connection(call) : { apiKey: options.apiKey, baseUrl: options.baseUrl }, call),
+    createHttpClient: (call) => createToolHttpClient(options.connection ? requireConnectionApiKey(options.connection(call)) : { apiKey: options.apiKey, baseUrl: options.baseUrl }, call),
     hooks: options.hooks ?? {},
     idempotencyStore: options.idempotencyStore ?? new MemoryIdempotencyStore(),
   };

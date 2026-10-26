@@ -1,5 +1,5 @@
 import { HttpClient } from "@posty5/core";
-import { AGENT_ORIGIN_HEADER, CLIENT_HEADER, MCP_CREATED_FROM, STDIO_CLIENT_ID } from "../config/agent-identity.config";
+import { AGENT_ORIGIN_HEADER, CLIENT_HEADER, MCP_CREATED_FROM, MISSING_CONNECTION_API_KEY_MESSAGE, STDIO_CLIENT_ID } from "../config/agent-identity.config";
 import type { IPosty5McpConnection } from "../interfaces/connection.interface";
 import type { IToolCallContext } from "../interfaces/tool.interface";
 import { encodeAgentHeader } from "./agent-origin.helper";
@@ -19,6 +19,12 @@ export function createToolHttpClient(connection: Partial<IPosty5McpConnection>, 
     createdFrom: MCP_CREATED_FROM,
     headers: mergeHeaders({ [CLIENT_HEADER]: STDIO_CLIENT_ID, [AGENT_ORIGIN_HEADER]: encodeAgentHeader(call) }, connection.headers),
   });
+}
+
+/** A host's connection, refused when it carries no API key — never left to the SDK's `POSTY5_API_KEY` fallback. */
+export function requireConnectionApiKey(connection: IPosty5McpConnection): IPosty5McpConnection {
+  if (!connection?.apiKey?.trim()) throw new Error(MISSING_CONNECTION_API_KEY_MESSAGE);
+  return connection;
 }
 
 /** `overrides` replace `defaults` whatever their letter case — one header, never two spellings of it. */
