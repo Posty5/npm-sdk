@@ -64,7 +64,7 @@ The server writes the protocol to stdout and everything else to stderr.
 
 The store toolsets (`store`, `store-catalog`, `store-orders`, `store-shipping`,
 `store-dropshipping`) left this package in 2.0.0: the Online Store Builder is
-now StorVilo, and its tools are in [`@storvilo/mcp`](https://www.npmjs.com/package/@storvilo/mcp).
+now Storvivo, and its tools are in [`@storvivo/mcp`](https://www.npmjs.com/package/@storvivo/mcp).
 
 **Credit transfers** are read-only here: `account_get_credit_transfer_eligibility`
 (can the account send — Business plan only — how many, and can it still receive

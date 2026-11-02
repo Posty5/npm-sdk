@@ -2,7 +2,7 @@
 
 ## 5.0.0
 
-**Breaking.** The Online Store Builder left Posty5 and is now StorVilo (owner
+**Breaking.** The Online Store Builder left Posty5 and is now Storvivo (owner
 decision D22, 2026-10-26).
 
 - `ICreditUsageFilters` loses `storeId` (only operations charged for one

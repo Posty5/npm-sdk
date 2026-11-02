@@ -1,10 +1,10 @@
 # Changelog
 
-## 2.0.0 — The store tools moved to StorVilo
+## 2.0.0 — The store tools moved to Storvivo
 
-**Breaking.** The Online Store Builder left Posty5 and is now StorVilo, a
+**Breaking.** The Online Store Builder left Posty5 and is now Storvivo, a
 separate platform (owner decision D22, 2026-10-26). Its MCP tools moved to
-**`@storvilo/mcp`**; this package no longer has them. 73 tools (152 before).
+**`@storvivo/mcp`**; this package no longer has them. 73 tools (152 before).
 
 - Removed the toolsets `store`, `store-catalog`, `store-orders`,
   `store-shipping` and `store-dropshipping` and their 79 tools. A connection
@@ -22,7 +22,7 @@ separate platform (owner decision D22, 2026-10-26). Its MCP tools moved to
 - Deprecate the removed store SDK, which is not published again:
 
   ```bash
-  npm deprecate @posty5/store "Moved to @storvilo/sdk"
+  npm deprecate @posty5/store "Moved to @storvivo/sdk"
   ```
 
 ### Security
