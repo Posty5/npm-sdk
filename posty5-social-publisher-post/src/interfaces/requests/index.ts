@@ -795,6 +795,19 @@ export interface IListParams {
   "facebook.postInfo.isAllow"?: boolean;
   "instagram.postInfo.isAllow"?: boolean;
   "tiktok.postInfo.isAllow"?: boolean;
+  /**
+   * Created on or after this day, `YYYY-MM-DD`. Applied only together with
+   * `toDate` (and vice versa): the API ignores a lone bound, and this SDK
+   * does not check the pair. Matched on the creation date, in whole UTC days
+   * (the API rounds `fromDate` to the start of its UTC day).
+   */
+  fromDate?: string;
+  /**
+   * Created on or before this day, `YYYY-MM-DD`. Applied only together with
+   * `fromDate` (and vice versa); the API rounds `toDate` to the end of its
+   * UTC day.
+   */
+  toDate?: string;
 }
 
 // ─── Long video (up to 60 minutes) ─────────────────────────────────────────

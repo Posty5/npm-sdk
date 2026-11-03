@@ -1,0 +1,47 @@
+// Callback component: a spinner while the code is exchanged, a message when
+// it failed. Zero-specificity selectors (:where) and public custom
+// properties, like the button.
+
+@use '../../styles/posty5-variables' as p5;
+
+:where(.posty5-callback) {
+    display: block;
+    padding: var(--posty5-callback-padding, #{p5.$posty5-callback-padding});
+    font-family: var(--posty5-callback-font-family, var(--posty5-btn-font-family, #{p5.$posty5-font-family}));
+    color: var(--posty5-callback-color, inherit);
+    text-align: center;
+}
+
+:where(.posty5-callback) :where(.posty5-callback__pending) {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--posty5-callback-gap, #{p5.$posty5-callback-gap});
+}
+
+:where(.posty5-callback) :where(.posty5-callback__spinner) {
+    box-sizing: border-box;
+    display: inline-block;
+    width: var(--posty5-callback-spinner-size, #{p5.$posty5-spinner-size});
+    height: var(--posty5-callback-spinner-size, #{p5.$posty5-spinner-size});
+    border: var(--posty5-callback-spinner-stroke, #{p5.$posty5-spinner-stroke}) solid var(--posty5-callback-spinner-track, #{p5.$posty5-spinner-track});
+    border-top-color: var(--posty5-callback-spinner-color, #{p5.$posty5-blue});
+    border-radius: p5.$posty5-radius-round;
+    animation: posty5-callback-spin var(--posty5-callback-spinner-duration, #{p5.$posty5-spinner-duration}) linear infinite;
+}
+
+:where(.posty5-callback) :where(.posty5-callback__error) {
+    color: var(--posty5-callback-error-color, #{p5.$posty5-danger});
+}
+
+@keyframes posty5-callback-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :where(.posty5-callback) :where(.posty5-callback__spinner) {
+        animation: none;
+    }
+}

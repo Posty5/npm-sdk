@@ -59,7 +59,7 @@ export class HtmlHostingVariablesClient {
      * ```
      */
     async get(id: string): Promise<IGetHtmlHostingVariableResponse> {
-        const response = await this.http.get<IGetHtmlHostingVariableResponse>(`${this.basePath}/${id}`);
+        const response = await this.http.get<IGetHtmlHostingVariableResponse>(`${this.basePath}/${encodeURIComponent(id)}`);
         return response.result!;
     }
 
@@ -84,7 +84,7 @@ export class HtmlHostingVariablesClient {
         if (!data.key.startsWith("pst5_")) {
             throw new Error(`Key must start with 'pst5_', change to pst5_${data.key}`);
         }
-        const response = await this.http.put<IUpdateHtmlHostingVariableResponse>(`${this.basePath}/${id}`, data, { version });
+        const response = await this.http.put<IUpdateHtmlHostingVariableResponse>(`${this.basePath}/${encodeURIComponent(id)}`, data, { version });
         return withVersion(response, id);
     }
 
@@ -99,7 +99,7 @@ export class HtmlHostingVariablesClient {
      */
     async delete(id: string, version: number): Promise<void> {
         assertVersion(version);
-        await this.http.delete<IDeleteHtmlHostingVariableResponse>(`${this.basePath}/${id}`, { version });
+        await this.http.delete<IDeleteHtmlHostingVariableResponse>(`${this.basePath}/${encodeURIComponent(id)}`, { version });
     }
 
     /**

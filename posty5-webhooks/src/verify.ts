@@ -5,6 +5,7 @@ import type { IVerifyWebhookSignatureInput } from "./interfaces/verify";
 import {
   WEBHOOK_DEFAULT_TOLERANCE_SECONDS,
   WEBHOOK_HEADERS,
+  WEBHOOK_MIN_SECRET_BYTES,
   WEBHOOK_SECRET_PREFIX,
   WEBHOOK_SIGNATURE_VERSION,
 } from "./config";
@@ -19,10 +20,28 @@ export function readHeader(headers: IVerifyWebhookSignatureInput["headers"], nam
   return undefined;
 }
 
-/** The secret's key bytes: base64 after the `whsec_` prefix. */
+/**
+ * The secret's key bytes: base64 after the `whsec_` prefix.
+ *
+ * @throws TypeError when the secret is missing or decodes to fewer than
+ * `WEBHOOK_MIN_SECRET_BYTES` bytes (an unset env var, a truncated paste) —
+ * signing with it would accept forged deliveries.
+ */
 export function toSecretKey(secret: string): Buffer {
-  const encoded = secret.startsWith(WEBHOOK_SECRET_PREFIX) ? secret.slice(WEBHOOK_SECRET_PREFIX.length) : secret;
-  return Buffer.from(encoded, "base64");
+  const text = typeof secret === "string" ? secret : "";
+  const encoded = text.startsWith(WEBHOOK_SECRET_PREFIX) ? text.slice(WEBHOOK_SECRET_PREFIX.length) : text;
+  const key = Buffer.from(encoded, "base64");
+  if (key.length < WEBHOOK_MIN_SECRET_BYTES) {
+    throw new TypeError(`The webhook secret is missing or invalid: it must be "whsec_" followed by at least ${WEBHOOK_MIN_SECRET_BYTES} base64-encoded bytes`);
+  }
+  return key;
+}
+
+/** The replay window in seconds: the caller's when it is a finite, non-negative number, else the default. */
+export function toToleranceSeconds(toleranceSeconds?: number): number {
+  return typeof toleranceSeconds === "number" && Number.isFinite(toleranceSeconds) && toleranceSeconds >= 0
+    ? toleranceSeconds
+    : WEBHOOK_DEFAULT_TOLERANCE_SECONDS;
 }
 
 /** The body as a string, decoding a `Buffer` as UTF-8. */
@@ -71,6 +90,7 @@ export function anySignatureMatches(header: string, expected: string): boolean {
  *
  * @throws Posty5WebhookSignatureError with `reason` `missingHeaders`,
  * `timestampOutOfRange`, `noMatchingSignature` or `invalidJson`
+ * @throws TypeError when `secret` is missing or decodes to too few bytes
  */
 export function verifyWebhookSignature(input: IVerifyWebhookSignatureInput): Posty5WebhookEvent {
   const id = readHeader(input.headers, WEBHOOK_HEADERS.id);
@@ -82,7 +102,7 @@ export function verifyWebhookSignature(input: IVerifyWebhookSignatureInput): Pos
 
   const sentAt = Number(timestamp);
   const now = input.nowSeconds ?? Math.floor(Date.now() / 1000);
-  const tolerance = input.toleranceSeconds ?? WEBHOOK_DEFAULT_TOLERANCE_SECONDS;
+  const tolerance = toToleranceSeconds(input.toleranceSeconds);
   if (!Number.isFinite(sentAt) || Math.abs(now - sentAt) > tolerance) {
     throw new Posty5WebhookSignatureError("timestampOutOfRange", "The webhook timestamp is outside the accepted tolerance");
   }

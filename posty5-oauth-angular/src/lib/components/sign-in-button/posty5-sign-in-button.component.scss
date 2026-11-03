@@ -1,0 +1,230 @@
+// "Continue with Posty5" button.
+//
+// ViewEncapsulation.None + every selector wrapped in :where(): the built-in
+// styles have ZERO specificity, so any app rule on `.posty5-btn`,
+// `.posty5-btn__label` ... wins without !important. Every visual value is a
+// public custom property (`--posty5-btn-*`) that can be set on the button,
+// on any ancestor or on :root; the private `--_p5-*` properties carry the
+// per-theme / per-size defaults. `posty5-btn--unstyled` turns all of it off.
+// Logical properties (padding-inline, margin-inline-start) make RTL work
+// without extra rules.
+
+@use '../../styles/posty5-variables' as p5;
+
+$styled: '.posty5-btn:not(.posty5-btn--unstyled)';
+
+:where(#{$styled}) {
+    // Size defaults (large).
+    --_p5-height: #{p5.$posty5-large-height};
+    --_p5-padding: #{p5.$posty5-large-padding};
+    --_p5-font-size: #{p5.$posty5-large-font-size};
+    --_p5-icon-size: #{p5.$posty5-large-icon-size};
+    --_p5-avatar-size: #{p5.$posty5-large-avatar-size};
+    --_p5-gap: #{p5.$posty5-large-gap};
+    --_p5-radius: #{p5.$posty5-radius};
+    // Theme defaults (filled).
+    --_p5-bg: #{p5.$posty5-blue};
+    --_p5-color: #{p5.$posty5-white};
+    --_p5-border-color: transparent;
+    --_p5-hover-bg: #{p5.$posty5-blue-hover};
+    --_p5-logo-color: #{p5.$posty5-white};
+
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--posty5-btn-gap, var(--_p5-gap));
+    height: var(--posty5-btn-height, var(--_p5-height));
+    max-width: 100%;
+    margin: 0;
+    padding-block: 0;
+    padding-inline: var(--posty5-btn-padding, var(--_p5-padding));
+    background: var(--posty5-btn-bg, var(--_p5-bg));
+    color: var(--posty5-btn-color, var(--_p5-color));
+    border: var(--posty5-btn-border, #{p5.$posty5-border-width} solid var(--_p5-border-color));
+    border-radius: var(--posty5-btn-radius, var(--_p5-radius));
+    box-shadow: var(--posty5-btn-shadow, none);
+    font-family: var(--posty5-btn-font-family, #{p5.$posty5-font-family});
+    font-size: var(--posty5-btn-font-size, var(--_p5-font-size));
+    font-weight: var(--posty5-btn-font-weight, #{p5.$posty5-font-weight});
+    line-height: p5.$posty5-line-height;
+    letter-spacing: var(--posty5-btn-letter-spacing, normal);
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    vertical-align: middle;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        background-color p5.$posty5-transition,
+        border-color p5.$posty5-transition,
+        box-shadow p5.$posty5-transition;
+}
+
+// ------------------------------------------------------------------ themes
+
+:where(#{$styled}.posty5-btn--outline) {
+    --_p5-bg: #{p5.$posty5-outline-bg};
+    --_p5-color: #{p5.$posty5-outline-color};
+    --_p5-border-color: #{p5.$posty5-outline-border};
+    --_p5-hover-bg: #{p5.$posty5-outline-hover-bg};
+    --_p5-logo-color: #{p5.$posty5-blue};
+}
+
+:where(#{$styled}.posty5-btn--filledDark) {
+    --_p5-bg: #{p5.$posty5-dark-bg};
+    --_p5-color: #{p5.$posty5-dark-color};
+    --_p5-border-color: #{p5.$posty5-dark-border};
+    --_p5-hover-bg: #{p5.$posty5-dark-hover-bg};
+    --_p5-logo-color: #{p5.$posty5-white};
+}
+
+// ------------------------------------------------------------------- sizes
+
+:where(#{$styled}.posty5-btn--medium) {
+    --_p5-height: #{p5.$posty5-medium-height};
+    --_p5-padding: #{p5.$posty5-medium-padding};
+    --_p5-font-size: #{p5.$posty5-medium-font-size};
+    --_p5-icon-size: #{p5.$posty5-medium-icon-size};
+    --_p5-avatar-size: #{p5.$posty5-medium-avatar-size};
+    --_p5-gap: #{p5.$posty5-medium-gap};
+}
+
+:where(#{$styled}.posty5-btn--small) {
+    --_p5-height: #{p5.$posty5-small-height};
+    --_p5-padding: #{p5.$posty5-small-padding};
+    --_p5-font-size: #{p5.$posty5-small-font-size};
+    --_p5-icon-size: #{p5.$posty5-small-icon-size};
+    --_p5-avatar-size: #{p5.$posty5-small-avatar-size};
+    --_p5-gap: #{p5.$posty5-small-gap};
+}
+
+// ------------------------------------------------------------------ shapes
+
+:where(#{$styled}.posty5-btn--pill) {
+    --_p5-radius: #{p5.$posty5-radius-pill};
+}
+
+:where(#{$styled}.posty5-btn--circle) {
+    --_p5-radius: #{p5.$posty5-radius-round};
+}
+
+:where(#{$styled}.posty5-btn--icon-only) {
+    width: var(--posty5-btn-height, var(--_p5-height));
+    padding-inline: 0;
+}
+
+// ------------------------------------------------------------------ states
+
+:where(#{$styled}:hover:not(:disabled)) {
+    background: var(--posty5-btn-hover-bg, var(--_p5-hover-bg));
+    box-shadow: var(--posty5-btn-hover-shadow, var(--posty5-btn-shadow, none));
+}
+
+:where(#{$styled}:active:not(:disabled)) {
+    background: var(--posty5-btn-active-bg, var(--posty5-btn-hover-bg, var(--_p5-hover-bg)));
+}
+
+:where(#{$styled}:focus-visible) {
+    outline: var(--posty5-btn-focus-ring, #{p5.$posty5-focus-ring-width} solid #{p5.$posty5-blue});
+    outline-offset: var(--posty5-btn-focus-offset, #{p5.$posty5-focus-ring-offset});
+}
+
+:where(#{$styled}:disabled) {
+    cursor: not-allowed;
+    opacity: var(--posty5-btn-disabled-opacity, #{p5.$posty5-disabled-opacity});
+}
+
+:where(#{$styled}.posty5-btn--busy) {
+    cursor: progress;
+    opacity: var(--posty5-btn-busy-opacity, #{p5.$posty5-busy-opacity});
+}
+
+// ------------------------------------------------------------------- parts
+
+:where(#{$styled}) :where(.posty5-btn__logo) {
+    display: inline-flex;
+    flex: none;
+    width: var(--posty5-btn-icon-size, var(--_p5-icon-size));
+    height: var(--posty5-btn-icon-size, var(--_p5-icon-size));
+    color: var(--posty5-btn-logo-color, var(--_p5-logo-color));
+}
+
+:where(#{$styled}) :where(.posty5-btn__logo svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+:where(#{$styled}) :where(.posty5-btn__label) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// logoAlignment="left": the logo sits at the start edge, the label is
+// centred in the rest of the button (visible when a width is set).
+:where(#{$styled}.posty5-btn--logo-left:not(.posty5-btn--personalized)) :where(.posty5-btn__label) {
+    flex: 1 1 auto;
+    text-align: center;
+}
+
+:where(#{$styled}.posty5-btn--logo-left:not(.posty5-btn--personalized)) {
+    justify-content: flex-start;
+}
+
+// Personalised: [avatar] [Continue as Ahmed / ah***@gmail.com] [logo].
+:where(#{$styled}.posty5-btn--personalized) {
+    justify-content: flex-start;
+    text-align: start;
+}
+
+:where(#{$styled}) :where(.posty5-btn__text) {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+}
+
+:where(#{$styled}) :where(.posty5-btn__email) {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--posty5-btn-email-font-size, #{p5.$posty5-email-font-size});
+    font-weight: var(--posty5-btn-email-font-weight, normal);
+    opacity: var(--posty5-btn-email-opacity, #{p5.$posty5-email-opacity});
+}
+
+:where(#{$styled}) :where(.posty5-btn__logo--end) {
+    margin-inline-start: auto;
+}
+
+:where(#{$styled}) :where(.posty5-btn__avatar) {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: var(--posty5-btn-avatar-size, var(--_p5-avatar-size));
+    height: var(--posty5-btn-avatar-size, var(--_p5-avatar-size));
+    overflow: hidden;
+    border-radius: var(--posty5-btn-avatar-radius, #{p5.$posty5-radius-round});
+    background: var(--posty5-btn-avatar-bg, #{p5.$posty5-avatar-bg});
+    color: var(--posty5-btn-avatar-color, #{p5.$posty5-blue});
+    font-size: var(--posty5-btn-avatar-font-size, var(--posty5-btn-font-size, var(--_p5-font-size)));
+}
+
+:where(#{$styled}) :where(.posty5-btn__avatar-img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :where(#{$styled}) {
+        transition: none;
+    }
+}

@@ -8,7 +8,7 @@ const templateId = "698a268af42b052d15e8f93c";
  * `@posty5/qr-code`.
  *
  * The offline part pins the payloads with a stub standing in for `HttpClient`
- * (the pattern `store-suppliers.test.ts` uses): the API builds the encoded
+ * (`helpers/stub-http.helper.ts`): the API builds the encoded
  * text from `qrCodeTarget`, so structured types send no `options.text`, and
  * `isEnableMonetization` never leaves the SDK. The live part runs against the
  * API in `setup.ts` and only when `POSTY5_API_KEY` is set; its truth-pass
@@ -123,6 +123,18 @@ describe("QR Code SDK — payloads (offline)", () => {
     await new QRCodeClient(http).list({ refId: "R1", isEnableLandingPage: true, isEnableMonetization: true }, { page: 1, pageSize: 10 });
 
     expect(calls[0]).toEqual({ method: "GET", url: "/api/qr-code", params: { refId: "R1", isEnableLandingPage: true, page: 1, pageSize: 10 } });
+  });
+
+  it("list sends the fromDate / toDate created-at window as given, other filters unchanged", async () => {
+    const { http, calls } = stubHttp({ items: [], pagination: {} });
+
+    await new QRCodeClient(http).list({ refId: "R1", mode: "dynamic", fromDate: "2026-10-01", toDate: "2026-10-07" }, { page: 1, pageSize: 10 });
+
+    expect(calls[0]).toEqual({
+      method: "GET",
+      url: "/api/qr-code",
+      params: { refId: "R1", mode: "dynamic", fromDate: "2026-10-01", toDate: "2026-10-07", page: 1, pageSize: 10 },
+    });
   });
 
   it("getAnalytics calls GET /api/qr-code/:id/analytics with the serialized query (VA)", async () => {

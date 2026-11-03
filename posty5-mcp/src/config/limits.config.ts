@@ -7,9 +7,6 @@ export const INLINE_HTML_MAX_BYTES = 1024 * 1024;
 /** Largest tool result text, in bytes; past it the result says how to narrow the request. */
 export const RESULT_MAX_BYTES = 256 * 1024;
 
-/** Most products one `store_product_bulk_create` call may carry. */
-export const BULK_CREATE_MAX_ITEMS = 50;
-
 /** How long a write's result is remembered under its idempotency key, in milliseconds. */
 export const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -21,6 +18,13 @@ export const TOOLS_LIST_CACHE_TTL_MS = 5 * 60 * 1000;
 
 /** Most idempotency results the in-process store keeps before forgetting the oldest. */
 export const MEMORY_IDEMPOTENCY_MAX_ENTRIES = 1000;
+
+/**
+ * Hex characters of the API-key hash that scopes idempotency keys
+ * (`<scope>:<tool>:<idempotencyKey>`), so a store shared by several
+ * connections never replays one key holder's result to another.
+ */
+export const IDEMPOTENCY_SCOPE_HEX_LENGTH = 16;
 
 /** Length bounds of an `idempotencyKey`. */
 export const IDEMPOTENCY_KEY_MIN_LENGTH = 8;

@@ -1,5 +1,65 @@
 # Changelog
 
+## 2.0.0 — The store tools moved to Storvivo
+
+**Breaking.** The Online Store Builder left Posty5 and is now Storvivo, a
+separate platform (owner decision D22, 2026-10-26). Its MCP tools moved to
+**`@storvivo/mcp`**; this package no longer has them. 73 tools (152 before).
+
+- Removed the toolsets `store`, `store-catalog`, `store-orders`,
+  `store-shipping` and `store-dropshipping` and their 79 tools. A connection
+  that names one of them gets the remaining toolsets only (unknown names were
+  always dropped), and `resolveToolsets` no longer adds `store`.
+- Removed the `storeId` argument of `account_get_credit_usage`.
+- Dropped the `@posty5/store` dependency; needs `@posty5/account` 5.0.0 (the
+  credit-history filters without `storeId`).
+- The server instructions no longer mention online stores, store IDs,
+  supplier payments, orders or supplier pages.
+
+**Release steps (owner, not done by this change):**
+
+- Publish `@posty5/account` 5.0.0 before this package.
+- Deprecate the removed store SDK, which is not published again:
+
+  ```bash
+  npm deprecate @posty5/store "Moved to @storvivo/sdk"
+  ```
+
+### Security
+
+- A host's `connection()` that returns no API key now fails the call with a fixed message instead of letting the
+  SDK fall back to the host process's own `POSTY5_API_KEY` (the call would have run as the operator's account).
+- Tool ids can no longer rewrite the API route: needs `@posty5/core` ^5.0.2 and the SDK packages that encode ids
+  (`html-hosting-variables` / `html-hosting-form-submission` / `social-publisher-workspace` ^5.0.1).
+- `zod` floor raised to `^4.6.7` (memory-exhaustion advisory GHSA-mrhx-c7xc-m3w5).
+- A host error from `beforeToolCall` or `connection()` no longer reaches the model (it could carry tokens or
+  internal URLs): the model reads a fixed sentence, `afterToolCall` gets the real text as `outcome.errorMessage`.
+- Idempotency keys are scoped by connection: the store sees `<scope>:<tool>:<idempotencyKey>`, the scope a
+  short SHA-256 of the API key, so a store shared by several connections never replays one key holder's result
+  to another. Results stored under the old `<tool>:<key>` form are not replayed after upgrading.
+- `createPosty5McpNodeHandler({ allowedOrigins })` (optional): a browser request from an unlisted `Origin` is
+  refused with 403 before `resolve` runs, the DNS-rebinding guard; requests without `Origin` are unaffected.
+  The README example now listens on `127.0.0.1` and sets it.
+
+## 1.3.0 — List date filters
+
+Needs `@posty5/short-link` 5.1.0, `@posty5/qr-code` 5.2.0,
+`@posty5/html-hosting` 5.1.0 and `@posty5/social-publisher-post` 5.1.0 (the
+list date filters), and the API release with the list date filters
+(redesign-dashboards API-03). 152 tools; no tool added or removed.
+
+- `short_link_list`, `qr_code_list`, `html_page_list` and `social_post_list`
+  take `fromDate` / `toDate` (`YYYY-MM-DD`, applied only as a pair, whole UTC
+  days) and their descriptions say so.
+- One shared date field: `core/store-date-field.helper.ts` is now
+  `core/date-field.helper.ts`, and the account tools use it instead of their
+  own `DATE_FIELD`. Same pattern and message (`YYYY-MM-DD`); no schema change
+  for the store or account tools.
+- `store_customer_search` / `store_customer_get` descriptions name each
+  customer's `accountKind` (store, posty5 or guest) and `emailVerified`
+  (storefront customer accounts), and `hasAccount: false` is described as
+  "everyone else — guests and store-account holders", not "only guests".
+
 ## 1.2.0
 
 Needs `@posty5/core` 5.0.1, `@posty5/qr-code` 5.1.0, `@posty5/account` 4.4.0

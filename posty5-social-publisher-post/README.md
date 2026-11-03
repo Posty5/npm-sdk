@@ -544,6 +544,8 @@ Search and retrieve publishing posts with pagination and filtering options.
   - `currentStatus` (string, optional): Filter by post status ('pending', 'processing', 'done', 'error', etc.)
   - `tag` (string, optional): Filter by custom tag
   - `refId` (string, optional): Filter by reference ID
+  - `fromDate` / `toDate` (string, optional): Created-at window, `YYYY-MM-DD`.
+    Applied only when both are sent (one alone filters nothing), in whole UTC days.
 - `pagination` (IPaginationParams, optional): Pagination settings
   - `page` (number): Page number (default: 1)
   - `pageSize` (number): Items per page (default: 10)
@@ -658,6 +660,9 @@ const specificPost = await client.list(
 if (specificPost.items.length > 0) {
   console.log("Found post:", specificPost.items[0].caption);
 }
+
+// Posts created in a date window (both bounds, YYYY-MM-DD, whole UTC days)
+const lastWeekPosts = await client.list({ fromDate: "2026-10-01", toDate: "2026-10-07" });
 ```
 
 ---

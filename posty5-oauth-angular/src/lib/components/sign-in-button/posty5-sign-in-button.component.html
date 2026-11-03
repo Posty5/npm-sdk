@@ -1,0 +1,48 @@
+<ng-template #posty5Logo let-end="end">
+    <span class="posty5-btn__logo" [class.posty5-btn__logo--end]="end" aria-hidden="true">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            [attr.viewBox]="logo.viewBox"
+            [attr.width]="intrinsicSizes.logo"
+            [attr.height]="intrinsicSizes.logo"
+            focusable="false"
+            fill="none"
+        >
+            @for (d of logo.paths; track $index) {
+                <path [attr.d]="d" fill="currentColor" />
+            }
+        </svg>
+    </span>
+</ng-template>
+
+@if (user(); as person) {
+    <span class="posty5-btn__avatar" aria-hidden="true">
+        @if (person.picture && !avatarFailed()) {
+            <img
+                class="posty5-btn__avatar-img"
+                [src]="person.picture"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                referrerpolicy="no-referrer"
+                [attr.width]="intrinsicSizes.avatar"
+                [attr.height]="intrinsicSizes.avatar"
+                (error)="avatarFailed.set(true)"
+            />
+        } @else {
+            <span class="posty5-btn__avatar-initial">{{ initial() }}</span>
+        }
+    </span>
+    <span class="posty5-btn__text">
+        <span class="posty5-btn__label">{{ labelText() }}</span>
+        @if (person.email) {
+            <span class="posty5-btn__email">{{ person.email }}</span>
+        }
+    </span>
+    <ng-container *ngTemplateOutlet="posty5Logo; context: { end: true }" />
+} @else {
+    <ng-container *ngTemplateOutlet="posty5Logo; context: { end: false }" />
+    @if (!iconOnly()) {
+        <span class="posty5-btn__label">{{ labelText() }}</span>
+    }
+}

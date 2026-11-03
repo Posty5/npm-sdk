@@ -731,7 +731,7 @@ export class QRCodeClient {
    * ```
    */
   async get(id: string): Promise<IGetQRCodeResponse> {
-    const response = await this.http.get<IGetQRCodeResponse>(`${this.basePath}/${id}`);
+    const response = await this.http.get<IGetQRCodeResponse>(`${this.basePath}/${encodeURIComponent(id)}`);
     return response.result!;
   }
 
@@ -747,7 +747,7 @@ export class QRCodeClient {
    */
   async delete(id: string, version: number): Promise<void> {
     assertVersion(version);
-    await this.http.delete<IDeleteQRCodeResponse>(`${this.basePath}/${id}`, { version });
+    await this.http.delete<IDeleteQRCodeResponse>(`${this.basePath}/${encodeURIComponent(id)}`, { version });
   }
 
   /**
@@ -769,6 +769,9 @@ export class QRCodeClient {
    *   { status: 'approved', tag: 'marketing' },
    *   { page: 1, pageSize: 20 }
    * );
+   *
+   * // Codes created in a date window (both bounds, YYYY-MM-DD, UTC days)
+   * const lastWeek = await qrCodeClient.list({ fromDate: '2026-10-01', toDate: '2026-10-07' });
    * ```
    */
   async list(params?: IListParams, pagination?: IPaginationParams): Promise<IPaginationResponse<IQRCode>> {
@@ -891,6 +894,10 @@ export class QRCodeClient {
   /**
    * Export the caller's QR codes as a CSV or JSON file, with the same filters
    * as `list`. Every CSV cell is injection-hardened by the API.
+   *
+   * Exception: the export endpoint does not apply the `fromDate` / `toDate`
+   * created-at window. They are sent, but the file holds every matching code
+   * whatever its creation date.
    * @param params - List filters plus `format` (`csv` by default)
    * @returns The file's bytes, content type and file name
    */
@@ -954,7 +961,7 @@ export class QRCodeClient {
    * ```
    */
   async render(id: string, options?: IQrRenderOptions): Promise<IBinaryResponse> {
-    return this.http.getBinary(`${this.basePath}/${id}${QrCodeRenderPathsConst.render}`, {
+    return this.http.getBinary(`${this.basePath}/${encodeURIComponent(id)}${QrCodeRenderPathsConst.render}`, {
       params: toQrRenderQuery(options),
     });
   }
@@ -972,7 +979,7 @@ export class QRCodeClient {
    * ```
    */
   async getExportUrl(id: string, options?: IQrExportOptions): Promise<IQrExportUrl> {
-    const response = await this.http.get<IQrExportUrl>(`${this.basePath}/${id}${QrCodeRenderPathsConst.exportUrl}`, {
+    const response = await this.http.get<IQrExportUrl>(`${this.basePath}/${encodeURIComponent(id)}${QrCodeRenderPathsConst.exportUrl}`, {
       params: toQrExportQuery(options),
     });
     return response.result!;
@@ -1012,7 +1019,7 @@ export class QRCodeClient {
     // `version` travels as `If-Match`, never inside the body.
     assertVersion(version);
     const response = await this.http.put<IUpdateQRCodeResponse>(
-      `${this.basePath}/${type}/${id}`,
+      `${this.basePath}/${type}/${encodeURIComponent(id)}`,
       {
         ...body,
         ...QrCodeRequestSourceConst,

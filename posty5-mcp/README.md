@@ -1,7 +1,7 @@
 # @posty5/mcp
 
-Every Posty5 service — short links, QR codes, hosted HTML pages, social
-publishing and online stores — as [Model Context Protocol](https://modelcontextprotocol.io)
+Every Posty5 service — short links, QR codes, hosted HTML pages and social
+publishing — as [Model Context Protocol](https://modelcontextprotocol.io)
 tools, for any AI assistant. One package holds the tool catalogue, the server
 that serves it, and a stdio binary for clients that launch local servers.
 
@@ -60,13 +60,11 @@ The server writes the protocol to stdout and everything else to stderr.
 | `qr-codes` | ✅ | QR codes of every type, QR templates, download links (PNG / SVG / print PDF) and scannability checks |
 | `html-hosting` | ✅ | Hosted pages, their variables, form submissions |
 | `social-publisher` | ✅ | Workspaces, connected accounts, posts to every platform |
-| `store` | with any `store-*` | The stores the connection can manage |
-| `store-catalog` | — | Products and tags |
-| `store-orders` | — | Orders and customers — shoppers' personal data reaches the assistant's provider |
-| `store-shipping` | — | Countries, routes, profiles, assignments |
-| `store-dropshipping` | — | Supplier catalogue, imports, product links, supplier orders |
+73 tools in all; `listToolsets()` and `listTools()` describe them.
 
-152 tools in all; `listToolsets()` and `listTools()` describe them.
+The store toolsets (`store`, `store-catalog`, `store-orders`, `store-shipping`,
+`store-dropshipping`) left this package in 2.0.0: the Online Store Builder is
+now Storvivo, and its tools are in [`@storvivo/mcp`](https://www.npmjs.com/package/@storvivo/mcp).
 
 **Credit transfers** are read-only here: `account_get_credit_transfer_eligibility`
 (can the account send — Business plan only — how many, and can it still receive
@@ -78,7 +76,7 @@ dashboard; no tool sends credits.
 
 - `read` — lists and gets only.
 - `write` — also creates and updates.
-- `full` — also deletes, removals from social platforms, supplier payments.
+- `full` — also deletes and removals from social platforms.
 
 A tool above the connection's level is not listed and is refused if called.
 Irreversible or paid tools take `confirm`: called without `confirm: true` they
@@ -93,6 +91,14 @@ A refused row is reported and skipped. `qr_code_create_many` with `zip: true`
 runs a bulk job and answers a **signed link to a ZIP of the images** that
 expires within minutes; `qr_code_get_bulk_job` reports a job still running and
 hands out fresh links. Webhook endpoints are not exposed through MCP.
+
+### Date filters on lists
+
+`short_link_list`, `qr_code_list`, `html_page_list` and `social_post_list`
+take `fromDate` / `toDate` (`YYYY-MM-DD`) to list what was created in a date
+window — "the QR codes I created last week" is one call. The API applies the
+window only when both are sent, in whole UTC days; a malformed date is refused
+before any call. The account history takes the same pair.
 
 ### Visit analytics
 
@@ -203,9 +209,11 @@ import { createPosty5McpNodeHandler } from "@posty5/mcp";
 
 const handler = createPosty5McpNodeHandler({
   sessionSecret: process.env.SESSION_SECRET!,
+  allowedOrigins: [], // no browser origin may call; desktop and server clients send none
   resolve: async (req) => (await isValid(req)) ? { options: { access: "read", connection: () => ({ apiKey: "…" }) } } : { refusal: { status: 401, message: "Create a new MCP link." } },
 });
-http.createServer((req, res) => void handler(req, res)).listen(3021);
+// Loopback only: on every interface, anyone on the network could call it.
+http.createServer((req, res) => void handler(req, res)).listen(3021, "127.0.0.1");
 ```
 
 One handler serves the 2026-07-28 protocol and, statelessly, the 2025 era.
@@ -214,6 +222,13 @@ options allow. A 2025-era client names itself only at `initialize`; the
 handler hands that identity back as a signed `Mcp-Session-Id`, which the
 client echoes, so its later tool calls are attributed to it on any process.
 Express: pass `req.body` as the third argument.
+
+Security: `resolve` is the only gate, so it must authenticate every request
+(never hand out a fixed key unchecked). Listen on `127.0.0.1` unless the
+server is meant to be public, and set `allowedOrigins` so a web page cannot
+reach a local server through DNS rebinding. A host's own errors (from
+`beforeToolCall` or `connection()`) reach `afterToolCall` as
+`outcome.errorMessage`; the model only reads a fixed sentence.
 
 Output: CommonJS and ES modules, with type definitions; the binary is CommonJS.
 

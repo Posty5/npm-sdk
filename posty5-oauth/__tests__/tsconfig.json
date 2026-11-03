@@ -1,0 +1,15 @@
+{
+  "//": "ts-jest settings for @posty5/oauth. Self-contained: no live API, no root setup.ts.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022", "DOM"],
+    "types": ["jest", "node"],
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "isolatedModules": false
+  },
+  "include": ["./**/*.ts", "../src/**/*.ts"]
+}

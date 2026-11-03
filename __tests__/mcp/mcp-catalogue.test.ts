@@ -12,7 +12,7 @@ import * as path from "path";
 
 /**
  * The catalogue's promises (mcp-server feature, npm-sdk/mcp-tool-catalogue-
- * package): 152 tools, stable names and order, the catalogue's own arguments
+ * package): 73 tools, stable names and order, the catalogue's own arguments
  * on every write, confirmation on every ✋ tool, and a server that registers
  * exactly what its access level and toolsets allow.
  */
@@ -25,11 +25,6 @@ const EXPECTED_COUNTS: Record<string, number> = {
   "qr-codes": 11,
   "html-hosting": 20,
   "social-publisher": 21,
-  store: 1,
-  "store-catalog": 23,
-  "store-orders": 10,
-  "store-shipping": 23,
-  "store-dropshipping": 22,
 };
 
 /** The ✋ tools of the table. */
@@ -46,21 +41,6 @@ const CONFIRM_TOOLS = [
   "social_post_publish_long_video",
   "social_post_delete",
   "social_post_remove_from_platforms",
-  "store_product_clone_from_url",
-  "store_product_generate_ai_content",
-  "store_product_delete",
-  "store_tag_delete",
-  "store_shipping_delete_country",
-  "store_shipping_clear_route",
-  "store_shipping_delete_profile",
-  "store_shipping_remove_parcel_price",
-  "store_supplier_import",
-  "store_supplier_link_delete",
-  "store_supplier_order_submit",
-  "store_supplier_order_retry",
-  "store_supplier_order_pay",
-  "store_supplier_order_cancel",
-  "store_fulfilment_group_fulfil_manually",
 ];
 
 function registeredNames(options: Parameters<typeof createPosty5McpServer>[0]): string[] {
@@ -74,8 +54,8 @@ function registeredNames(options: Parameters<typeof createPosty5McpServer>[0]): 
 }
 
 describe("@posty5/mcp — the catalogue", () => {
-  it("holds 152 tools, as many per toolset as the table lists", () => {
-    expect(CATALOGUE).toHaveLength(152);
+  it("holds 73 tools, as many per toolset as the table lists", () => {
+    expect(CATALOGUE).toHaveLength(73);
     for (const name of TOOLSET_NAMES) {
       expect([name, CATALOGUE.filter((tool) => tool.toolset === name).length]).toEqual([name, EXPECTED_COUNTS[name]]);
     }
@@ -149,8 +129,8 @@ describe("@posty5/mcp — toolset selection", () => {
     expect(resolveToolsets()).toEqual(DEFAULT_TOOLSETS);
   });
 
-  it("always adds account, adds store with any store-* group, drops unknown names, keeps catalogue order", () => {
-    expect(resolveToolsets(["store-orders", "nope", "qr-codes"])).toEqual(["account", "qr-codes", "store", "store-orders"]);
+  it("always adds account, drops unknown names (the removed store-* groups too), keeps catalogue order", () => {
+    expect(resolveToolsets(["social-publisher", "store-orders", "nope", "qr-codes"])).toEqual(["account", "qr-codes", "social-publisher"]);
   });
 });
 

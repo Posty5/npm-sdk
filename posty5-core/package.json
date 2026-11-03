@@ -1,6 +1,6 @@
 {
   "name": "@posty5/core",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "Core utilities and HTTP client for Posty5 SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -44,7 +44,7 @@
   "author": "Posty5",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.6.0",
+    "axios": "^1.20.0",
     "axios-retry": "^4.1.0"
   },
   "devDependencies": {

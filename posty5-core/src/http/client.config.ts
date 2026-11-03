@@ -33,3 +33,15 @@ export const IDEMPOTENT_METHODS = ["GET", "HEAD", "OPTIONS", "PUT", "DELETE"];
  * processed the request before the connection dropped.
  */
 export const NEVER_CONNECTED_ERROR_CODES = ["ECONNREFUSED", "ENOTFOUND", "EAI_AGAIN", "ENETUNREACH", "EHOSTUNREACH"];
+
+/** Header carrying the API key on every request. */
+export const API_KEY_HEADER_NAME = "X-API-Key";
+
+/** What a redacted API key reads as, in errors and debug output. */
+export const REDACTED_VALUE = "[REDACTED]";
+
+/** Hosts a plain-`http:` base URL may point at without a warning: this machine only. */
+export const LOOPBACK_HOSTNAMES = ["localhost", "127.0.0.1", "[::1]", "::1"];
+
+/** A `.` or `..` path segment, plain or percent-encoded — never part of an SDK route. */
+export const DOT_SEGMENT_PATTERN = /^(?:\.|%2e){1,2}$/i;

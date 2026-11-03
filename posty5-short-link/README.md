@@ -474,6 +474,9 @@ Search and filter short links with advanced pagination and filtering options.
   - `isEnableLandingPage` (boolean, optional): Filter by landing page on/off
   - `pageInfo.title` (string, optional): Filter by landing page title (partial match).
     The old spelling `pageinfo.title` is deprecated and sent as `pageInfo.title`.
+  - `fromDate` / `toDate` (string, optional): Created-at window, `YYYY-MM-DD`.
+    Applied only when both are sent (one alone filters nothing), in whole UTC days.
+    `export()` applies the same window.
 
   An API-key call only ever lists the links created with that key. Each item
   carries `numberOfVisitors`, `status`, `isEnableLandingPage` and `pageInfo`;
@@ -552,6 +555,11 @@ const approvedLinks = await shortLinks.list({
 });
 
 console.log(`${approvedLinks.items.length} approved links`);
+```
+
+```typescript
+// Links created in a date window (both bounds, YYYY-MM-DD, whole UTC days)
+const lastWeekLinks = await shortLinks.list({ fromDate: "2026-10-01", toDate: "2026-10-07" });
 ```
 
 ```typescript

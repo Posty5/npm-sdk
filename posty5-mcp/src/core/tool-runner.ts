@@ -5,6 +5,7 @@
  */
 import { ACCESS_RANK } from "../config/access.config";
 import { IDEMPOTENCY_LOCK_TTL_MS, IDEMPOTENCY_TTL_MS } from "../config/limits.config";
+import { CLIENT_FAILED_MESSAGE, HOOK_FAILED_MESSAGE } from "../config/tool-errors.config";
 import type { IToolOutcome } from "../interfaces/hooks.interface";
 import type { IRawClientInfo, IToolRunnerDeps } from "../interfaces/runner.interface";
 import type { IToolCallContext, IToolDefinition, IToolEntity, IToolRunContext } from "../interfaces/tool.interface";
@@ -12,6 +13,7 @@ import { normaliseAgentText, resolveModel } from "./agent-origin.helper";
 import { createClients } from "./clients.factory";
 import { previewConfirmation } from "./confirm.helper";
 import { mapToolError } from "./errors.helper";
+import { idempotencyStoreKey } from "./idempotency-scope.helper";
 import { toToolError, toToolResult, type IToolResult } from "./result.helper";
 import { isWriteTool } from "./tool-schema.helper";
 
@@ -68,8 +70,9 @@ export async function runTool(
     }
     return result;
   };
-  const fail = (status: IToolOutcome["status"], code: string, message: string) =>
-    finish(toToolError(message, code), { status, errorCode: code, errorMessage: message });
+  // `detail` reaches the host's log only; the model reads `message`.
+  const fail = (status: IToolOutcome["status"], code: string, message: string, detail: string = message) =>
+    finish(toToolError(message, code), { status, errorCode: code, errorMessage: detail });
 
   // Unregistered when the level forbids it; refused here too, in case a host registered it anyway.
   if (ACCESS_RANK[tool.access] > ACCESS_RANK[deps.access]) {
@@ -83,14 +86,14 @@ export async function runTool(
       return fail(refusal.status, refusal.status, `${refusal.message}${wait}`);
     }
   } catch (error) {
-    return fail("failed", "hook", (error as Error)?.message || "The call was refused.");
+    return fail("failed", "hook", HOOK_FAILED_MESSAGE, (error as Error)?.message || HOOK_FAILED_MESSAGE);
   }
 
   let ctx: IToolRunContext;
   try {
     ctx = { clients: createClients(deps.createHttpClient(call)), call };
   } catch (error) {
-    return fail("failed", "client", (error as Error)?.message || "Could not prepare the Posty5 client.");
+    return fail("failed", "client", CLIENT_FAILED_MESSAGE, (error as Error)?.message || CLIENT_FAILED_MESSAGE);
   }
 
   if (tool.confirm && !confirm) {
@@ -103,7 +106,7 @@ export async function runTool(
     }
   }
 
-  const key = call.idempotencyKey ? `${tool.name}:${call.idempotencyKey}` : undefined;
+  const key = call.idempotencyKey ? idempotencyStoreKey(deps.idempotencyScope?.(call), tool.name, call.idempotencyKey) : undefined;
   if (key) {
     try {
       const stored = await deps.idempotencyStore.get(key);

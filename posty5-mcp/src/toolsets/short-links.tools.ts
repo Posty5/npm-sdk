@@ -3,6 +3,7 @@ import { MCP_BULK_MAX_ROWS } from "../config/limits.config";
 import { CREATE_SHORT_LINK_FEATURE_PATH } from "../config/link-costs.config";
 import { LINK_CLOCK_PATTERN, LINK_RULE_ID_PATTERN, LINK_UTM_VALUE_PATTERN, SHORT_LINK_CONTROLS_LIMITS as L } from "../config/short-link-controls-limits.config";
 import { LINK_CAMPAIGN_COLORS, LINK_DEVICE_TYPES, LINK_OS_FAMILIES, LINK_PIXEL_PROVIDERS, SHORT_LINK_STATUSES } from "../config/short-links-enums.config";
+import { dateField } from "../core/date-field.helper";
 import { defineTool, idField, pageFields, pickPage, versionField, withoutPaging } from "../core/define-tool.helper";
 import { batchIdempotencyKey, describeBatch, unwrapBulkError } from "../core/link-bulk.helper";
 import { LINK_ANALYTICS_CAVEATS, linkAnalyticsInput, toLinkAnalyticsArgs } from "../core/link-analytics.helper";
@@ -153,7 +154,7 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
     toolset: "short-links",
     access: "read",
     title: "List short links",
-    description: "Short links, newest first, with their short URL, target and visit count. Filter by part of the target URL, name, tag, refId or status.",
+    description: "Short links, newest first, with their short URL, target and visit count. Filter by part of the target URL, name, tag, refId or status, or by creation date (fromDate and toDate together).",
     input: z.object({
       baseUrl: z.string().optional().describe("Part or all of the target URL."),
       name: z.string().optional(),
@@ -163,6 +164,8 @@ export const SHORT_LINK_TOOLS: IToolDefinition[] = [
       refId: z.string().optional(),
       status: z.enum(SHORT_LINK_STATUSES).optional(),
       createdFrom: z.string().optional().describe('Where it was created, e.g. "mcp".'),
+      fromDate: dateField("Created on or after, YYYY-MM-DD; applied only with toDate.").optional(),
+      toDate: dateField("Created on or before, YYYY-MM-DD; applied only with fromDate.").optional(),
       ...pageFields(),
     }),
     run: (args, { clients }) => clients.shortLinks.list(withoutPaging(args), pickPage(args)),

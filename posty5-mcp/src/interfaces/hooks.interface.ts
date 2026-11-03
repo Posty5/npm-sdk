@@ -30,7 +30,9 @@ export interface IStoredToolResult {
 
 /**
  * Where write results are remembered by idempotency key. The package ships an
- * in-process store; the hosted server plugs in Redis.
+ * in-process store; the hosted server plugs in Redis. Keys arrive as
+ * `<scope>:<tool>:<idempotencyKey>`, the scope a hash of the connection's API
+ * key, so one store may be shared by several connections.
  */
 export interface IIdempotencyStore {
   get(key: string): Promise<IStoredToolResult | undefined>;

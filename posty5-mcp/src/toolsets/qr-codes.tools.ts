@@ -21,6 +21,7 @@ import { MCP_BULK_MAX_ROWS, QR_MCP_FILE_MAX_BYTES, QR_SOCIAL_MAX_PROFILES } from
 import { CREATE_QR_CODE_FEATURE_PATH } from "../config/link-costs.config";
 import { batchIdempotencyKey, describeBatch, describeQrBulkJob, runQrZipJob, unwrapBulkError } from "../core/link-bulk.helper";
 import { LINK_ANALYTICS_CAVEATS, linkAnalyticsInput, toLinkAnalyticsArgs } from "../core/link-analytics.helper";
+import { dateField } from "../core/date-field.helper";
 import { defineTool, idField, pageFields, pickPage, requireExactlyOne, requireFields, versionField, withoutPaging } from "../core/define-tool.helper";
 import { checkQrPrintSize, toQrRenderResult, withPngFallbackHint } from "../core/qr-render.helper";
 import { checkQrCodeAccess, checkQrSocialProfiles, createQrCode, resolveQrCodeMode, toQrBulkRow, updateQrCode } from "../core/qr-codes.helper";
@@ -177,7 +178,7 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
     access: "read",
     title: "List QR codes",
     description:
-      "QR codes, newest first, with their type, mode (static or dynamic), dynamicSince, landing page URL, image URL and scan count. Filter by name, landing id, template, tag, refId, status or mode.",
+      "QR codes, newest first, with their type, mode (static or dynamic), dynamicSince, landing page URL, image URL and scan count. Filter by name, landing id, template, tag, refId, status or mode, or by creation date (fromDate and toDate together).",
     input: z.object({
       name: z.string().optional().describe("Part of the QR code's name."),
       qrCodeId: z.string().optional().describe("The QR code's landing id (the last part of its landing page URL)."),
@@ -187,6 +188,8 @@ export const QR_CODE_TOOLS: IToolDefinition[] = [
       status: z.enum(QR_CODE_STATUSES).optional(),
       createdFrom: z.string().optional().describe('Where it was created, e.g. "mcp".'),
       mode: z.enum(QR_CODE_MODES).optional().describe('Only "static" or only "dynamic" QR codes.'),
+      fromDate: dateField("Created on or after, YYYY-MM-DD; applied only with toDate.").optional(),
+      toDate: dateField("Created on or before, YYYY-MM-DD; applied only with fromDate.").optional(),
       ...pageFields(),
     }),
     run: (args, { clients }) => clients.qrCodes.list(withoutPaging(args), pickPage(args)),

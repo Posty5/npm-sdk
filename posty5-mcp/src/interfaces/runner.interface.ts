@@ -10,6 +10,8 @@ export interface IToolRunnerDeps {
   createHttpClient(call: IToolCallContext): HttpClient;
   hooks: IPosty5McpHooks;
   idempotencyStore: IIdempotencyStore;
+  /** The connection a call's idempotency key is scoped to (set once `createHttpClient` resolved it). */
+  idempotencyScope?(call: IToolCallContext): string | undefined;
 }
 
 /** The MCP client as the protocol named it, before normalisation. */

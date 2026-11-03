@@ -66,5 +66,5 @@ export function toLinkStatisticsPath(basePath: string): string {
 
 /** The analytics path of one record: `<basePath>/<id>/analytics`. */
 export function toLinkAnalyticsPath(basePath: string, id: string): string {
-    return `${basePath}/${id}/${LinkAnalyticsQueryConst.pathSegment}`;
+    return `${basePath}/${encodeURIComponent(id)}/${LinkAnalyticsQueryConst.pathSegment}`;
 }

@@ -36,7 +36,7 @@ export class HtmlHostingFormSubmissionClient {
    * ```
    */
   async get(id: string): Promise<IGetFormSubmissionResponse> {
-    const response = await this.http.get<IGetFormSubmissionResponse>(`${this.basePath}/${id}`);
+    const response = await this.http.get<IGetFormSubmissionResponse>(`${this.basePath}/${encodeURIComponent(id)}`);
     return response.result!;
   }
 
@@ -56,7 +56,7 @@ export class HtmlHostingFormSubmissionClient {
    * ```
    */
   async getNextPrevious(id: string): Promise<INextPreviousSubmissionsResponse> {
-    const response = await this.http.get<INextPreviousSubmissionsResponse>(`${this.basePath}/${id}/next-previous`);
+    const response = await this.http.get<INextPreviousSubmissionsResponse>(`${this.basePath}/${encodeURIComponent(id)}/next-previous`);
     return response.result!;
   }
 
@@ -104,7 +104,7 @@ export class HtmlHostingFormSubmissionClient {
    */
   async changeStatus(id: string, request: IChangeStatusRequest, version: number): Promise<IChangeStatusResponse> {
     assertVersion(version);
-    const response = await this.http.put<IChangeStatusResponse>(`${this.basePath}/${id}/status`, request, { version });
+    const response = await this.http.put<IChangeStatusResponse>(`${this.basePath}/${encodeURIComponent(id)}/status`, request, { version });
     return withVersion(response, id);
   }
 
@@ -119,7 +119,7 @@ export class HtmlHostingFormSubmissionClient {
    */
   async delete(id: string, version: number): Promise<void> {
     assertVersion(version);
-    await this.http.delete<IDeleteFormSubmissionResponse>(`${this.basePath}/${id}`, { version });
+    await this.http.delete<IDeleteFormSubmissionResponse>(`${this.basePath}/${encodeURIComponent(id)}`, { version });
   }
 
   /**

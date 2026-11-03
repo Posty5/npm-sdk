@@ -8,7 +8,7 @@ const templateId = "698a268af42b052d15e8f93c";
  * `@posty5/short-link`.
  *
  * The offline part pins the payloads with a stub standing in for `HttpClient`
- * (the pattern `store-suppliers.test.ts` uses). The live part runs against the
+ * (`helpers/stub-http.helper.ts`). The live part runs against the
  * API in `setup.ts` and only when `POSTY5_API_KEY` is set; its S13 block
  * (deep links, landing page kept on update) needs the API's link-qr truth
  * pass deployed there.
@@ -96,6 +96,18 @@ describe("Short Link SDK — payloads (offline)", () => {
     await new ShortLinkClient(http).list({ "pageInfo.title": "New", "pageinfo.title": "Old" });
 
     expect(calls[0].params).toEqual({ "pageInfo.title": "New" });
+  });
+
+  it("list sends the fromDate / toDate created-at window as given, other filters unchanged", async () => {
+    const { http, calls } = stubHttp({ items: [], pagination: {} });
+
+    await new ShortLinkClient(http).list({ tag: "t", status: "approved", fromDate: "2026-10-01", toDate: "2026-10-07" }, { page: 1, pageSize: 10 });
+
+    expect(calls[0]).toEqual({
+      method: "GET",
+      url: "/api/short-link",
+      params: { tag: "t", status: "approved", fromDate: "2026-10-01", toDate: "2026-10-07", page: 1, pageSize: 10 },
+    });
   });
 
   it("getAnalytics calls GET /api/short-link/:id/analytics with the serialized query (VA)", async () => {

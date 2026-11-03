@@ -30,3 +30,6 @@ export const RESOLVED_OPTIONS_KEY = "posty5McpOptions";
 
 /** JSON-RPC error code of a refused HTTP request (the implementation-defined server-error range). */
 export const HTTP_REFUSAL_RPC_CODE = -32001;
+
+/** What a browser request from an origin outside `allowedOrigins` is told (403). */
+export const ORIGIN_REFUSED_MESSAGE = "This origin may not use this MCP server.";

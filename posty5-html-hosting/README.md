@@ -313,6 +313,8 @@ Search and filter HTML pages with pagination.
   - `isEnableMonetization` (boolean, optional): Filter by monetization status
   - `autoSaveInGoogleSheet` (boolean, optional): Filter by Google Sheets integration
   - `isTemp` (boolean, optional): Filter temporary pages
+  - `fromDate` / `toDate` (string, optional): Created-at window, `YYYY-MM-DD`.
+    Applied only when both are sent (one alone filters nothing), in whole UTC days.
 - `pagination` (IPaginationParams, optional): Pagination options
   - `page` (number, optional): Page number (default: 1)
   - `pageSize` (number, optional): Items per page (default: 10)
@@ -357,6 +359,11 @@ const filtered = await htmlHosting.list({
 const myPages = await htmlHosting.list({
   refId: "campaign-2024-q1",
 });
+```
+
+```typescript
+// Pages created in a date window (both bounds, YYYY-MM-DD, whole UTC days)
+const lastWeekPages = await htmlHosting.list({ fromDate: "2026-10-01", toDate: "2026-10-07" });
 ```
 
 ---

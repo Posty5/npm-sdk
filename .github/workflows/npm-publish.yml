@@ -168,24 +168,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Last on purpose: it was never published by CI before 4.3.0, and a run that
-      # stops earlier (an unchanged package's version already exists) can be
-      # re-run from workflow_dispatch with this step the easiest to reach.
-      - name: Publish posty5-store
-        working-directory: ./posty5-store
-        # A version already on npm is skipped, so a tag publishes only the
-        # packages whose version changed (the run used to stop at the first).
-        run: |
-          NAME=$(node -p "require('./package.json').name")
-          VERSION=$(node -p "require('./package.json').version")
-          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
-            echo "$NAME@$VERSION is already on npm - skipped"
-          else
-            npm publish --provenance --access public
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       # New in 4.3.0 (mcp-server feature): who a key is, credits, prices.
       - name: Publish posty5-account
         working-directory: ./posty5-account
@@ -224,6 +206,34 @@ jobs:
         working-directory: ./posty5-mcp
         # A version already on npm is skipped, so a tag publishes only the
         # packages whose version changed (the run used to stop at the first).
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Login with Posty5 (login-with-posty5): the OIDC helper for back ends. No dependency on the packages above.
+      - name: Publish posty5-oauth
+        working-directory: ./posty5-oauth
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm - skipped"
+          else
+            npm publish --provenance --access public
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # The Angular library is published from ng-packagr's output (dist/ has its own package.json).
+      - name: Publish posty5-oauth-angular
+        working-directory: ./posty5-oauth-angular/dist
         run: |
           NAME=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")

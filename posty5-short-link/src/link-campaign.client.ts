@@ -34,7 +34,7 @@ export class LinkCampaignClient {
 
     /** Get a campaign with `linkCount` and `totalVisits`. */
     async get(id: string): Promise<ILinkCampaignDetailsResponse> {
-        const response = await this.http.get<ILinkCampaignDetailsResponse>(`${this.basePath}/${id}`);
+        const response = await this.http.get<ILinkCampaignDetailsResponse>(`${this.basePath}/${encodeURIComponent(id)}`);
         return response.result!;
     }
 
@@ -53,7 +53,7 @@ export class LinkCampaignClient {
      */
     async update(id: string, data: IUpdateLinkCampaignRequest, version: number): Promise<ILinkCampaignResponse> {
         assertVersion(version);
-        const response = await this.http.put<ILinkCampaignResponse>(`${this.basePath}/${id}`, data, { version });
+        const response = await this.http.put<ILinkCampaignResponse>(`${this.basePath}/${encodeURIComponent(id)}`, data, { version });
         return withVersion(response, id);
     }
 
@@ -64,7 +64,7 @@ export class LinkCampaignClient {
      */
     async delete(id: string, version: number, options?: IDeleteLinkCampaignOptions): Promise<void> {
         assertVersion(version);
-        await this.http.delete(`${this.basePath}/${id}`, {
+        await this.http.delete(`${this.basePath}/${encodeURIComponent(id)}`, {
             params: options?.detach ? { detach: true } : undefined,
             version,
         });

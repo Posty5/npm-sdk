@@ -10,7 +10,10 @@ function getFile() {
   const file = new File([blob], "logo.png", { type: "image/png" });
   return file;
 }
-describe("Social Publisher Workspace SDK", () => {
+
+const describeLive = TEST_CONFIG.apiKey ? describe : describe.skip;
+
+describeLive("Social Publisher Workspace SDK", () => {
   let httpClient: HttpClient;
   let client!: SocialPublisherWorkspaceClient;
   let createdId: string;

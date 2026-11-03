@@ -2,7 +2,9 @@ import { HttpClient } from "@posty5/core";
 import { HtmlHostingFormSubmissionClient, IFormStatusType } from "@posty5/html-hosting-form-submission";
 import { TEST_CONFIG, createdResources } from "./setup";
 
-describe("HTML Hosting Form Submission SDK", () => {
+const describeLive = TEST_CONFIG.apiKey ? describe : describe.skip;
+
+describeLive("HTML Hosting Form Submission SDK", () => {
   let httpClient: HttpClient;
   let client: HtmlHostingFormSubmissionClient;
   let testHtmlHostingId = "69933e2daa6ee6fa8eb949c5";

@@ -22,6 +22,14 @@ export interface IPosty5McpHttpOptions {
    * attributed to its User-Agent at best.
    */
   sessionSecret: string;
+  /**
+   * Browser origins allowed to call (e.g. `["https://app.example.com"]`). When
+   * set, a request whose `Origin` header is not listed is refused with 403
+   * before `resolve` runs; requests without `Origin` (desktop and server
+   * clients) are unaffected. Set it whenever the server listens where a web
+   * page could reach it (localhost, a LAN): it stops DNS rebinding.
+   */
+  allowedOrigins?: string[];
   /** Default `HTTP_MAX_REQUEST_BYTES`. */
   maxRequestBodySize?: number;
   /** Out-of-band errors (reporting only). Never given request bodies or tokens. */

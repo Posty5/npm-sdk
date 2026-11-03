@@ -3,7 +3,6 @@ import { readFileSync } from "fs";
 import * as path from "path";
 import { CLIENT_HEADER_NAME, CORE_VERSION, HttpClient, shouldRetryRequest } from "@posty5/core";
 import { AccountClient } from "@posty5/account";
-import { StoreClient, StoreStoresClient, StoreOrdersClient } from "@posty5/store";
 import { SocialPublisherAccountClient } from "@posty5/social-publisher-workspace";
 import { QRCodeTemplateClient } from "@posty5/qr-code";
 import { SocialPublisherPostClient } from "@posty5/social-publisher-post";
@@ -11,7 +10,7 @@ import { ShortLinkClient } from "@posty5/short-link";
 
 /**
  * The gaps an AI agent hit (mcp-server feature, npm-sdk/sdk-agent-gaps):
- * who am I, credits, prices, stores, social accounts, QR templates, text and
+ * who am I, credits, prices, social accounts, QR templates, text and
  * story posts — and a core client that no longer repeats a POST the server
  * already acted on, names itself, and lets a caller set `createdFrom`.
  *
@@ -164,35 +163,6 @@ describe("@posty5/account — credit transfers (read-only)", () => {
     const { http: stub, calls } = stubHttp({});
     await new AccountClient(stub).getCreditUsage({ kind: "transferIn" });
     expect(calls[0].params).toEqual({ kind: "transferIn" });
-  });
-});
-
-describe("@posty5/store — stores and the order origin", () => {
-  it("lists the stores the key can manage, from the facade too", async () => {
-    const { http: stub, calls } = stubHttp([{ _id: "s1", name: "shop - Shop" }]);
-
-    expect(await new StoreClient(stub).listStores("shop")).toEqual([{ _id: "s1", name: "shop - Shop" }]);
-    expect(new StoreClient(stub).stores).toBeInstanceOf(StoreStoresClient);
-    expect(calls[0]).toEqual({ method: "GET", url: "/api/store/lookup", params: { term: "shop" } });
-  });
-
-  it("answers an empty list rather than undefined", async () => {
-    const { http: stub } = stubHttp(null);
-
-    expect(await new StoreStoresClient(stub).lookup()).toEqual([]);
-  });
-
-  it("tags a manual order with the client's createdFrom when the API accepts it, else npmPackage", async () => {
-    const order = { items: [] } as any;
-    const sent = async (createdFrom: string) => {
-      const { http: stub, calls } = stubHttp({}, createdFrom);
-      await new StoreOrdersClient(stub).create("s1", order);
-      return calls[0].body.createdFrom;
-    };
-
-    expect(await sent("npmPackage")).toBe("npmPackage");
-    expect(await sent("mcp")).toBe("mcp");
-    expect(await sent("my-integration")).toBe("npmPackage");
   });
 });
 

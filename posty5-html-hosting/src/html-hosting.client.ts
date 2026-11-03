@@ -99,7 +99,7 @@ export class HtmlHostingClient {
    * @returns HTML page details
    */
   async get(id: string): Promise<IHtmlPageResponse> {
-    const response = await this.http.get<IHtmlPageResponse>(`${this.basePath}/${id}`);
+    const response = await this.http.get<IHtmlPageResponse>(`${this.basePath}/${encodeURIComponent(id)}`);
     return response.result!;
   }
 
@@ -116,7 +116,7 @@ export class HtmlHostingClient {
     assertVersion(version);
     // Step 1: Update the HTML page record and get upload configuration
     const response = await this.http.put<IUpdateHtmlPageResponse>(
-      `${this.basePath}/${id}/file`,
+      `${this.basePath}/${encodeURIComponent(id)}/file`,
       {
         ...data,
         isNewFile: true,
@@ -148,7 +148,7 @@ export class HtmlHostingClient {
    */
   async updateWithGithubFile(id: string, data: IUpdateHtmlPageRequestWithGithub, version: number): Promise<IHtmlPageResponse> {
     assertVersion(version);
-    const response = await this.http.put<IUpdateHtmlPageResponse>(`${this.basePath}/${id}/github`, { ...data }, { version });
+    const response = await this.http.put<IUpdateHtmlPageResponse>(`${this.basePath}/${encodeURIComponent(id)}/github`, { ...data }, { version });
     return this.pageWithVersion(response, id);
   }
 
@@ -159,7 +159,7 @@ export class HtmlHostingClient {
    */
   async delete(id: string, version: number): Promise<void> {
     assertVersion(version);
-    await this.http.delete<IDeleteHtmlPageResponse>(`${this.basePath}/${id}`, { version });
+    await this.http.delete<IDeleteHtmlPageResponse>(`${this.basePath}/${encodeURIComponent(id)}`, { version });
   }
 
   /** The update answer's `details`, with `__v` from the envelope's `version`. */
@@ -198,7 +198,7 @@ export class HtmlHostingClient {
    * @returns Array of form lookup items
    */
   async lookupForms(id: string): Promise<ILookupFormsResponse> {
-    const response = await this.http.get<ILookupFormsResponse>(`${this.basePath}/lookup-froms/${id}`);
+    const response = await this.http.get<ILookupFormsResponse>(`${this.basePath}/lookup-froms/${encodeURIComponent(id)}`);
     return response.result!;
   }
 
@@ -207,6 +207,6 @@ export class HtmlHostingClient {
    * @param id - HTML page ID
    */
   async cleanCache(id: string): Promise<void> {
-    await this.http.put<ICleanCacheResponse>(`${this.basePath}/${id}/clean-cache`, {});
+    await this.http.put<ICleanCacheResponse>(`${this.basePath}/${encodeURIComponent(id)}/clean-cache`, {});
   }
 }

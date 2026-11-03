@@ -1,5 +1,22 @@
 # Changelog
 
+## 5.1.0 — List date filters
+
+Additive (minor): optional fields only, no behaviour change for existing
+calls. Needs the API release with the list date filters (redesign-dashboards
+API-03); against an older API the fields are ignored.
+
+### Added
+
+- `IListParams.fromDate` / `toDate` (`YYYY-MM-DD`): `list()` sends them as
+  query params to filter on the creation date. The API applies the window only
+  when both are sent (a lone bound filters nothing) and rounds it to whole UTC
+  days. The SDK does not check the pair; the API decides.
+
+### Security
+
+- Ids are percent-encoded (`encodeURIComponent`) before they go into a request path. An id such as `../webhook-endpoints` or `x?y=1` used to rewrite the route (axios resolves `..`), so a caller passing user input as an id could reach a different API endpoint with its own API key. Valid ids are unchanged on the wire.
+
 ## 5.0.0
 
 Optimistic concurrency. Released in lockstep with every `@posty5/*` package

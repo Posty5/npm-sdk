@@ -1,16 +1,14 @@
 import { ACCESS_RANK, type AccessLevel } from "../config/access.config";
-import { ALWAYS_ON_TOOLSET, DEFAULT_TOOLSETS, STORE_LIST_TOOLSET, TOOLSET_NAMES, type ToolsetName } from "../config/toolsets.config";
+import { ALWAYS_ON_TOOLSET, DEFAULT_TOOLSETS, TOOLSET_NAMES, type ToolsetName } from "../config/toolsets.config";
 import type { IToolDefinition } from "../interfaces/tool.interface";
 
 /**
- * The toolsets a connection gets: the requested ones (or the defaults),
- * `account` always, `store` whenever a `store-*` group is on — in catalogue
- * order, unknown names dropped.
+ * The toolsets a connection gets: the requested ones (or the defaults) and
+ * `account` always — in catalogue order, unknown names dropped.
  */
 export function resolveToolsets(requested?: readonly string[]): ToolsetName[] {
   const wanted = new Set<string>(requested && requested.length ? requested : DEFAULT_TOOLSETS);
   wanted.add(ALWAYS_ON_TOOLSET);
-  if ([...wanted].some((name) => name.startsWith(`${STORE_LIST_TOOLSET}-`))) wanted.add(STORE_LIST_TOOLSET);
   return TOOLSET_NAMES.filter((name) => wanted.has(name));
 }
 

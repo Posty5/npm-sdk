@@ -12,6 +12,7 @@ import {
     VersionRequiredError,
 } from './base-error';
 import { IApiErrorResponse, IInvalidField } from '../types';
+import { redactApiKey } from '../http/request-safety.helper';
 
 /**
  * Transform axios errors into Posty5 SDK errors
@@ -24,7 +25,8 @@ export function transformError(error: any): Posty5Error {
 
     // Handle axios errors
     if (error.isAxiosError) {
-        const axiosError = error as AxiosError<IApiErrorResponse>;
+        // `originalError` below keeps the axios error, whose config holds the API key.
+        const axiosError = redactApiKey(error) as AxiosError<IApiErrorResponse>;
 
         // Network errors (no response)
         if (!axiosError.response) {

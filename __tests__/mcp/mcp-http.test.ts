@@ -3,6 +3,7 @@ import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/cli
 import { createPosty5McpNodeHandler } from "../../posty5-mcp/src/http/node-handler";
 import { decodeLegacySession, encodeLegacySession } from "../../posty5-mcp/src/http/legacy-session.helper";
 import { identityFromUserAgent } from "../../posty5-mcp/src/http/user-agent.helper";
+import { isAllowedOrigin } from "../../posty5-mcp/src/http/origin.helper";
 
 /**
  * The HTTP face the hosted service mounts (`createPosty5McpNodeHandler`),
@@ -145,5 +146,56 @@ describe("@posty5/mcp — legacy session ids and User-Agents", () => {
     expect(identityFromUserAgent("node")).toBeUndefined();
     expect(identityFromUserAgent("undici/6.0")).toBeUndefined();
     expect(identityFromUserAgent(undefined)).toBeUndefined();
+  });
+});
+
+describe("@posty5/mcp — HTTP handler allowedOrigins", () => {
+  let server: http.Server;
+  let url = "";
+  let resolved = 0;
+
+  beforeAll(async () => {
+    const handler = createPosty5McpNodeHandler({
+      sessionSecret: SECRET,
+      allowedOrigins: ["https://app.example"],
+      resolve: () => {
+        resolved += 1;
+        return { refusal: { status: 401, message: "no token" } };
+      },
+    });
+    server = http.createServer((req, res) => void handler(req, res));
+    url = `${await listen(server)}/mcp`;
+  });
+
+  afterAll(() => server?.close());
+
+  // node:http, not fetch: a fetch implementation may drop a hand-set Origin header.
+  const post = (headers: Record<string, string>) =>
+    new Promise<{ status: number }>((resolve, reject) => {
+      const req = http.request(url, { method: "POST", headers: { "Content-Type": "application/json", ...headers } }, (res) => {
+        res.resume();
+        res.on("end", () => resolve({ status: res.statusCode || 0 }));
+      });
+      req.on("error", reject);
+      req.end("{}");
+    });
+
+  it("refuses a browser origin outside the list before resolve runs", async () => {
+    resolved = 0;
+    expect((await post({ Origin: "https://evil.example" })).status).toBe(403);
+    expect(resolved).toBe(0);
+  });
+
+  it("lets a listed origin and an origin-less client through to resolve", async () => {
+    resolved = 0;
+    expect((await post({ Origin: "https://app.example/" })).status).toBe(401);
+    expect((await post({})).status).toBe(401);
+    expect(resolved).toBe(2);
+  });
+
+  it("matches origins case-insensitively and ignores a trailing slash", () => {
+    expect(isAllowedOrigin(undefined, [])).toBe(true);
+    expect(isAllowedOrigin("HTTPS://APP.EXAMPLE", ["https://app.example/"])).toBe(true);
+    expect(isAllowedOrigin("http://localhost:6274", [])).toBe(false);
   });
 });

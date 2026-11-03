@@ -7,7 +7,6 @@ import { QRCodeClient, QRCodeTemplateClient } from "@posty5/qr-code";
 import { LinkCampaignClient, ShortLinkClient } from "@posty5/short-link";
 import { SocialPublisherPostClient } from "@posty5/social-publisher-post";
 import { SocialPublisherAccountClient, SocialPublisherWorkspaceClient } from "@posty5/social-publisher-workspace";
-import { StoreClient } from "@posty5/store";
 import type { IPosty5Clients } from "../interfaces/clients.interface";
 
 /**
@@ -33,6 +32,5 @@ export function createClients(http: HttpClient): IPosty5Clients {
     get workspaces() { return lazy("workspaces", () => new SocialPublisherWorkspaceClient(http)); },
     get socialAccounts() { return lazy("socialAccounts", () => new SocialPublisherAccountClient(http)); },
     get posts() { return lazy("posts", () => new SocialPublisherPostClient(http)); },
-    get store() { return lazy("store", () => new StoreClient(http)); },
   };
 }

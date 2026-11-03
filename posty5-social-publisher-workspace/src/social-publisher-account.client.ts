@@ -40,7 +40,7 @@ export class SocialPublisherAccountClient {
 
   /** One account's details. */
   async get(id: string): Promise<ISocialAccountDetails> {
-    const response = await this.http.get<ISocialAccountDetails>(`${this.basePath}/${id}`);
+    const response = await this.http.get<ISocialAccountDetails>(`${this.basePath}/${encodeURIComponent(id)}`);
     return response.result!;
   }
 }

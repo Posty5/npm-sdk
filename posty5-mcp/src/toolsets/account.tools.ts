@@ -1,9 +1,8 @@
 import { z } from "zod";
 import { CREDIT_TRANSFER_DIRECTIONS, CREDIT_TRANSFER_STATUSES, CREDIT_USAGE_KINDS } from "../config/account-enums.config";
+import { dateField } from "../core/date-field.helper";
 import { cursorFields, defineTool } from "../core/define-tool.helper";
 import type { IToolDefinition } from "../interfaces/tool.interface";
-
-const DATE_FIELD = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
 
 export const ACCOUNT_TOOLS: IToolDefinition[] = [
   defineTool({
@@ -31,15 +30,14 @@ export const ACCOUNT_TOOLS: IToolDefinition[] = [
     access: "read",
     title: "Credit usage history",
     description:
-      "The credit ledger, newest first: every charge, grant, carry-over, refund and credit transfer (transferOut sent, transferIn received). Filter by module, operation, kind, store or date range (fromDate and toDate together). Pages with cursor.",
+      "The credit ledger, newest first: every charge, grant, carry-over, refund and credit transfer (transferOut sent, transferIn received). Filter by module, operation, kind or date range (fromDate and toDate together). Pages with cursor.",
     input: z.object({
       module: z.string().optional().describe("Module key, e.g. socialMediaPublisher."),
       operationType: z.string().optional().describe("Operation key, from account_get_operation_costs."),
       kind: z.enum(CREDIT_USAGE_KINDS).optional(),
       settled: z.boolean().optional().describe("false lists deferred charges not yet paid."),
-      storeId: z.string().optional().describe("Only operations charged for this store (from store_list)."),
-      fromDate: DATE_FIELD.optional().describe("YYYY-MM-DD, with toDate."),
-      toDate: DATE_FIELD.optional().describe("YYYY-MM-DD, with fromDate."),
+      fromDate: dateField("YYYY-MM-DD, with toDate.").optional(),
+      toDate: dateField("YYYY-MM-DD, with fromDate.").optional(),
       ...cursorFields(),
     }),
     run: ({ cursor, pageSize, ...filters }, { clients }) => clients.account.getCreditUsage(filters, { cursor, pageSize }),
@@ -66,8 +64,8 @@ export const ACCOUNT_TOOLS: IToolDefinition[] = [
     input: z.object({
       direction: z.enum(CREDIT_TRANSFER_DIRECTIONS).optional().describe("sent, received or all (default)."),
       status: z.enum(CREDIT_TRANSFER_STATUSES).optional().describe("pending and debited are still completing."),
-      fromDate: DATE_FIELD.optional().describe("YYYY-MM-DD, with toDate."),
-      toDate: DATE_FIELD.optional().describe("YYYY-MM-DD, with fromDate."),
+      fromDate: dateField("YYYY-MM-DD, with toDate.").optional(),
+      toDate: dateField("YYYY-MM-DD, with fromDate.").optional(),
       ...cursorFields(),
     }),
     run: ({ cursor, pageSize, ...filters }, { clients }) => clients.account.listCreditTransfers(filters, { cursor, pageSize }),

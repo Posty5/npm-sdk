@@ -76,8 +76,6 @@ export interface ICreditUsageFilters {
   kind?: CreditUsageKind;
   /** `false` lists deferred charges not yet paid. */
   settled?: boolean;
-  /** Only operations charged for this store. */
-  storeId?: string;
   /** `YYYY-MM-DD`, with `toDate`. */
   fromDate?: string;
   toDate?: string;
@@ -90,8 +88,8 @@ export interface ICreditUsagePaging {
   cursor?: string;
 }
 
-/** Filters for the summary — the history's, except by store (the summary ignores it). */
-export type ICreditUsageSummaryFilters = Omit<ICreditUsageFilters, "storeId">;
+/** Filters for the summary — the same as the history's. */
+export type ICreditUsageSummaryFilters = ICreditUsageFilters;
 
 /** What a ledger row is about, e.g. an order. */
 export interface ICreditUsageReference {

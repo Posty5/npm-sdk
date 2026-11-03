@@ -37,7 +37,7 @@ export function pageFields() {
   };
 }
 
-/** Cursor paging fields, for the store's list methods. */
+/** Cursor paging fields, for SDK list methods that page by cursor (the account credit history). */
 export function cursorFields() {
   return {
     cursor: z.string().optional().describe("The `nextCursor` from the previous page; omit for the first page."),
@@ -57,16 +57,6 @@ export function pickPage(args: { page?: number; pageSize?: number }): { page?: n
 export function requireFields(args: Record<string, unknown>, fields: readonly string[], context: string): void {
   const missing = fields.filter((field) => args[field] === undefined || args[field] === null || args[field] === "");
   if (missing.length) throw new ToolInputError(`${context} needs: ${missing.join(", ")}.`);
-}
-
-/**
- * Throws a `ToolInputError` unless at least one of `fields` is set — for
- * partial updates, where the API refuses a body that changes nothing.
- * `context` names the call (e.g. `store_shipping_update_country`).
- */
-export function requireAtLeastOne(args: Record<string, unknown>, fields: readonly string[], context: string): void {
-  const set = fields.some((field) => args[field] !== undefined);
-  if (!set) throw new ToolInputError(`${context} changes nothing: give at least one of ${fields.join(", ")}.`);
 }
 
 /** Throws a `ToolInputError` unless exactly one of `fields` is set; returns the one that is. */

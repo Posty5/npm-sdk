@@ -1,0 +1,8 @@
+{
+  "//": "ts-jest settings for the sdk suites in __tests__ (__tests__/mcp has its own). \"types\" is the point: without it every package in node_modules/@types is loaded, and the @types/jasmine that posty5-oauth-angular hoists there shadows @types/jest. Everything else stays at ts-jest's defaults, as when this project had no tsconfig.",
+  "compilerOptions": {
+    "types": ["jest", "node"]
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["./mcp/**"]
+}
