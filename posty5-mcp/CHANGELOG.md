@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.0 — Remove a post from one platform
+
+- `social_post_remove_from_platforms` takes an optional `platform`: the post
+  is removed from that platform only and the confirmation names just it.
+- `social_post_list` accepts the `partiallyRemoved` status filter.
+- Needs `@posty5/social-publisher-post` 5.2.0.
+
 ## 2.0.0 — The store tools moved to Storvivo
 
 **Breaking.** The Online Store Builder left Posty5 and is now Storvivo, a

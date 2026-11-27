@@ -1,5 +1,5 @@
 import { IPaginationResponse } from "@posty5/core";
-import { SocialPublisherPostStatusType, SocialPublisherPostSourceType, SocialPublisherAccountStatusType, CommentStatusType } from "../../types/type";
+import { SocialPublisherPostStatusType, SocialPublisherPostSourceType, SocialPublisherAccountStatusType, CommentStatusType, SocialPublisherPostRemovePlatformType } from "../../types/type";
 
 export interface IUploadConfig {
   url: string;
@@ -65,7 +65,8 @@ export interface IRemovePostResponse {
   _id: string;
   /** The post's new version */
   __v: number;
-  results: Partial<Record<"youtube" | "facebook" | "instagram" | "tiktok", IRemovePostPlatformResult>>;
+  /** One entry per platform the removal targeted: only `platform` when one was passed. */
+  results: Partial<Record<SocialPublisherPostRemovePlatformType, IRemovePostPlatformResult>>;
 }
 
 export interface ISocialPublisherPostStatusLog {

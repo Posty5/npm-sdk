@@ -6,6 +6,7 @@ import {
   SOCIAL_ACCOUNT_PLATFORMS,
   SOCIAL_ACCOUNT_STATUSES,
   SOCIAL_POST_PLATFORMS,
+  SOCIAL_POST_REMOVE_PLATFORMS,
   SOCIAL_POST_STATUSES,
   SOCIAL_POST_TARGETS,
   STORY_KINDS,
@@ -503,19 +504,26 @@ export const SOCIAL_PUBLISHER_TOOLS: IToolDefinition[] = [
     access: "full",
     title: "Remove a post from the platforms",
     description:
-      "Deletes a published post's media from the platforms it was published to, at once. Instagram and TikTok offer no delete through their APIs, so media there stays. Irreversible. Paid, only when the removal succeeds: the price is in account_get_operation_costs.",
-    input: z.object({ id: idField(POST_ID), version: versionField("the post") }),
+      "Deletes a published post's media from the platforms it was published to, at once, or from one platform when `platform` is given (the others keep their copies and the post becomes partiallyRemoved). Instagram and TikTok offer no delete through their APIs, so media there stays. Irreversible. Paid, only when the removal succeeds: the price is in account_get_operation_costs.",
+    input: z.object({
+      id: idField(POST_ID),
+      version: versionField("the post"),
+      platform: z
+        .enum(SOCIAL_POST_REMOVE_PLATFORMS)
+        .optional()
+        .describe("Remove from this platform only. The post must have been published there. Omit to remove from every platform."),
+    }),
     annotations: { destructive: true, idempotent: true },
     confirm: {
-      describe: async ({ id }, { clients }) => {
+      describe: async ({ id, platform }, { clients }) => {
         const post = await clients.posts.getStatus(id);
-        const platforms = postPlatforms(post);
+        const platforms = platform ? [platform] : postPlatforms(post);
         const where = platforms.length ? platforms.join(", ") : "the platforms it was published to";
         return `Remove post #${post.numbering} from ${where}. The published media is deleted from those platforms immediately, and this is irreversible — it cannot be restored or re-published from here. Instagram and TikTok offer no delete through their APIs, so media there stays.`;
       },
       costFeaturePath: "socialMediaPublisher.removePost",
     },
-    run: ({ id, version }, { clients }) => clients.posts.removePost(id, version),
+    run: ({ id, version, platform }, { clients }) => clients.posts.removePost(id, version, platform),
     entity: (_result, args) => ({ entityType: "socialPost", entityId: args.id }),
   }),
 ];

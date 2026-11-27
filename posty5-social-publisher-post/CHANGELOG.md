@@ -1,5 +1,21 @@
 # Changelog
 
+## 5.2.0 — Remove from one platform
+
+Additive (minor): an optional argument, no behaviour change for existing calls.
+Needs the API with per-platform removal (`POST /:id/remove` body `platform`).
+
+### Added
+
+- `removePost(id, version, platform?)`: with `platform`, removes the post
+  from that platform only; the other platforms keep their copies and the post
+  becomes `partiallyRemoved`. The post must have been published there
+  (platform status `done` or `removeFailed`). A `partiallyRemoved` post can
+  be removed again.
+- `SocialPublisherPostRemovePlatformType` (the six platforms) and the
+  `partiallyRemoved` post status, which the API already returned.
+- `IRemovePostResponse.results` is keyed by the six platforms.
+
 ## 5.1.0 — List date filters
 
 Additive (minor): optional fields only, no behaviour change for existing
