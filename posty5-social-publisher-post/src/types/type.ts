@@ -12,7 +12,9 @@ export type SocialPublisherPostStatusType =
   | "retrying"
   | "removing"
   | "removed"
-  | "removeFailed";
+  | "removeFailed"
+  /** Removed from some platforms while at least one copy is still live (5.2.0). */
+  | "partiallyRemoved";
 
 /**
  * Content type of a post.
@@ -39,6 +41,9 @@ export type SocialPublisherPostSourceType = "video-file" | "video-url";
  * - `notSupported`: platform does not allow programmatic comments (TikTok)
  */
 export type CommentStatusType = "pending" | "processing" | "done" | "error" | "skipped" | "notSupported";
+
+/** A platform `removePost` can target on its own (5.2.0). */
+export type SocialPublisherPostRemovePlatformType = "youtube" | "facebook" | "instagram" | "tiktok" | "threads" | "twitter";
 
 export type SocialPublisherAccountPlatformType = "youtube" | "facebook" | "tiktok";
 export type SocialPublisherAccountAccountType = "facebook" | "instagram" | "youtube" | "tiktok";

@@ -30,6 +30,7 @@ import {
   ICreateStoryPostToAccountRequest,
   ICreatePostResult,
 } from "./interfaces";
+import { SocialPublisherPostRemovePlatformType } from "./types/type";
 
 /**
  * Social Publisher Post Client
@@ -98,7 +99,15 @@ export class SocialPublisherPostClient {
    * cannot be removed programmatically and no credits are charged.
    *
    * @param id - Post ID
+   * Pass `platform` to remove the post from that one platform only. The other
+   * platforms keep their copies and the post becomes `partiallyRemoved`. The
+   * post must have been published there (platform status `done` or
+   * `removeFailed`), or the API refuses the call. A `partiallyRemoved` post can
+   * be removed again. Needs the API with per-platform removal.
+   *
+   * @param id - Post ID
    * @param version - The post's `__v` as you read it. A stale one throws `ConflictError`.
+   * @param platform - Optional (5.2.0): remove from this platform only. Omit to remove from every platform.
    * @returns Per-platform removal results, `__v` set to the post's new version
    *
    * @example
@@ -106,11 +115,15 @@ export class SocialPublisherPostClient {
    * const post = await client.getStatus("post_123");
    * const { results } = await client.removePost("post_123", post.__v);
    * // results.youtube?.success === true
+   *
+   * // Only the YouTube copy:
+   * await client.removePost("post_123", post.__v, "youtube");
    * ```
    */
-  async removePost(id: string, version: number): Promise<IRemovePostResponse> {
+  async removePost(id: string, version: number, platform?: SocialPublisherPostRemovePlatformType): Promise<IRemovePostResponse> {
     assertVersion(version);
-    const response = await this.http.post<IRemovePostResponse>(`${this.basePath}/${encodeURIComponent(id)}/remove`, {}, { version });
+    const body = platform ? { platform } : {};
+    const response = await this.http.post<IRemovePostResponse>(`${this.basePath}/${encodeURIComponent(id)}/remove`, body, { version });
     return withVersion(response, id);
   }
 

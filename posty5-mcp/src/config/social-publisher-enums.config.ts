@@ -1,4 +1,4 @@
-import type { SocialPublisherPostAccountType, SocialPublisherPostStatusType } from "@posty5/social-publisher-post";
+import type { SocialPublisherPostAccountType, SocialPublisherPostRemovePlatformType, SocialPublisherPostStatusType } from "@posty5/social-publisher-post";
 import type { SocialAccountPlatform, SocialAccountStatus } from "@posty5/social-publisher-workspace";
 
 /**
@@ -25,10 +25,14 @@ export const SOCIAL_POST_STATUSES = [
   "removing",
   "removed",
   "removeFailed",
+  "partiallyRemoved",
 ] as const satisfies readonly SocialPublisherPostStatusType[];
 
 /** Platforms a post carries a block for — the `<platform>.postInfo.isAllow` list filter, and what a removal reports on. */
 export const SOCIAL_POST_PLATFORMS = ["youtube", "facebook", "instagram", "tiktok"] as const satisfies readonly SocialPublisherPostAccountType[];
+
+/** Platforms one removal can target on its own (`social_post_remove_from_platforms` `platform`). */
+export const SOCIAL_POST_REMOVE_PLATFORMS = ["youtube", "facebook", "instagram", "tiktok", "threads", "twitter"] as const satisfies readonly SocialPublisherPostRemovePlatformType[];
 
 /** The video platform blocks; a video post needs one per platform connected to its target. */
 export const VIDEO_PLATFORM_BLOCKS = ["youtube", "tiktok", "facebook", "instagram"] as const;
